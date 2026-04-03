@@ -1,0 +1,58 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") // <-- ADD THIS LINE!
+}
+
+// --- USERS ---
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   
+  name      String?
+  role      String   @default("CUSTOMER") // "CUSTOMER" or "ADMIN"
+  orders    Order[]  // A user can have many orders
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// --- PRODUCTS ---
+model Product {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  brand       String   
+  imageUrl    String
+  orderItems  OrderItem[] // A product can be in many different orders
+  createdAt   DateTime    @default(now())
+}
+
+// --- ORDERS (The New Addition!) ---
+model Order {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  items       OrderItem[] // An order contains multiple items
+  totalAmount Float
+  status      String      @default("PENDING") // PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+// --- ORDER ITEMS (The Bridge between Orders and Products) ---
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  priceAtPurchase Float // We save the price here in case the product price changes later!
+}
