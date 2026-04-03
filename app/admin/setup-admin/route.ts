@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 
 // @ts-ignore - Mute the typescript warning for the hasher
 import bcrypt from "bcryptjs"; // NOTE: Change "bcryptjs" to "bcrypt" if that is what you used in your login file!
