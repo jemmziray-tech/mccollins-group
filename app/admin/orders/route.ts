@@ -10,7 +10,6 @@ export async function GET() {
     const session = await getServerSession(authOptions);
     
     // Security check: Only let Admins pull this data
-    // Change line 13 to this:
     if ((session?.user as any)?.role !== "ADMIN") {
       return new NextResponse("Unauthorized", { status: 401 });
     }
