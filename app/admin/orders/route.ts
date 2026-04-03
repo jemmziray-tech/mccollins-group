@@ -37,7 +37,7 @@ export async function PATCH(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (session?.user?.role !== "ADMIN") {
+    if ((session?.user as any)?.role !== "ADMIN") {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
