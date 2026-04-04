@@ -3,27 +3,21 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { 
-  ShoppingBag, 
-  ArrowRight, 
+  ShoppingCart, 
   Menu, 
-  MessageCircle, 
-  X,
   Search,
-  Shirt,
-  Leaf,
-  BookOpen
+  MapPin,
+  MessageCircle // Added for the WhatsApp Bubble
 } from "lucide-react";
-// Using react-icons for brands to avoid the lucide-react export error!
-import { FaInstagram, FaTwitter } from "react-icons/fa";
 
-// --- THE DISPLAY INVENTORY (Backup Data) ---
-// If the database fails, the site uses this beautiful display data instead.
+// --- THE DISPLAY INVENTORY (Now with Categories for filtering!) ---
 const displayInventory = [
   { 
     id: "prod_1", 
     name: "Vintage Denim Jacket", 
     brand: "Colman Looks", 
     price: 45000, 
+    category: "Fashion",
     imageUrl: "https://images.unsplash.com/photo-1555583743-991174c11425?q=80&w=1973" 
   },
   { 
@@ -31,6 +25,7 @@ const displayInventory = [
     name: "Fresh Organic Avocados", 
     brand: "Nataka Afya", 
     price: 8500, 
+    category: "Food",
     imageUrl: "https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?q=80&w=1975" 
   },
   { 
@@ -38,6 +33,7 @@ const displayInventory = [
     name: "The Innovator's Playbook", 
     brand: "Akili Hub", 
     price: 35000, 
+    category: "Education",
     imageUrl: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=2112" 
   },
   { 
@@ -45,31 +41,28 @@ const displayInventory = [
     name: "Heavyweight Street Tee", 
     brand: "Colman Looks", 
     price: 25000, 
+    category: "Fashion",
     imageUrl: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=1974" 
   }
 ];
 
-export default function McCollinsGroupUltimate() {
+export default function McCollinsGroupAmazon() {
   const [products, setProducts] = useState<any[]>([]);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // NEW: Search & Filter States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   // YOUR OFFICIAL BUSINESS DETAILS
   const WHATSAPP_NUMBER = "255700000000"; // Update to your real number
 
   useEffect(() => {
-    // 1. Smooth Scroll Listener for the Glass Navbar
-    const handleScroll = () => setIsScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", handleScroll);
-    
-    // 2. Database Fetch Logic with Safety Net
     async function fetchProducts() {
       try {
         const res = await fetch("/api/products");
         if (!res.ok) throw new Error("API Connection Failed");
         const data = await res.json();
         
-        // If DB works but is empty, use the beautiful display data!
         if (data.length === 0) {
           setProducts(displayInventory);
         } else {
@@ -77,13 +70,22 @@ export default function McCollinsGroupUltimate() {
         }
       } catch (error) {
         console.error("McCollins Debug: Using display data due to DB error.", error);
-        // If DB completely fails (like your 405 error), use display data!
         setProducts(displayInventory);
       }
     }
     fetchProducts();
-    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // NEW: The Filtering Logic
+  // This runs instantly every time a user types a letter or changes the dropdown
+  const displayedProducts = products.filter((product) => {
+    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          product.brand.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
+    
+    return matchesSearch && matchesCategory;
+  });
 
   const handleWhatsAppOrder = (pName: string, pPrice: any) => {
     const formattedPrice = Number(pPrice || 0).toLocaleString();
@@ -91,174 +93,227 @@ export default function McCollinsGroupUltimate() {
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
+  const handleGeneralSupport = () => {
+    const msg = `Hujambo McCollins Group! Nina swali kuhusu huduma zenu.`;
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
   return (
-    <div className="min-h-screen bg-[#F8F9FA] font-sans text-slate-900 selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen bg-[#EAEDED] font-sans text-[#0F1111] relative">
       
-      {/* 1. MOBILE MENU OVERLAY */}
-      <div className={`fixed inset-0 z-[200] bg-slate-950 transition-all duration-700 ${mobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}>
-        <div className="p-10 flex justify-between items-center border-b border-white/5">
-          <h2 className="text-white font-black uppercase tracking-tighter text-3xl">McCollins.</h2>
-          <button onClick={() => setMobileMenuOpen(false)} className="text-white p-2 hover:rotate-90 transition-transform"><X className="w-10 h-10" /></button>
-        </div>
-        <div className="p-16 space-y-12">
-          <Link href="/" onClick={() => setMobileMenuOpen(false)} className="block text-6xl font-black text-white uppercase tracking-tighter hover:text-blue-500 transition-colors">Home</Link>
-          <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="block text-6xl font-black text-blue-600 uppercase tracking-tighter hover:text-white transition-colors">Admin Portal</Link>
-          <div className="pt-20 border-t border-white/5">
-             <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Direct Support: {WHATSAPP_NUMBER}</p>
-          </div>
-        </div>
+      {/* NEW: Floating WhatsApp Live Chat Bubble */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <button 
+          onClick={handleGeneralSupport}
+          className="bg-[#25D366] hover:bg-[#128C7E] text-white p-4 rounded-full shadow-2xl transition-transform transform hover:scale-110 flex items-center justify-center group relative"
+        >
+          <MessageCircle className="w-8 h-8" />
+          {/* Tooltip that shows on hover */}
+          <span className="absolute right-16 bg-white text-[#0F1111] text-xs font-bold px-3 py-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+            Chat with us live!
+          </span>
+        </button>
       </div>
 
-      {/* 2. DYNAMIC GLASS NAVBAR */}
-      <nav className={`fixed top-0 w-full z-[100] transition-all duration-700 ${isScrolled ? "bg-white/90 backdrop-blur-2xl py-4 shadow-sm" : "bg-transparent py-10"}`}>
-        <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
-          <div className="flex items-center space-x-8">
-            <button onClick={() => setMobileMenuOpen(true)} className={`transition-transform hover:scale-110 ${isScrolled ? "text-slate-900" : "text-white"}`}><Menu className="w-7 h-7" /></button>
-            <h1 className={`text-3xl font-black tracking-tighter uppercase transition-colors duration-500 ${isScrolled ? "text-slate-900" : "text-white"}`}>
-              McCollins<span className="text-blue-600 font-medium tracking-normal text-2xl">Group</span>
+      {/* 1. AMAZON STYLE MAIN NAVBAR */}
+      <nav className="bg-[#131921] text-white flex flex-col md:flex-row items-center px-4 py-2 gap-4">
+        
+        <div className="flex items-center justify-between w-full md:w-auto gap-4">
+          <Link href="/" className="flex items-center border border-transparent hover:border-white p-1 rounded">
+            <h1 className="text-2xl font-bold tracking-tighter">
+              McCollins<span className="text-[#febd69]">.</span>
             </h1>
-          </div>
-          <div className="flex items-center space-x-8">
-            <Search className={`w-6 h-6 hidden md:block cursor-pointer transition-colors ${isScrolled ? "text-slate-900" : "text-white"}`} />
-            <div className="relative group cursor-pointer">
-              <ShoppingBag className={`w-7 h-7 transition-transform group-hover:scale-110 ${isScrolled ? "text-slate-900" : "text-white"}`} />
-              <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full ring-4 ring-white/10 shadow-lg">
-                {products.length}
-              </span>
+          </Link>
+          
+          <div className="hidden lg:flex items-center border border-transparent hover:border-white p-1 rounded cursor-pointer">
+            <MapPin className="w-5 h-5 text-gray-300 mr-1 mt-2" />
+            <div className="flex flex-col text-sm leading-tight">
+              <span className="text-[#CCCCCC] text-[11px]">Deliver to</span>
+              <span className="font-bold">Tanzania</span>
             </div>
+          </div>
+        </div>
+
+        {/* UPDATED: Dynamic Search Bar */}
+        <div className="flex flex-1 w-full rounded-md overflow-hidden bg-white h-10 focus-within:ring-4 focus-within:ring-[#f90] focus-within:ring-opacity-50">
+          <select 
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="bg-gray-100 border-r border-gray-300 text-black text-xs px-2 outline-none cursor-pointer hidden md:block w-auto"
+          >
+            <option value="All">All</option>
+            <option value="Fashion">Fashion</option>
+            <option value="Food">Food</option>
+            <option value="Education">Education</option>
+          </select>
+          <input 
+            type="text" 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search McCollins" 
+            className="flex-1 px-3 text-black outline-none w-full"
+          />
+          <button className="bg-[#febd69] hover:bg-[#f3a847] px-4 flex items-center justify-center transition-colors">
+            <Search className="w-5 h-5 text-slate-900" />
+          </button>
+        </div>
+
+        <div className="hidden md:flex items-center gap-2 text-sm">
+          <Link href="/admin" className="flex flex-col border border-transparent hover:border-white p-2 rounded leading-tight">
+            <span className="text-xs font-normal">Hello, Admin</span>
+            <span className="font-bold">Account & Dashboard</span>
+          </Link>
+          
+          <div className="flex flex-col border border-transparent hover:border-white p-2 rounded leading-tight cursor-pointer">
+            <span className="text-xs font-normal">Returns</span>
+            <span className="font-bold">& Orders</span>
+          </div>
+
+          <div className="flex items-end border border-transparent hover:border-white p-2 rounded cursor-pointer relative">
+            <ShoppingCart className="w-8 h-8" />
+            <span className="absolute top-1 left-[22px] text-[#f08804] font-bold text-sm">
+              {displayedProducts.length} {/* Updates cart number to match search results! */}
+            </span>
+            <span className="font-bold ml-1 hidden lg:block">Cart</span>
           </div>
         </div>
       </nav>
 
-      {/* 3. CINEMATIC HERO */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden bg-slate-950">
-        <div className="absolute inset-0 z-0">
-          <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974" className="w-full h-full object-cover animate-slow-zoom scale-110 opacity-30" alt="Hero Background" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/50 to-black/40"></div>
-        </div>
-        <div className="relative z-10 text-center px-6 mt-20">
-          <p className="text-blue-500 font-black uppercase tracking-[0.8em] text-[10px] mb-8 animate-pulse">Tanzania's Premier Holding</p>
-          <h2 className="text-7xl md:text-[140px] font-black text-white leading-[0.8] tracking-tighter mb-10 mix-blend-screen drop-shadow-2xl">
-            ELEVATE <br /> EVERYDAY.
-          </h2>
-          <p className="text-white/70 font-black uppercase tracking-[0.4em] text-sm md:text-xl mb-16">
-            Fashion • Organic Food • Education
-          </p>
-          <button className="px-20 py-7 bg-white text-slate-900 font-black uppercase text-xs tracking-widest rounded-full hover:bg-blue-600 hover:text-white transition-all shadow-[0_20px_50px_rgba(255,255,255,0.1)] hover:scale-105">
-            Discover Our World
-          </button>
-        </div>
-      </section>
+      {/* Secondary Nav Bar */}
+      <div className="bg-[#232F3E] text-white px-4 py-1 flex items-center gap-4 text-sm font-medium">
+        <button className="flex items-center gap-1 border border-transparent hover:border-white p-1 rounded">
+          <Menu className="w-5 h-5" /> All
+        </button>
+        <span className="cursor-pointer border border-transparent hover:border-white p-1 rounded hidden md:inline">Today's Deals</span>
+        <span className="cursor-pointer border border-transparent hover:border-white p-1 rounded hidden md:inline">Customer Service</span>
+      </div>
 
-      {/* 4. THE THREE PILLARS */}
-      <section className="max-w-7xl mx-auto px-8 -mt-32 relative z-20 grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* 2. HERO CAROUSEL BACKGROUND */}
+      <div className="relative w-full h-[300px] md:h-[400px] bg-gradient-to-r from-blue-100 to-teal-100 overflow-hidden">
+        <img 
+          src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=2070" 
+          alt="Hero Banner" 
+          className="absolute inset-0 w-full h-full object-cover opacity-70 mix-blend-multiply"
+        />
+        <div className="absolute bottom-0 w-full h-48 bg-gradient-to-t from-[#EAEDED] to-transparent z-10"></div>
+      </div>
+
+      {/* 3. THE AMAZON OVERLAPPING GRID */}
+      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 relative z-20 -mt-32 md:-mt-64 mb-10">
+        
+        {/* Only show category cards if the user IS NOT searching. If they are searching, get straight to the products! */}
+        {searchQuery === "" && selectedCategory === "All" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
+            <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm">
+              <h2 className="text-xl font-bold mb-4">Elevate your Style</h2>
+              <div className="flex-grow relative mb-4 cursor-pointer" onClick={() => setSelectedCategory("Fashion")}>
+                <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000" className="absolute inset-0 w-full h-full object-cover" alt="Fashion" />
+              </div>
+              <button onClick={() => setSelectedCategory("Fashion")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium">
+                Shop Colman Looks
+              </button>
+            </div>
+
+            <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm">
+              <h2 className="text-xl font-bold mb-4">Fresh Organic Groceries</h2>
+              <div className="flex-grow grid grid-cols-2 gap-4 mb-4" onClick={() => setSelectedCategory("Food")}>
+                 <div className="flex flex-col cursor-pointer"><img src="https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?q=80&w=500" className="h-28 object-cover mb-1" alt="Veg" /><span className="text-xs">Vegetables</span></div>
+                 <div className="flex flex-col cursor-pointer"><img src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?q=80&w=500" className="h-28 object-cover mb-1" alt="Fruits" /><span className="text-xs">Fresh Fruits</span></div>
+                 <div className="flex flex-col cursor-pointer"><img src="https://images.unsplash.com/photo-1596040033229-a9821ebd058d?q=80&w=500" className="h-28 object-cover mb-1" alt="Spices" /><span className="text-xs">Spices</span></div>
+                 <div className="flex flex-col cursor-pointer"><img src="https://images.unsplash.com/photo-1506084868230-bb9d95c24759?q=80&w=500" className="h-28 object-cover mb-1" alt="Grains" /><span className="text-xs">Grains</span></div>
+              </div>
+              <button onClick={() => setSelectedCategory("Food")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium">
+                Explore Nataka Afya
+              </button>
+            </div>
+
+            <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm">
+              <h2 className="text-xl font-bold mb-4">Learn and Grow</h2>
+              <div className="flex-grow relative mb-4 cursor-pointer" onClick={() => setSelectedCategory("Education")}>
+                <img src="https://images.unsplash.com/photo-1524901548305-08eeddc35080?q=80&w=1000" className="absolute inset-0 w-full h-full object-cover" alt="Education" />
+              </div>
+              <button onClick={() => setSelectedCategory("Education")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium">
+                Visit Akili Hub
+              </button>
+            </div>
+
+            <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm">
+              <h2 className="text-xl font-bold mb-4">Sign in for the best experience</h2>
+              <Link href="/admin" className="w-full bg-[#FFD814] hover:bg-[#F7CA00] border border-[#FCD200] text-[#0F1111] text-sm py-2 rounded-lg text-center font-medium shadow-sm mb-4">
+                Sign in securely
+              </Link>
+              <div className="flex-grow relative mt-2 cursor-pointer border-t border-gray-200 pt-4">
+                <img src="https://images.unsplash.com/photo-1607082349566-187342175e2f?q=80&w=1000" className="absolute inset-0 w-full h-full object-cover mt-4" alt="Promo" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 4. DYNAMIC PRODUCT INVENTORY */}
+        <div className="bg-white p-5 shadow-sm min-h-[400px]">
+          <div className="flex items-end gap-4 mb-6 pb-2 border-b border-gray-200">
+            <h2 className="text-2xl font-bold text-[#0F1111]">
+              {searchQuery !== "" ? `Results for "${searchQuery}"` : selectedCategory !== "All" ? `${selectedCategory} Inventory` : "Discover our inventory"}
+            </h2>
+            <span className="text-gray-500 text-sm mb-1">{displayedProducts.length} items</span>
+            
+            {/* Clear Filters Button */}
+            {(searchQuery !== "" || selectedCategory !== "All") && (
+              <button 
+                onClick={() => { setSearchQuery(""); setSelectedCategory("All"); }}
+                className="ml-auto text-[#007185] hover:text-[#C7511F] hover:underline text-sm font-medium"
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
           
-          {/* FASHION */}
-          <div className="bg-white p-12 rounded-[40px] shadow-2xl border border-slate-100 group hover:-translate-y-4 transition-all duration-500">
-              <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
-                <Shirt className="w-8 h-8 text-blue-600" />
-              </div>
-              <h4 className="text-slate-400 font-black uppercase text-[10px] tracking-widest mb-2">Apparel & Style</h4>
-              <h3 className="text-4xl font-black tracking-tighter uppercase mb-6 leading-none italic">Colman <br /> Looks.</h3>
-              <p className="text-slate-500 text-sm mb-10 leading-relaxed font-medium">Premium curated fashion designed for the modern Tanzanian individual.</p>
-              <div className="flex items-center text-slate-900 font-black text-xs uppercase tracking-widest group-hover:text-blue-600 transition-colors">Shop Fashion <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-2 transition-transform" /></div>
-          </div>
-
-          {/* FOOD */}
-          <div className="bg-slate-900 p-12 rounded-[40px] shadow-2xl text-white group hover:-translate-y-4 transition-all duration-500 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
-              <div className="w-16 h-16 bg-green-500/20 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform relative z-10">
-                <Leaf className="w-8 h-8 text-green-400" />
-              </div>
-              <h4 className="text-green-400 font-black uppercase text-[10px] tracking-widest mb-2 relative z-10">Health & Groceries</h4>
-              <h3 className="text-4xl font-black tracking-tighter uppercase mb-6 leading-none italic relative z-10">Nataka <br /> Afya.</h3>
-              <p className="text-slate-400 text-sm mb-10 leading-relaxed font-medium relative z-10">Defining wellness through high-quality organic groceries and fresh produce.</p>
-              <div className="flex items-center text-white font-black text-xs uppercase tracking-widest group-hover:text-green-400 transition-colors relative z-10">Order Fresh <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-2 transition-transform" /></div>
-          </div>
-
-          {/* EDUCATION */}
-          <div className="bg-white p-12 rounded-[40px] shadow-2xl border border-slate-100 group hover:-translate-y-4 transition-all duration-500">
-              <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
-                <BookOpen className="w-8 h-8 text-indigo-600" />
-              </div>
-              <h4 className="text-slate-400 font-black uppercase text-[10px] tracking-widest mb-2">Learning & Growth</h4>
-              <h3 className="text-4xl font-black tracking-tighter uppercase mb-6 leading-none italic">Akili <br /> Hub.</h3>
-              <p className="text-slate-500 text-sm mb-10 leading-relaxed font-medium">Empowering the next generation with premier educational resources and books.</p>
-              <div className="flex items-center text-slate-900 font-black text-xs uppercase tracking-widest group-hover:text-indigo-600 transition-colors">Explore Hub <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-2 transition-transform" /></div>
-          </div>
-      </section>
-
-      {/* 5. NOURISHED INVENTORY */}
-      <section className="max-w-7xl mx-auto px-8 py-48">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-24 border-l-[12px] border-slate-900 pl-10">
-          <h3 className="text-6xl md:text-7xl font-black tracking-tighter uppercase italic text-slate-900 leading-[0.85]">
-            Featured <br /> Inventory.
-          </h3>
-          <p className="max-w-xs text-slate-500 font-bold text-sm mt-8 md:mt-0">Across Fashion, Food, and Education.</p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
-          {products.map((p: any) => (
-            <div key={p.id} className="group cursor-pointer">
-              <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-white mb-6 shadow-lg group-hover:shadow-2xl transition-all duration-500">
-                <img src={p.imageUrl} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={p.name} />
-                
-                {/* WHATSAPP ACTION OVERLAY */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-end p-6 space-y-3">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); handleWhatsAppOrder(p.name, p.price); }}
-                      className="w-full py-4 bg-green-500 text-white font-black uppercase text-[10px] tracking-widest rounded-xl flex items-center justify-center hover:bg-green-600 transition-transform transform hover:scale-105 shadow-xl"
-                    >
-                      <MessageCircle className="w-5 h-5 mr-3" /> Buy Now
-                    </button>
+          {displayedProducts.length === 0 ? (
+            <div className="text-center py-20">
+              <h3 className="text-xl font-bold text-gray-700">No products found.</h3>
+              <p className="text-gray-500 mt-2">Try checking your spelling or clearing your filters.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+              {displayedProducts.map((p: any) => (
+                <div key={p.id} className="group cursor-pointer flex flex-col">
+                  <div className="bg-[#F8F8F8] h-48 w-full flex items-center justify-center mb-2 overflow-hidden rounded">
+                    <img src={p.imageUrl} className="h-full w-full object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-110" alt={p.name} />
+                  </div>
+                  <h4 className="text-[14px] font-medium text-[#007185] group-hover:text-[#C7511F] line-clamp-2 leading-tight">{p.name}</h4>
+                  <div className="text-xl font-normal text-[#0F1111] mt-1">
+                    <span className="text-[11px] align-top relative top-1">Tsh</span> {Number(p.price || 0).toLocaleString()}
+                  </div>
+                  
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleWhatsAppOrder(p.name, p.price); }}
+                    className="mt-3 w-full bg-[#FFD814] hover:bg-[#F7CA00] border border-[#FCD200] text-[#0F1111] text-[12px] py-2 rounded-full text-center font-medium shadow-sm transition-colors"
+                  >
+                    Buy via WhatsApp
+                  </button>
                 </div>
-              </div>
-              <div className="px-2">
-                <h4 className="text-xl font-black tracking-tighter leading-tight uppercase text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1 mb-1">{p.name}</h4>
-                <div className="flex justify-between items-center mt-3">
-                  <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-md text-[9px] font-black uppercase tracking-widest">{p.brand}</span>
-                  <p className="font-black text-slate-900 text-lg tracking-tighter italic">
-                    Tsh {Number(p.price || 0).toLocaleString()}
-                  </p>
-                </div>
-              </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
-      </section>
 
-      {/* 6. GLOBAL FOOTER */}
-      <footer className="bg-slate-950 text-white pt-40 pb-16 px-10">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center border-b border-white/10 pb-20 mb-10">
-            <div className="mb-12 md:mb-0 text-center md:text-left">
-              <h2 className="text-5xl font-black uppercase tracking-tighter mb-4">McCollins.</h2>
-              <p className="text-slate-500 font-bold text-sm tracking-widest uppercase mb-8">Fashion • Food • Education</p>
-              <div className="flex justify-center md:justify-start space-x-8 text-slate-400">
-                <FaInstagram className="w-7 h-7 hover:text-white cursor-pointer transition-colors" />
-                <FaTwitter className="w-7 h-7 hover:text-white cursor-pointer transition-colors" />
-                <Link href={`https://wa.me/${WHATSAPP_NUMBER}`}><MessageCircle className="w-7 h-7 hover:text-green-500 cursor-pointer transition-colors" /></Link>
-              </div>
-            </div>
-            <div className="text-center md:text-right space-y-6">
-               <Link href="/admin" className="inline-block bg-blue-600 text-white font-black uppercase tracking-widest text-xs px-8 py-4 rounded-full hover:bg-blue-500 transition-colors shadow-lg">
-                 Admin Dashboard
-               </Link>
-            </div>
+      </div>
+
+      {/* 5. AMAZON FOOTER */}
+      <footer className="mt-10">
+        <div className="bg-[#37475A] hover:bg-[#485769] text-white text-center py-4 text-[13px] font-medium cursor-pointer transition-colors" onClick={() => window.scrollTo(0, 0)}>
+          Back to top
         </div>
-        <div className="max-w-7xl mx-auto text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-600">© 2026 MCCOLLINS GROUP INTERNATIONAL. ALL RIGHTS RESERVED.</p>
+        <div className="bg-[#232F3E] py-10 text-center text-gray-300 text-sm">
+          <div className="flex justify-center gap-8 mb-6 font-medium">
+            <span className="hover:underline cursor-pointer">Conditions of Use</span>
+            <span className="hover:underline cursor-pointer">Privacy Notice</span>
+            <span className="hover:underline cursor-pointer">Help</span>
+          </div>
+          <p>© 2026, McCollins Group International, or its affiliates</p>
         </div>
       </footer>
 
-      <style jsx global>{`
-        @keyframes slow-zoom {
-          0% { transform: scale(1.05); }
-          100% { transform: scale(1.2); }
-        }
-        .animate-slow-zoom {
-          animation: slow-zoom 40s infinite alternate ease-in-out;
-        }
-      `}</style>
     </div>
   );
 }
