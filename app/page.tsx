@@ -7,54 +7,67 @@ import {
   Menu, 
   Search,
   MapPin,
-  MessageCircle // Added for the WhatsApp Bubble
+  MessageCircle
 } from "lucide-react";
 
-// --- THE DISPLAY INVENTORY (Now with Categories for filtering!) ---
+// --- CURATED MEN'S FASHION INVENTORY ---
 const displayInventory = [
   { 
     id: "prod_1", 
-    name: "Vintage Denim Jacket", 
+    name: "Classic White Premium Tee", 
     brand: "Colman Looks", 
-    price: 45000, 
-    category: "Fashion",
-    imageUrl: "https://images.unsplash.com/photo-1555583743-991174c11425?q=80&w=1973" 
+    price: 15000, 
+    category: "Shirts",
+    imageUrl: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=800" 
   },
   { 
     id: "prod_2", 
-    name: "Fresh Organic Avocados", 
-    brand: "Nataka Afya", 
-    price: 8500, 
-    category: "Food",
-    imageUrl: "https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?q=80&w=1975" 
+    name: "Vintage Wash Denim Jacket", 
+    brand: "Colman Looks", 
+    price: 45000, 
+    category: "Outerwear",
+    imageUrl: "https://images.unsplash.com/photo-1555583743-991174c11425?q=80&w=800" 
   },
   { 
     id: "prod_3", 
-    name: "The Innovator's Playbook", 
-    brand: "Akili Hub", 
+    name: "Slim Fit Black Jeans", 
+    brand: "Colman Looks", 
     price: 35000, 
-    category: "Education",
-    imageUrl: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=2112" 
+    category: "Denim",
+    imageUrl: "https://images.unsplash.com/photo-1542272604-787c3835535d?q=80&w=800" 
   },
   { 
     id: "prod_4", 
-    name: "Heavyweight Street Tee", 
+    name: "Heavyweight Street Hoodie", 
+    brand: "Urban TZ", 
+    price: 30000, 
+    category: "Outerwear",
+    imageUrl: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=800" 
+  },
+  { 
+    id: "prod_5", 
+    name: "Leather Chelsea Boots", 
     brand: "Colman Looks", 
-    price: 25000, 
-    category: "Fashion",
-    imageUrl: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=1974" 
+    price: 85000, 
+    category: "Footwear",
+    imageUrl: "https://images.unsplash.com/photo-1499013819532-e4ff41b00669?q=80&w=800" 
+  },
+  { 
+    id: "prod_6", 
+    name: "Minimalist Silver Watch", 
+    brand: "Luxe Time", 
+    price: 55000, 
+    category: "Accessories",
+    imageUrl: "https://images.unsplash.com/photo-1622434641406-a158123450f9?q=80&w=800" 
   }
 ];
 
 export default function McCollinsGroupAmazon() {
   const [products, setProducts] = useState<any[]>([]);
-  
-  // NEW: Search & Filter States
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
-  // YOUR OFFICIAL BUSINESS DETAILS
-  const WHATSAPP_NUMBER = "255700000000"; // Update to your real number
+  const WHATSAPP_NUMBER = "255700000000"; 
 
   useEffect(() => {
     async function fetchProducts() {
@@ -63,21 +76,20 @@ export default function McCollinsGroupAmazon() {
         if (!res.ok) throw new Error("API Connection Failed");
         const data = await res.json();
         
-        if (data.length === 0) {
+        // Temporarily forcing the display inventory so you can see the new layout
+        // Once you update your Supabase with men's clothes, change this back!
+        if (data.length === 0 || true) { 
           setProducts(displayInventory);
         } else {
           setProducts(data);
         }
       } catch (error) {
-        console.error("McCollins Debug: Using display data due to DB error.", error);
         setProducts(displayInventory);
       }
     }
     fetchProducts();
   }, []);
 
-  // NEW: The Filtering Logic
-  // This runs instantly every time a user types a letter or changes the dropdown
   const displayedProducts = products.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           product.brand.toLowerCase().includes(searchQuery.toLowerCase());
@@ -89,35 +101,33 @@ export default function McCollinsGroupAmazon() {
 
   const handleWhatsAppOrder = (pName: string, pPrice: any) => {
     const formattedPrice = Number(pPrice || 0).toLocaleString();
-    const msg = `Hujambo McCollins Group! Natamani kuagiza ${pName} ya Tsh ${formattedPrice}. Ipo store?`;
+    const msg = `Hujambo McCollins! Natamani kuagiza hii: ${pName} ya Tsh ${formattedPrice}. Ipo store?`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
   const handleGeneralSupport = () => {
-    const msg = `Hujambo McCollins Group! Nina swali kuhusu huduma zenu.`;
+    const msg = `Hujambo McCollins! Nina swali kuhusu nguo zenu.`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
   return (
     <div className="min-h-screen bg-[#EAEDED] font-sans text-[#0F1111] relative">
       
-      {/* NEW: Floating WhatsApp Live Chat Bubble */}
+      {/* WhatsApp Live Chat Bubble */}
       <div className="fixed bottom-6 right-6 z-50">
         <button 
           onClick={handleGeneralSupport}
           className="bg-[#25D366] hover:bg-[#128C7E] text-white p-4 rounded-full shadow-2xl transition-transform transform hover:scale-110 flex items-center justify-center group relative"
         >
           <MessageCircle className="w-8 h-8" />
-          {/* Tooltip that shows on hover */}
           <span className="absolute right-16 bg-white text-[#0F1111] text-xs font-bold px-3 py-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-            Chat with us live!
+            Chat with a stylist!
           </span>
         </button>
       </div>
 
-      {/* 1. AMAZON STYLE MAIN NAVBAR */}
+      {/* NAVBAR */}
       <nav className="bg-[#131921] text-white flex flex-col md:flex-row items-center px-4 py-2 gap-4">
-        
         <div className="flex items-center justify-between w-full md:w-auto gap-4">
           <Link href="/" className="flex items-center border border-transparent hover:border-white p-1 rounded">
             <h1 className="text-2xl font-bold tracking-tighter">
@@ -134,23 +144,25 @@ export default function McCollinsGroupAmazon() {
           </div>
         </div>
 
-        {/* UPDATED: Dynamic Search Bar */}
+        {/* Dynamic Search Bar */}
         <div className="flex flex-1 w-full rounded-md overflow-hidden bg-white h-10 focus-within:ring-4 focus-within:ring-[#f90] focus-within:ring-opacity-50">
           <select 
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
             className="bg-gray-100 border-r border-gray-300 text-black text-xs px-2 outline-none cursor-pointer hidden md:block w-auto"
           >
-            <option value="All">All</option>
-            <option value="Fashion">Fashion</option>
-            <option value="Food">Food</option>
-            <option value="Education">Education</option>
+            <option value="All">All Men's</option>
+            <option value="Shirts">Shirts & Tees</option>
+            <option value="Denim">Jeans & Denim</option>
+            <option value="Outerwear">Jackets & Outerwear</option>
+            <option value="Footwear">Shoes & Boots</option>
+            <option value="Accessories">Accessories</option>
           </select>
           <input 
             type="text" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search McCollins" 
+            placeholder="Search shirts, jackets, jeans..." 
             className="flex-1 px-3 text-black outline-none w-full"
           />
           <button className="bg-[#febd69] hover:bg-[#f3a847] px-4 flex items-center justify-center transition-colors">
@@ -164,100 +176,102 @@ export default function McCollinsGroupAmazon() {
             <span className="font-bold">Account & Dashboard</span>
           </Link>
           
-          <div className="flex flex-col border border-transparent hover:border-white p-2 rounded leading-tight cursor-pointer">
-            <span className="text-xs font-normal">Returns</span>
-            <span className="font-bold">& Orders</span>
-          </div>
-
           <div className="flex items-end border border-transparent hover:border-white p-2 rounded cursor-pointer relative">
             <ShoppingCart className="w-8 h-8" />
             <span className="absolute top-1 left-[22px] text-[#f08804] font-bold text-sm">
-              {displayedProducts.length} {/* Updates cart number to match search results! */}
+              {displayedProducts.length} 
             </span>
             <span className="font-bold ml-1 hidden lg:block">Cart</span>
           </div>
         </div>
       </nav>
 
-      {/* Secondary Nav Bar */}
       <div className="bg-[#232F3E] text-white px-4 py-1 flex items-center gap-4 text-sm font-medium">
         <button className="flex items-center gap-1 border border-transparent hover:border-white p-1 rounded">
           <Menu className="w-5 h-5" /> All
         </button>
-        <span className="cursor-pointer border border-transparent hover:border-white p-1 rounded hidden md:inline">Today's Deals</span>
+        <span className="cursor-pointer border border-transparent hover:border-white p-1 rounded hidden md:inline">New Arrivals</span>
+        <span className="cursor-pointer border border-transparent hover:border-white p-1 rounded hidden md:inline">Best Sellers</span>
         <span className="cursor-pointer border border-transparent hover:border-white p-1 rounded hidden md:inline">Customer Service</span>
       </div>
 
-      {/* 2. HERO CAROUSEL BACKGROUND */}
-      <div className="relative w-full h-[300px] md:h-[400px] bg-gradient-to-r from-blue-100 to-teal-100 overflow-hidden">
+      {/* MASCULINE HERO BANNER */}
+      <div className="relative w-full h-[300px] md:h-[400px] bg-gray-900 overflow-hidden">
         <img 
-          src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=2070" 
-          alt="Hero Banner" 
-          className="absolute inset-0 w-full h-full object-cover opacity-70 mix-blend-multiply"
+          src="https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?q=80&w=2071" 
+          alt="Men's Fashion Banner" 
+          className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay"
         />
+        <div className="absolute top-1/4 left-10 md:left-20 text-white z-20">
+          <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-2">Elevate Your<br/>Everyday Look.</h2>
+          <p className="text-lg text-gray-200">Premium menswear curated for Tanzania.</p>
+        </div>
         <div className="absolute bottom-0 w-full h-48 bg-gradient-to-t from-[#EAEDED] to-transparent z-10"></div>
       </div>
 
-      {/* 3. THE AMAZON OVERLAPPING GRID */}
+      {/* OVERLAPPING GRID */}
       <div className="max-w-[1500px] mx-auto px-4 sm:px-6 relative z-20 -mt-32 md:-mt-64 mb-10">
         
-        {/* Only show category cards if the user IS NOT searching. If they are searching, get straight to the products! */}
         {searchQuery === "" && selectedCategory === "All" && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
+            
+            {/* Card 1 */}
             <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm">
-              <h2 className="text-xl font-bold mb-4">Elevate your Style</h2>
-              <div className="flex-grow relative mb-4 cursor-pointer" onClick={() => setSelectedCategory("Fashion")}>
-                <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000" className="absolute inset-0 w-full h-full object-cover" alt="Fashion" />
+              <h2 className="text-xl font-bold mb-4">Latest Arrivals</h2>
+              <div className="flex-grow relative mb-4 cursor-pointer" onClick={() => setSelectedCategory("Outerwear")}>
+                <img src="https://images.unsplash.com/photo-1617137968427-85924c800a22?q=80&w=1000" className="absolute inset-0 w-full h-full object-cover object-top" alt="Latest Men's Fashion" />
               </div>
-              <button onClick={() => setSelectedCategory("Fashion")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium">
-                Shop Colman Looks
+              <button onClick={() => setSelectedCategory("Outerwear")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium">
+                Shop the new collection
               </button>
             </div>
 
+            {/* Card 2: 4-Grid Layout for Categories */}
             <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm">
-              <h2 className="text-xl font-bold mb-4">Fresh Organic Groceries</h2>
-              <div className="flex-grow grid grid-cols-2 gap-4 mb-4" onClick={() => setSelectedCategory("Food")}>
-                 <div className="flex flex-col cursor-pointer"><img src="https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?q=80&w=500" className="h-28 object-cover mb-1" alt="Veg" /><span className="text-xs">Vegetables</span></div>
-                 <div className="flex flex-col cursor-pointer"><img src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?q=80&w=500" className="h-28 object-cover mb-1" alt="Fruits" /><span className="text-xs">Fresh Fruits</span></div>
-                 <div className="flex flex-col cursor-pointer"><img src="https://images.unsplash.com/photo-1596040033229-a9821ebd058d?q=80&w=500" className="h-28 object-cover mb-1" alt="Spices" /><span className="text-xs">Spices</span></div>
-                 <div className="flex flex-col cursor-pointer"><img src="https://images.unsplash.com/photo-1506084868230-bb9d95c24759?q=80&w=500" className="h-28 object-cover mb-1" alt="Grains" /><span className="text-xs">Grains</span></div>
+              <h2 className="text-xl font-bold mb-4">Wardrobe Essentials</h2>
+              <div className="flex-grow grid grid-cols-2 gap-4 mb-4">
+                 <div className="flex flex-col cursor-pointer" onClick={() => setSelectedCategory("Shirts")}><img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=500" className="h-28 object-cover mb-1" alt="Shirts" /><span className="text-xs">Shirts & Tees</span></div>
+                 <div className="flex flex-col cursor-pointer" onClick={() => setSelectedCategory("Denim")}><img src="https://images.unsplash.com/photo-1542272604-787c3835535d?q=80&w=500" className="h-28 object-cover mb-1" alt="Denim" /><span className="text-xs">Denim</span></div>
+                 <div className="flex flex-col cursor-pointer" onClick={() => setSelectedCategory("Outerwear")}><img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=500" className="h-28 object-cover mb-1" alt="Outerwear" /><span className="text-xs">Jackets</span></div>
+                 <div className="flex flex-col cursor-pointer" onClick={() => setSelectedCategory("Footwear")}><img src="https://images.unsplash.com/photo-1499013819532-e4ff41b00669?q=80&w=500" className="h-28 object-cover mb-1" alt="Footwear" /><span className="text-xs">Shoes</span></div>
               </div>
-              <button onClick={() => setSelectedCategory("Food")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium">
-                Explore Nataka Afya
+              <button onClick={() => setSelectedCategory("All")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium">
+                Shop all categories
               </button>
             </div>
 
+            {/* Card 3 */}
             <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm">
-              <h2 className="text-xl font-bold mb-4">Learn and Grow</h2>
-              <div className="flex-grow relative mb-4 cursor-pointer" onClick={() => setSelectedCategory("Education")}>
-                <img src="https://images.unsplash.com/photo-1524901548305-08eeddc35080?q=80&w=1000" className="absolute inset-0 w-full h-full object-cover" alt="Education" />
+              <h2 className="text-xl font-bold mb-4">Accessories & Gear</h2>
+              <div className="flex-grow relative mb-4 cursor-pointer" onClick={() => setSelectedCategory("Accessories")}>
+                <img src="https://images.unsplash.com/photo-1622434641406-a158123450f9?q=80&w=1000" className="absolute inset-0 w-full h-full object-cover" alt="Accessories" />
               </div>
-              <button onClick={() => setSelectedCategory("Education")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium">
-                Visit Akili Hub
+              <button onClick={() => setSelectedCategory("Accessories")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium">
+                Shop watches & more
               </button>
             </div>
 
+            {/* Card 4 */}
             <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm">
               <h2 className="text-xl font-bold mb-4">Sign in for the best experience</h2>
               <Link href="/admin" className="w-full bg-[#FFD814] hover:bg-[#F7CA00] border border-[#FCD200] text-[#0F1111] text-sm py-2 rounded-lg text-center font-medium shadow-sm mb-4">
                 Sign in securely
               </Link>
               <div className="flex-grow relative mt-2 cursor-pointer border-t border-gray-200 pt-4">
-                <img src="https://images.unsplash.com/photo-1607082349566-187342175e2f?q=80&w=1000" className="absolute inset-0 w-full h-full object-cover mt-4" alt="Promo" />
+                <img src="https://images.unsplash.com/photo-1607083206968-13611e3d76db?q=80&w=1000" className="absolute inset-0 w-full h-full object-cover mt-4 rounded" alt="Promo" />
               </div>
             </div>
           </div>
         )}
 
-        {/* 4. DYNAMIC PRODUCT INVENTORY */}
+        {/* DYNAMIC PRODUCT INVENTORY */}
         <div className="bg-white p-5 shadow-sm min-h-[400px]">
           <div className="flex items-end gap-4 mb-6 pb-2 border-b border-gray-200">
             <h2 className="text-2xl font-bold text-[#0F1111]">
-              {searchQuery !== "" ? `Results for "${searchQuery}"` : selectedCategory !== "All" ? `${selectedCategory} Inventory` : "Discover our inventory"}
+              {searchQuery !== "" ? `Results for "${searchQuery}"` : selectedCategory !== "All" ? `${selectedCategory} Collection` : "Discover our inventory"}
             </h2>
             <span className="text-gray-500 text-sm mb-1">{displayedProducts.length} items</span>
             
-            {/* Clear Filters Button */}
             {(searchQuery !== "" || selectedCategory !== "All") && (
               <button 
                 onClick={() => { setSearchQuery(""); setSelectedCategory("All"); }}
@@ -296,20 +310,14 @@ export default function McCollinsGroupAmazon() {
             </div>
           )}
         </div>
-
       </div>
 
-      {/* 5. AMAZON FOOTER */}
+      {/* FOOTER */}
       <footer className="mt-10">
         <div className="bg-[#37475A] hover:bg-[#485769] text-white text-center py-4 text-[13px] font-medium cursor-pointer transition-colors" onClick={() => window.scrollTo(0, 0)}>
           Back to top
         </div>
         <div className="bg-[#232F3E] py-10 text-center text-gray-300 text-sm">
-          <div className="flex justify-center gap-8 mb-6 font-medium">
-            <span className="hover:underline cursor-pointer">Conditions of Use</span>
-            <span className="hover:underline cursor-pointer">Privacy Notice</span>
-            <span className="hover:underline cursor-pointer">Help</span>
-          </div>
           <p>© 2026, McCollins Group International, or its affiliates</p>
         </div>
       </footer>
