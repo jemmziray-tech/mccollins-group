@@ -1,5 +1,3 @@
-// prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,22 +5,22 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL") // <-- ADD THIS LINE!
+  directUrl = env("DIRECT_URL")
 }
 
-// --- USERS ---
+// --- USERS (For Authentication) ---
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   password  String   
   name      String?
-  role      String   @default("CUSTOMER") // "CUSTOMER" or "ADMIN"
-  orders    Order[]  // A user can have many orders
+  role      String   @default("CUSTOMER") // Can be "CUSTOMER" or "ADMIN"
+  orders    Order[]  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-// --- PRODUCTS ---
+// --- PRODUCTS (The Inventory) ---
 model Product {
   id          String      @id @default(cuid())
   name        String
@@ -30,29 +28,36 @@ model Product {
   price       Float
   brand       String   
   imageUrl    String
-  orderItems  OrderItem[] // A product can be in many different orders
-  createdAt   DateTime    @default(now())
-}
-
-// --- ORDERS (The New Addition!) ---
-model Order {
-  id          String      @id @default(cuid())
-  userId      String
-  user        User        @relation(fields: [userId], references: [id])
-  items       OrderItem[] // An order contains multiple items
-  totalAmount Float
-  status      String      @default("PENDING") // PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED
+  category    String      @default("Uncategorized")
+  sizeType    String      @default("none") // "clothing", "shoes", or "none"
+  isAvailable Boolean     @default(true)
+  orderItems  OrderItem[] 
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }
 
-// --- ORDER ITEMS (The Bridge between Orders and Products) ---
+// --- ORDERS (Customer Purchases) ---
+model Order {
+  id            String      @id @default(cuid())
+  userId        String?     // Optional for guest checkouts
+  user          User?       @relation(fields: [userId], references: [id])
+  customerName  String?    
+  customerPhone String?
+  items         OrderItem[] 
+  totalAmount   Float
+  status        String      @default("PENDING")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+// --- ORDER ITEMS (What's inside the order) ---
 model OrderItem {
-  id        String   @id @default(cuid())
-  orderId   String
-  order     Order    @relation(fields: [orderId], references: [id])
-  productId String
-  product   Product  @relation(fields: [productId], references: [id])
-  quantity  Int
-  priceAtPurchase Float // We save the price here in case the product price changes later!
+  id              String   @id @default(cuid())
+  orderId         String
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id])
+  quantity        Int
+  size            String?  // Saves the specific size they ordered (e.g., "XL")
+  priceAtPurchase Float    // Freezes the price in case you change it later
 }
