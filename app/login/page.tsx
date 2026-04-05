@@ -21,7 +21,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] flex flex-col items-center justify-center p-4 selection:bg-[#febd69] selection:text-black">
+    <div className="min-h-screen bg-[#F3F4F6] flex flex-col items-center justify-center p-4 selection:bg-[#febd69] selection:text-black animate-in fade-in duration-300 ease-in-out">
       
       {/* Distraction-Free Logo */}
       <Link href="/" className="mb-8 hover:opacity-80 transition-opacity">
@@ -31,7 +31,7 @@ export default function LoginPage() {
       </Link>
 
       {/* Main Auth Card */}
-      <div className="w-full max-w-[400px] bg-white rounded-2xl shadow-xl border border-gray-100 p-8 animate-in fade-in zoom-in-95 duration-300">
+      <div className="w-full max-w-[400px] bg-white rounded-2xl shadow-xl border border-gray-100 p-8 animate-in zoom-in-95 duration-200">
         
         <h2 className="text-2xl font-bold text-gray-900 mb-6">
           {isLogin ? "Sign in" : "Create account"}
@@ -53,7 +53,8 @@ export default function LoginPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="First and last name"
-                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#f08804] focus:border-[#f08804] outline-none transition-all sm:text-sm"
+                  // visibility fix: added 'placeholder:text-gray-500' 
+                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 placeholder:text-gray-500 rounded-lg focus:ring-2 focus:ring-[#f08804] focus:border-[#f08804] outline-none transition-all sm:text-sm text-gray-900"
                 />
               </div>
             </div>
@@ -72,7 +73,8 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#f08804] focus:border-[#f08804] outline-none transition-all sm:text-sm"
+                // visibility fix: added 'placeholder:text-gray-500'
+                className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 placeholder:text-gray-500 rounded-lg focus:ring-2 focus:ring-[#f08804] focus:border-[#f08804] outline-none transition-all sm:text-sm text-gray-900"
               />
             </div>
           </div>
@@ -97,7 +99,8 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={isLogin ? "Enter your password" : "At least 6 characters"}
-                className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#f08804] focus:border-[#f08804] outline-none transition-all sm:text-sm"
+                // visibility fix: added 'placeholder:text-gray-500' and 'text-gray-900'
+                className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 placeholder:text-gray-500 rounded-lg focus:ring-2 focus:ring-[#f08804] focus:border-[#f08804] outline-none transition-all sm:text-sm text-gray-900"
               />
               <button
                 type="button"
