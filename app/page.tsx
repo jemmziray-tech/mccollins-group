@@ -16,6 +16,9 @@ import {
 // IMPORT THE GLOBAL BRAIN!
 import { useCart } from "./context/CartContext";
 
+// IMPORT THE NEW MODERN FOOTER
+import Footer from "@/components/footer"; 
+
 // --- CURATED MEN'S FASHION INVENTORY ---
 const displayInventory = [
   { 
@@ -443,14 +446,8 @@ export default function McCollinsGroupAmazon() {
         </div>
       </div>
 
-      <footer className="mt-10">
-        <div className="bg-[#37475A] hover:bg-[#485769] text-white text-center py-4 text-[13px] font-medium cursor-pointer transition-colors" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          Back to top
-        </div>
-        <div className="bg-[#232F3E] py-10 text-center text-gray-300 text-sm">
-          <p>© 2026, McCollins Group International, or its affiliates</p>
-        </div>
-      </footer>
+      {/* --- YOUR NEW MODERN FOOTER REPLACES THE OLD ONE --- */}
+      <Footer />
 
     </div>
   );
