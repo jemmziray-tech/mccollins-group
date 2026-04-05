@@ -16,6 +16,9 @@ import {
 // IMPORT THE GLOBAL BRAIN!
 import { useCart } from "./context/CartContext";
 
+// IMPORT AI ASSISTANT
+import FashionAssistant from "./components/FashionAssistant";
+
 // IMPORT THE NEW MODERN FOOTER
 import Footer from "./components/SiteFooter"; 
 
@@ -449,6 +452,7 @@ export default function McCollinsGroupAmazon() {
       {/* --- YOUR NEW MODERN FOOTER REPLACES THE OLD ONE --- */}
       <Footer />
 
+        <FashionAssistant />
     </div>
   );
 }
