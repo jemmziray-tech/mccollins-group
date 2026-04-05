@@ -9,7 +9,7 @@ import {
   MapPin,
   MessageCircle,
   X,
-  Trash2, // Added for the cart delete button
+  Trash2,
   ShieldCheck
 } from "lucide-react";
 
@@ -132,7 +132,8 @@ export default function McCollinsGroupAmazon() {
   };
 
   return (
-    <div className="min-h-screen bg-[#EAEDED] font-sans text-[#0F1111] relative overflow-x-hidden">
+    {/* Added animate-in and fade-in for smooth app-like page transitions */}
+    <div className="min-h-screen bg-[#EAEDED] font-sans text-[#0F1111] relative overflow-x-hidden animate-in fade-in duration-500 ease-in-out">
       
       {/* --- THE CART DRAWER (SLIDES FROM RIGHT) --- */}
       <div 
@@ -165,7 +166,7 @@ export default function McCollinsGroupAmazon() {
           ) : (
             <div className="space-y-6">
               {cart.map((item, index) => (
-                <div key={index} className="flex gap-4">
+                <div key={index} className="flex gap-4 animate-in slide-in-from-right-4 duration-300">
                   <div className="w-20 h-20 bg-gray-100 rounded overflow-hidden flex-shrink-0">
                     <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover mix-blend-multiply" />
                   </div>
@@ -189,7 +190,7 @@ export default function McCollinsGroupAmazon() {
 
         {/* Drawer Footer (Checkout) */}
         {cart.length > 0 && (
-          <div className="p-5 border-t border-gray-200 bg-gray-50">
+          <div className="p-5 border-t border-gray-200 bg-gray-50 animate-in slide-in-from-bottom-4 duration-300">
             <div className="flex justify-between items-center mb-4">
               <span className="font-medium text-gray-600">Subtotal</span>
               <span className="text-xl font-bold text-gray-900">Tsh {cartTotal.toLocaleString()}</span>
@@ -264,72 +265,80 @@ export default function McCollinsGroupAmazon() {
         </button>
       </div>
 
-      {/* STICKY NAVBAR */}
-      <nav className="bg-[#131921] text-white flex flex-col md:flex-row items-center px-4 py-2 gap-4 sticky top-0 z-50 shadow-md">
-        <div className="flex items-center justify-between w-full md:w-auto gap-4">
-          <Link href="/" className="flex items-center border border-transparent hover:border-white p-1 rounded">
+      {/* STICKY NAVBAR (MOBILE & DESKTOP FRIENDLY) */}
+      <nav className="bg-[#131921] text-white flex flex-col px-4 py-3 gap-3 sticky top-0 z-50 shadow-md transition-all duration-300">
+        
+        {/* Top Row: Logo, Admin, and Cart */}
+        <div className="flex items-center justify-between w-full">
+          {/* Left: Logo */}
+          <Link href="/" className="flex items-center border border-transparent hover:border-white p-1 rounded transition-colors duration-200">
             <h1 className="text-2xl font-bold tracking-tighter">
               McCollins<span className="text-[#febd69]">.</span>
             </h1>
           </Link>
-          
-          <div className="hidden lg:flex items-center border border-transparent hover:border-white p-1 rounded cursor-pointer">
+
+          {/* Right: Admin & Cart (Now ALWAYS visible) */}
+          <div className="flex items-center gap-4">
+            <Link href="/admin" className="text-sm font-medium hover:text-[#febd69] transition-colors duration-200">
+              Admin
+            </Link>
+            
+            <div onClick={() => setIsCartOpen(true)} className="flex items-center relative cursor-pointer border border-transparent hover:border-white p-1 rounded transition-colors duration-200">
+              <ShoppingCart className="w-7 h-7" />
+              {/* Floating Cart Number Badge */}
+              <span className="absolute -top-1 -right-1 bg-[#f08804] text-[#0F1111] text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                {cartCount} 
+              </span>
+              <span className="font-bold ml-1 hidden lg:block">Cart</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Row: Delivery (Desktop only) + Search Bar */}
+        <div className="flex items-center gap-4 w-full">
+          <div className="hidden lg:flex items-center border border-transparent hover:border-white p-1 rounded cursor-pointer flex-shrink-0 transition-colors duration-200">
             <MapPin className="w-5 h-5 text-gray-300 mr-1 mt-2" />
             <div className="flex flex-col text-sm leading-tight">
               <span className="text-[#CCCCCC] text-[11px]">Deliver to</span>
               <span className="font-bold">Tanzania</span>
             </div>
           </div>
-        </div>
 
-        <div className="flex flex-1 w-full rounded-md overflow-hidden bg-white h-10 focus-within:ring-4 focus-within:ring-[#f90] focus-within:ring-opacity-50">
-          <select 
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="bg-gray-100 border-r border-gray-300 text-black text-xs px-2 outline-none cursor-pointer hidden md:block w-auto font-medium"
-          >
-            <option value="All">All Men's</option>
-            <option value="Shirts">Shirts & Tees</option>
-            <option value="Denim">Jeans & Denim</option>
-            <option value="Outerwear">Jackets & Outerwear</option>
-            <option value="Footwear">Shoes & Boots</option>
-            <option value="Accessories">Accessories</option>
-          </select>
-          <input 
-            type="text" 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search shirts, jackets, jeans..." 
-            className="flex-1 px-3 text-black outline-none w-full"
-          />
-          <button className="bg-[#febd69] hover:bg-[#f3a847] px-4 flex items-center justify-center transition-colors">
-            <Search className="w-5 h-5 text-slate-900" />
-          </button>
-        </div>
-
-        <div className="hidden md:flex items-center gap-2 text-sm">
-          <Link href="/admin" className="flex flex-col border border-transparent hover:border-white p-2 rounded leading-tight">
-            <span className="text-xs font-normal">Hello, Admin</span>
-            <span className="font-bold">Account & Dashboard</span>
-          </Link>
-          
-          <div onClick={() => setIsCartOpen(true)} className="flex items-end border border-transparent hover:border-white p-2 rounded cursor-pointer relative">
-            <ShoppingCart className="w-8 h-8" />
-            <span className="absolute top-1 left-[22px] text-[#f08804] font-bold text-sm">
-              {cartCount} 
-            </span>
-            <span className="font-bold ml-1 hidden lg:block">Cart</span>
+          {/* Search Input */}
+          <div className="flex flex-1 w-full rounded-md overflow-hidden bg-white h-10 focus-within:ring-4 focus-within:ring-[#f90] focus-within:ring-opacity-50 transition-all duration-200">
+            <select 
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="bg-gray-100 border-r border-gray-300 text-black text-xs px-2 outline-none cursor-pointer hidden md:block w-auto font-medium"
+            >
+              <option value="All">All Men's</option>
+              <option value="Shirts">Shirts & Tees</option>
+              <option value="Denim">Jeans & Denim</option>
+              <option value="Outerwear">Jackets & Outerwear</option>
+              <option value="Footwear">Shoes & Boots</option>
+              <option value="Accessories">Accessories</option>
+            </select>
+            <input 
+              type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search shirts, jackets, jeans..." 
+              className="flex-1 px-3 text-black outline-none w-full"
+            />
+            <button className="bg-[#febd69] hover:bg-[#f3a847] px-4 flex items-center justify-center transition-colors duration-200">
+              <Search className="w-5 h-5 text-slate-900" />
+            </button>
           </div>
         </div>
       </nav>
 
       <div className="bg-[#232F3E] text-white px-4 py-1 flex items-center gap-4 text-sm font-medium">
-        <button className="flex items-center gap-1 border border-transparent hover:border-white p-1 rounded">
+        <button className="flex items-center gap-1 border border-transparent hover:border-white p-1 rounded transition-colors duration-200">
           <Menu className="w-5 h-5" /> All
         </button>
-        <span className="cursor-pointer border border-transparent hover:border-white p-1 rounded hidden md:inline">New Arrivals</span>
-        <span className="cursor-pointer border border-transparent hover:border-white p-1 rounded hidden md:inline">Best Sellers</span>
-        <span className="cursor-pointer border border-transparent hover:border-white p-1 rounded hidden md:inline">Customer Service</span>
+        <span className="cursor-pointer border border-transparent hover:border-white p-1 rounded hidden md:inline transition-colors duration-200">New Arrivals</span>
+        <span className="cursor-pointer border border-transparent hover:border-white p-1 rounded hidden md:inline transition-colors duration-200">Best Sellers</span>
+        <span className="cursor-pointer border border-transparent hover:border-white p-1 rounded hidden md:inline transition-colors duration-200">Customer Service</span>
       </div>
 
       {/* MASCULINE HERO BANNER */}
@@ -337,9 +346,9 @@ export default function McCollinsGroupAmazon() {
         <img 
           src="https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?q=80&w=2071" 
           alt="Men's Fashion Banner" 
-          className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay"
+          className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay animate-in zoom-in-105 duration-1000 ease-out"
         />
-        <div className="absolute top-1/4 left-10 md:left-20 text-white z-20">
+        <div className="absolute top-1/4 left-10 md:left-20 text-white z-20 animate-in slide-in-from-left-8 duration-700 delay-150 fill-mode-both">
           <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-2">Elevate Your<br/>Everyday Look.</h2>
           <p className="text-lg text-gray-200">Premium menswear curated for Tanzania.</p>
         </div>
@@ -351,45 +360,45 @@ export default function McCollinsGroupAmazon() {
         
         {searchQuery === "" && selectedCategory === "All" && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
-            <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm">
+            <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm hover:shadow-md transition-shadow duration-300">
               <h2 className="text-xl font-bold mb-4">Latest Arrivals</h2>
-              <div className="flex-grow relative mb-4 cursor-pointer" onClick={() => setSelectedCategory("Outerwear")}>
-                <img src="https://images.unsplash.com/photo-1617137968427-85924c800a22?q=80&w=1000" className="absolute inset-0 w-full h-full object-cover object-top" alt="Latest Men's Fashion" />
+              <div className="flex-grow relative mb-4 cursor-pointer overflow-hidden rounded group" onClick={() => setSelectedCategory("Outerwear")}>
+                <img src="https://images.unsplash.com/photo-1617137968427-85924c800a22?q=80&w=1000" className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105" alt="Latest Men's Fashion" />
               </div>
-              <button onClick={() => setSelectedCategory("Outerwear")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium">Shop the new collection</button>
+              <button onClick={() => setSelectedCategory("Outerwear")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium transition-colors">Shop the new collection</button>
             </div>
 
-            <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm">
+            <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm hover:shadow-md transition-shadow duration-300">
               <h2 className="text-xl font-bold mb-4">Wardrobe Essentials</h2>
               <div className="flex-grow grid grid-cols-2 gap-4 mb-4">
-                 <div className="flex flex-col cursor-pointer" onClick={() => setSelectedCategory("Shirts")}><img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=500" className="h-28 object-cover mb-1" alt="Shirts" /><span className="text-xs">Shirts & Tees</span></div>
-                 <div className="flex flex-col cursor-pointer" onClick={() => setSelectedCategory("Denim")}><img src="https://images.unsplash.com/photo-1542272604-787c3835535d?q=80&w=500" className="h-28 object-cover mb-1" alt="Denim" /><span className="text-xs">Denim</span></div>
-                 <div className="flex flex-col cursor-pointer" onClick={() => setSelectedCategory("Outerwear")}><img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=500" className="h-28 object-cover mb-1" alt="Outerwear" /><span className="text-xs">Jackets</span></div>
-                 <div className="flex flex-col cursor-pointer" onClick={() => setSelectedCategory("Footwear")}><img src="https://images.unsplash.com/photo-1499013819532-e4ff41b00669?q=80&w=500" className="h-28 object-cover mb-1" alt="Footwear" /><span className="text-xs">Shoes</span></div>
+                 <div className="flex flex-col cursor-pointer group" onClick={() => setSelectedCategory("Shirts")}><div className="overflow-hidden rounded mb-1 h-28"><img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=500" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" alt="Shirts" /></div><span className="text-xs group-hover:text-[#C7511F] transition-colors">Shirts & Tees</span></div>
+                 <div className="flex flex-col cursor-pointer group" onClick={() => setSelectedCategory("Denim")}><div className="overflow-hidden rounded mb-1 h-28"><img src="https://images.unsplash.com/photo-1542272604-787c3835535d?q=80&w=500" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" alt="Denim" /></div><span className="text-xs group-hover:text-[#C7511F] transition-colors">Denim</span></div>
+                 <div className="flex flex-col cursor-pointer group" onClick={() => setSelectedCategory("Outerwear")}><div className="overflow-hidden rounded mb-1 h-28"><img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=500" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" alt="Outerwear" /></div><span className="text-xs group-hover:text-[#C7511F] transition-colors">Jackets</span></div>
+                 <div className="flex flex-col cursor-pointer group" onClick={() => setSelectedCategory("Footwear")}><div className="overflow-hidden rounded mb-1 h-28"><img src="https://images.unsplash.com/photo-1499013819532-e4ff41b00669?q=80&w=500" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" alt="Footwear" /></div><span className="text-xs group-hover:text-[#C7511F] transition-colors">Shoes</span></div>
               </div>
-              <button onClick={() => setSelectedCategory("All")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium">Shop all categories</button>
+              <button onClick={() => setSelectedCategory("All")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium transition-colors">Shop all categories</button>
             </div>
 
-            <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm">
+            <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm hover:shadow-md transition-shadow duration-300">
               <h2 className="text-xl font-bold mb-4">Accessories & Gear</h2>
-              <div className="flex-grow relative mb-4 cursor-pointer" onClick={() => setSelectedCategory("Accessories")}>
-                <img src="https://images.unsplash.com/photo-1622434641406-a158123450f9?q=80&w=1000" className="absolute inset-0 w-full h-full object-cover" alt="Accessories" />
+              <div className="flex-grow relative mb-4 cursor-pointer overflow-hidden rounded group" onClick={() => setSelectedCategory("Accessories")}>
+                <img src="https://images.unsplash.com/photo-1622434641406-a158123450f9?q=80&w=1000" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="Accessories" />
               </div>
-              <button onClick={() => setSelectedCategory("Accessories")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium">Shop watches & more</button>
+              <button onClick={() => setSelectedCategory("Accessories")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium transition-colors">Shop watches & more</button>
             </div>
 
-            <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm">
+            <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm hover:shadow-md transition-shadow duration-300">
               <h2 className="text-xl font-bold mb-4">Sign in for the best experience</h2>
-              <Link href="/admin" className="w-full bg-[#FFD814] hover:bg-[#F7CA00] border border-[#FCD200] text-[#0F1111] text-sm py-2 rounded-lg text-center font-medium shadow-sm mb-4">Sign in securely</Link>
-              <div className="flex-grow relative mt-2 cursor-pointer border-t border-gray-200 pt-4">
-                <img src="https://images.unsplash.com/photo-1607083206968-13611e3d76db?q=80&w=1000" className="absolute inset-0 w-full h-full object-cover mt-4 rounded" alt="Promo" />
+              <Link href="/admin" className="w-full bg-[#FFD814] hover:bg-[#F7CA00] border border-[#FCD200] text-[#0F1111] text-sm py-2 rounded-lg text-center font-medium shadow-sm mb-4 transition-transform active:scale-95">Sign in securely</Link>
+              <div className="flex-grow relative mt-2 cursor-pointer border-t border-gray-200 pt-4 overflow-hidden rounded group">
+                <img src="https://images.unsplash.com/photo-1607083206968-13611e3d76db?q=80&w=1000" className="absolute inset-0 w-full h-full object-cover mt-4 rounded transition-transform duration-500 group-hover:scale-105" alt="Promo" />
               </div>
             </div>
           </div>
         )}
 
         {/* DYNAMIC PRODUCT INVENTORY */}
-        <div className="bg-white p-5 shadow-sm min-h-[400px]">
+        <div className="bg-white p-5 shadow-sm min-h-[400px] rounded-sm">
           <div className="flex items-end gap-4 mb-6 pb-2 border-b border-gray-200">
             <h2 className="text-2xl font-bold text-[#0F1111]">
               {searchQuery !== "" ? `Results for "${searchQuery}"` : selectedCategory !== "All" ? `${selectedCategory} Collection` : "Discover our inventory"}
@@ -397,28 +406,33 @@ export default function McCollinsGroupAmazon() {
             <span className="text-gray-500 text-sm mb-1">{displayedProducts.length} items</span>
             
             {(searchQuery !== "" || selectedCategory !== "All") && (
-              <button onClick={() => { setSearchQuery(""); setSelectedCategory("All"); }} className="ml-auto text-[#007185] hover:text-[#C7511F] hover:underline text-sm font-medium">
+              <button onClick={() => { setSearchQuery(""); setSelectedCategory("All"); }} className="ml-auto text-[#007185] hover:text-[#C7511F] hover:underline text-sm font-medium transition-colors">
                 Clear Filters
               </button>
             )}
           </div>
           
           {displayedProducts.length === 0 ? (
-            <div className="text-center py-20">
+            <div className="text-center py-20 animate-in fade-in duration-500">
               <h3 className="text-xl font-bold text-gray-700">No products found.</h3>
               <p className="text-gray-500 mt-2">Try checking your spelling or clearing your filters.</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-              {displayedProducts.map((p: any) => (
-                <div key={p.id} onClick={() => setQuickViewProduct(p)} className="group cursor-pointer flex flex-col">
+              {displayedProducts.map((p: any, idx: number) => (
+                <div 
+                  key={p.id} 
+                  onClick={() => setQuickViewProduct(p)} 
+                  className="group cursor-pointer flex flex-col animate-in fade-in slide-in-from-bottom-4 fill-mode-both"
+                  style={{ animationDelay: `${idx * 50}ms` }}
+                >
                   <div className="bg-[#F8F8F8] h-48 w-full flex items-center justify-center mb-2 overflow-hidden rounded relative">
                     <img src={p.imageUrl} className="h-full w-full object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-105" alt={p.name} />
-                    <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                      <span className="bg-white text-gray-900 text-xs px-3 py-1 rounded shadow uppercase font-bold">Quick View</span>
+                    <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
+                      <span className="bg-white text-gray-900 text-xs px-3 py-1 rounded shadow uppercase font-bold transform translate-y-2 group-hover:translate-y-0 transition-all duration-200">Quick View</span>
                     </div>
                   </div>
-                  <h4 className="text-[14px] font-medium text-[#007185] group-hover:text-[#C7511F] line-clamp-2 leading-tight">{p.name}</h4>
+                  <h4 className="text-[14px] font-medium text-[#007185] group-hover:text-[#C7511F] line-clamp-2 leading-tight transition-colors">{p.name}</h4>
                   <div className="text-xl font-normal text-[#0F1111] mt-1">
                     <span className="text-[11px] align-top relative top-1">Tsh</span> {Number(p.price || 0).toLocaleString()}
                   </div>
@@ -430,7 +444,7 @@ export default function McCollinsGroupAmazon() {
       </div>
 
       <footer className="mt-10">
-        <div className="bg-[#37475A] hover:bg-[#485769] text-white text-center py-4 text-[13px] font-medium cursor-pointer transition-colors" onClick={() => window.scrollTo(0, 0)}>
+        <div className="bg-[#37475A] hover:bg-[#485769] text-white text-center py-4 text-[13px] font-medium cursor-pointer transition-colors" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
           Back to top
         </div>
         <div className="bg-[#232F3E] py-10 text-center text-gray-300 text-sm">
