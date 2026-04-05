@@ -8,8 +8,13 @@ import {
   Search,
   MapPin,
   MessageCircle,
-  X // Added the X icon for our new Modal
+  X,
+  Trash2, // Added for the cart delete button
+  ShieldCheck
 } from "lucide-react";
+
+// IMPORT THE GLOBAL BRAIN!
+import { useCart } from "./context/CartContext";
 
 // --- CURATED MEN'S FASHION INVENTORY ---
 const displayInventory = [
@@ -73,10 +78,10 @@ export default function McCollinsGroupAmazon() {
   const [products, setProducts] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  
-  // NEW: Modern UI States
-  const [cartCount, setCartCount] = useState(0); 
   const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
+
+  // WE NOW PULL EVERYTHING FROM THE GLOBAL CONTEXT
+  const { cart, addToCart, removeFromCart, cartTotal, cartCount, isCartOpen, setIsCartOpen } = useCart();
 
   const WHATSAPP_NUMBER = "255700000000"; 
 
@@ -106,31 +111,106 @@ export default function McCollinsGroupAmazon() {
     return matchesSearch && matchesCategory;
   });
 
-  const handleWhatsAppOrder = (pName: string, pPrice: any) => {
-    const formattedPrice = Number(pPrice || 0).toLocaleString();
-    const msg = `Hujambo McCollins! Natamani kuagiza hii: ${pName} ya Tsh ${formattedPrice}. Ipo store?`;
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
-  };
-
   const handleGeneralSupport = () => {
     const msg = `Hujambo McCollins! Nina swali kuhusu nguo zenu.`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
-  const handleAddToCart = () => {
-    setCartCount(prev => prev + 1);
-    setQuickViewProduct(null); // Close modal after adding
-    // Optional: You could add a toast notification here later!
+  // THE MASTER WHATSAPP CHECKOUT BUILDER
+  const handleMasterCheckout = () => {
+    if (cart.length === 0) return;
+    
+    let orderDetails = "Hujambo McCollins! Ninaomba ku-place order hii:\n\n";
+    
+    cart.forEach(item => {
+      orderDetails += `▪️ ${item.quantity}x ${item.name} - Tsh ${(item.price * item.quantity).toLocaleString()}\n`;
+    });
+
+    orderDetails += `\n*TOTAL: Tsh ${cartTotal.toLocaleString()}*\n\nJe, hivi vitu vyote vipo store?`;
+    
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(orderDetails)}`, "_blank");
   };
 
   return (
-    <div className="min-h-screen bg-[#EAEDED] font-sans text-[#0F1111] relative">
+    <div className="min-h-screen bg-[#EAEDED] font-sans text-[#0F1111] relative overflow-x-hidden">
       
-      {/* NEW: QUICK VIEW MODAL */}
+      {/* --- THE CART DRAWER (SLIDES FROM RIGHT) --- */}
+      <div 
+        className={`fixed inset-0 z-[200] bg-black/50 transition-opacity duration-300 ${isCartOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} 
+        onClick={() => setIsCartOpen(false)}
+      ></div>
+      
+      <div className={`fixed top-0 right-0 h-full w-full md:w-[400px] bg-white shadow-2xl z-[250] transform transition-transform duration-300 ease-in-out flex flex-col ${isCartOpen ? "translate-x-0" : "translate-x-full"}`}>
+        
+        {/* Drawer Header */}
+        <div className="p-5 flex justify-between items-center border-b border-gray-200">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <ShoppingCart className="w-5 h-5"/> Your Cart ({cartCount})
+          </h2>
+          <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <X className="w-5 h-5 text-gray-600"/>
+          </button>
+        </div>
+
+        {/* Drawer Items List */}
+        <div className="flex-1 overflow-y-auto p-5">
+          {cart.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-gray-400">
+              <ShoppingCart className="w-16 h-16 mb-4 opacity-50"/>
+              <p>Your cart is empty.</p>
+              <button onClick={() => setIsCartOpen(false)} className="mt-4 text-[#007185] hover:underline font-medium">
+                Continue shopping
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {cart.map((item, index) => (
+                <div key={index} className="flex gap-4">
+                  <div className="w-20 h-20 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover mix-blend-multiply" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-bold text-gray-900 leading-tight mb-1">{item.name}</h4>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="font-bold text-[#C7511F]">Tsh {item.price.toLocaleString()}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded">Qty: {item.quantity}</span>
+                        <button onClick={() => removeFromCart(item.id, item.size)} className="text-red-500 hover:text-red-700 transition-colors">
+                          <Trash2 className="w-4 h-4"/>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Drawer Footer (Checkout) */}
+        {cart.length > 0 && (
+          <div className="p-5 border-t border-gray-200 bg-gray-50">
+            <div className="flex justify-between items-center mb-4">
+              <span className="font-medium text-gray-600">Subtotal</span>
+              <span className="text-xl font-bold text-gray-900">Tsh {cartTotal.toLocaleString()}</span>
+            </div>
+            <button 
+              onClick={handleMasterCheckout}
+              className="w-full bg-[#FFD814] hover:bg-[#F7CA00] border border-[#FCD200] text-[#0F1111] py-3.5 rounded-xl font-bold shadow-sm flex justify-center items-center gap-2 transition-transform active:scale-95"
+            >
+              <MessageCircle className="w-5 h-5" /> Checkout via WhatsApp
+            </button>
+            <p className="text-center text-xs text-gray-500 mt-3 flex items-center justify-center gap-1">
+              <ShieldCheck className="w-3 h-3"/> Safe and secure order processing
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* QUICK VIEW MODAL */}
       {quickViewProduct && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl flex flex-col md:flex-row overflow-hidden relative animate-in fade-in zoom-in duration-200">
-            {/* Close Button */}
             <button 
               onClick={() => setQuickViewProduct(null)}
               className="absolute top-4 right-4 z-20 bg-white/80 p-1 rounded-full hover:bg-gray-200 transition-colors shadow-sm"
@@ -138,7 +218,6 @@ export default function McCollinsGroupAmazon() {
               <X className="w-6 h-6 text-gray-800" />
             </button>
 
-            {/* Product Image */}
             <div className="md:w-1/2 bg-gray-50 h-64 md:h-auto relative">
               <img 
                 src={quickViewProduct.imageUrl} 
@@ -147,7 +226,6 @@ export default function McCollinsGroupAmazon() {
               />
             </div>
 
-            {/* Product Details */}
             <div className="md:w-1/2 p-8 flex flex-col bg-white">
               <span className="text-[#007185] font-bold text-sm uppercase tracking-wider mb-2">{quickViewProduct.brand}</span>
               <h2 className="text-2xl font-bold text-gray-900 mb-2 leading-tight">{quickViewProduct.name}</h2>
@@ -161,16 +239,14 @@ export default function McCollinsGroupAmazon() {
 
               <div className="mt-auto space-y-3">
                 <button 
-                  onClick={handleAddToCart}
+                  onClick={() => {
+                    addToCart(quickViewProduct); // Adds to global cart
+                    setQuickViewProduct(null); // Closes modal
+                    setIsCartOpen(true); // Opens the drawer to show them it worked!
+                  }}
                   className="w-full bg-[#FFD814] hover:bg-[#F7CA00] border border-[#FCD200] text-[#0F1111] py-3 rounded-full font-bold shadow-sm flex justify-center items-center gap-2 transition-transform active:scale-95"
                 >
                   <ShoppingCart className="w-5 h-5" /> Add to Cart
-                </button>
-                <button 
-                  onClick={() => handleWhatsAppOrder(quickViewProduct.name, quickViewProduct.price)}
-                  className="w-full bg-white hover:bg-gray-50 border border-gray-300 text-gray-900 py-3 rounded-full font-bold shadow-sm flex justify-center items-center gap-2 transition-transform active:scale-95"
-                >
-                  <MessageCircle className="w-5 h-5" /> Buy via WhatsApp
                 </button>
               </div>
             </div>
@@ -185,9 +261,6 @@ export default function McCollinsGroupAmazon() {
           className="bg-[#25D366] hover:bg-[#128C7E] text-white p-4 rounded-full shadow-2xl transition-transform transform hover:scale-110 flex items-center justify-center group relative"
         >
           <MessageCircle className="w-8 h-8" />
-          <span className="absolute right-16 bg-white text-[#0F1111] text-xs font-bold px-3 py-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-            Chat with a stylist!
-          </span>
         </button>
       </div>
 
@@ -209,12 +282,11 @@ export default function McCollinsGroupAmazon() {
           </div>
         </div>
 
-        {/* Dynamic Search Bar */}
         <div className="flex flex-1 w-full rounded-md overflow-hidden bg-white h-10 focus-within:ring-4 focus-within:ring-[#f90] focus-within:ring-opacity-50">
           <select 
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="bg-gray-100 border-r border-gray-300 text-black text-xs px-2 outline-none cursor-pointer hidden md:block w-auto"
+            className="bg-gray-100 border-r border-gray-300 text-black text-xs px-2 outline-none cursor-pointer hidden md:block w-auto font-medium"
           >
             <option value="All">All Men's</option>
             <option value="Shirts">Shirts & Tees</option>
@@ -241,9 +313,8 @@ export default function McCollinsGroupAmazon() {
             <span className="font-bold">Account & Dashboard</span>
           </Link>
           
-          <div className="flex items-end border border-transparent hover:border-white p-2 rounded cursor-pointer relative">
+          <div onClick={() => setIsCartOpen(true)} className="flex items-end border border-transparent hover:border-white p-2 rounded cursor-pointer relative">
             <ShoppingCart className="w-8 h-8" />
-            {/* FIXED: Cart count now uses the actual state! */}
             <span className="absolute top-1 left-[22px] text-[#f08804] font-bold text-sm">
               {cartCount} 
             </span>
@@ -280,15 +351,12 @@ export default function McCollinsGroupAmazon() {
         
         {searchQuery === "" && selectedCategory === "All" && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
-            
             <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm">
               <h2 className="text-xl font-bold mb-4">Latest Arrivals</h2>
               <div className="flex-grow relative mb-4 cursor-pointer" onClick={() => setSelectedCategory("Outerwear")}>
                 <img src="https://images.unsplash.com/photo-1617137968427-85924c800a22?q=80&w=1000" className="absolute inset-0 w-full h-full object-cover object-top" alt="Latest Men's Fashion" />
               </div>
-              <button onClick={() => setSelectedCategory("Outerwear")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium">
-                Shop the new collection
-              </button>
+              <button onClick={() => setSelectedCategory("Outerwear")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium">Shop the new collection</button>
             </div>
 
             <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm">
@@ -299,9 +367,7 @@ export default function McCollinsGroupAmazon() {
                  <div className="flex flex-col cursor-pointer" onClick={() => setSelectedCategory("Outerwear")}><img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=500" className="h-28 object-cover mb-1" alt="Outerwear" /><span className="text-xs">Jackets</span></div>
                  <div className="flex flex-col cursor-pointer" onClick={() => setSelectedCategory("Footwear")}><img src="https://images.unsplash.com/photo-1499013819532-e4ff41b00669?q=80&w=500" className="h-28 object-cover mb-1" alt="Footwear" /><span className="text-xs">Shoes</span></div>
               </div>
-              <button onClick={() => setSelectedCategory("All")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium">
-                Shop all categories
-              </button>
+              <button onClick={() => setSelectedCategory("All")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium">Shop all categories</button>
             </div>
 
             <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm">
@@ -309,16 +375,12 @@ export default function McCollinsGroupAmazon() {
               <div className="flex-grow relative mb-4 cursor-pointer" onClick={() => setSelectedCategory("Accessories")}>
                 <img src="https://images.unsplash.com/photo-1622434641406-a158123450f9?q=80&w=1000" className="absolute inset-0 w-full h-full object-cover" alt="Accessories" />
               </div>
-              <button onClick={() => setSelectedCategory("Accessories")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium">
-                Shop watches & more
-              </button>
+              <button onClick={() => setSelectedCategory("Accessories")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium">Shop watches & more</button>
             </div>
 
             <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm">
               <h2 className="text-xl font-bold mb-4">Sign in for the best experience</h2>
-              <Link href="/admin" className="w-full bg-[#FFD814] hover:bg-[#F7CA00] border border-[#FCD200] text-[#0F1111] text-sm py-2 rounded-lg text-center font-medium shadow-sm mb-4">
-                Sign in securely
-              </Link>
+              <Link href="/admin" className="w-full bg-[#FFD814] hover:bg-[#F7CA00] border border-[#FCD200] text-[#0F1111] text-sm py-2 rounded-lg text-center font-medium shadow-sm mb-4">Sign in securely</Link>
               <div className="flex-grow relative mt-2 cursor-pointer border-t border-gray-200 pt-4">
                 <img src="https://images.unsplash.com/photo-1607083206968-13611e3d76db?q=80&w=1000" className="absolute inset-0 w-full h-full object-cover mt-4 rounded" alt="Promo" />
               </div>
@@ -335,10 +397,7 @@ export default function McCollinsGroupAmazon() {
             <span className="text-gray-500 text-sm mb-1">{displayedProducts.length} items</span>
             
             {(searchQuery !== "" || selectedCategory !== "All") && (
-              <button 
-                onClick={() => { setSearchQuery(""); setSelectedCategory("All"); }}
-                className="ml-auto text-[#007185] hover:text-[#C7511F] hover:underline text-sm font-medium"
-              >
+              <button onClick={() => { setSearchQuery(""); setSelectedCategory("All"); }} className="ml-auto text-[#007185] hover:text-[#C7511F] hover:underline text-sm font-medium">
                 Clear Filters
               </button>
             )}
@@ -355,7 +414,6 @@ export default function McCollinsGroupAmazon() {
                 <div key={p.id} onClick={() => setQuickViewProduct(p)} className="group cursor-pointer flex flex-col">
                   <div className="bg-[#F8F8F8] h-48 w-full flex items-center justify-center mb-2 overflow-hidden rounded relative">
                     <img src={p.imageUrl} className="h-full w-full object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-105" alt={p.name} />
-                    {/* Hover Overlay */}
                     <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                       <span className="bg-white text-gray-900 text-xs px-3 py-1 rounded shadow uppercase font-bold">Quick View</span>
                     </div>
@@ -371,7 +429,6 @@ export default function McCollinsGroupAmazon() {
         </div>
       </div>
 
-      {/* FOOTER */}
       <footer className="mt-10">
         <div className="bg-[#37475A] hover:bg-[#485769] text-white text-center py-4 text-[13px] font-medium cursor-pointer transition-colors" onClick={() => window.scrollTo(0, 0)}>
           Back to top
