@@ -17,7 +17,7 @@ import {
 import { useCart } from "./context/CartContext";
 
 // IMPORT THE NEW MODERN FOOTER
-import Footer from "@/components/footer"; 
+import Footer from "@/components/Footer"; 
 
 // --- CURATED MEN'S FASHION INVENTORY ---
 const displayInventory = [
