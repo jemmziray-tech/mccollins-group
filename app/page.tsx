@@ -261,16 +261,6 @@ export default function McCollinsGroupAmazon() {
         </div>
       )}
 
-      {/* WhatsApp Live Chat Bubble */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <button 
-          onClick={handleGeneralSupport}
-          className="bg-[#25D366] hover:bg-[#128C7E] text-white p-4 rounded-full shadow-2xl transition-transform transform hover:scale-110 flex items-center justify-center group relative"
-        >
-          <MessageCircle className="w-8 h-8" />
-        </button>
-      </div>
-
       {/* STICKY NAVBAR (MOBILE & DESKTOP FRIENDLY) */}
       <nav className="bg-[#131921] text-white flex flex-col px-4 py-3 gap-3 sticky top-0 z-50 shadow-md transition-all duration-300">
         
