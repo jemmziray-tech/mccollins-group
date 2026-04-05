@@ -132,8 +132,8 @@ export default function McCollinsGroupAmazon() {
   };
 
   return (
-    {/* Added animate-in and fade-in for smooth app-like page transitions */}
-    <div className="min-h-screen bg-[#EAEDED] font-sans text-[#0F1111] relative overflow-x-hidden animate-in fade-in duration-500 ease-in-out">
+      <div className="min-h-screen bg-[#EAEDED] font-sans text-[#0F1111] relative overflow-x-hidden animate-in fade-in duration-500 ease-in-out">
+      {/* Added animate-in and fade-in for smooth app-like page transitions */}
       
       {/* --- THE CART DRAWER (SLIDES FROM RIGHT) --- */}
       <div 
