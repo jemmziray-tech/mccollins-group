@@ -1,9 +1,10 @@
-// components/footer.tsx
+// components/SiteFooter.tsx
 import React from 'react';
+import { MapPin, Phone, Mail } from 'lucide-react';
 
 export default function Footer() {
   // Update these with your actual profile links!
-  const WHATSAPP_NUMBER = "255743924467";
+  const WHATSAPP_NUMBER = "255678405111";
   const INSTAGRAM_LINK = "https://www.instagram.com/_lwah.o?igsh=MTVha3V2a2ExdW40Mg=="; 
   const TIKTOK_LINK = "https://tiktok.com/@mccollinsgroup"; 
 
@@ -92,16 +93,16 @@ export default function Footer() {
             <h4 className="text-lg font-bold text-white mb-6 uppercase tracking-wider text-sm">Contact Us</h4>
             <ul className="space-y-4 text-gray-400">
               <li className="flex items-start">
-                <span className="text-white mr-3">📍</span>
-                Tanzania
+                <MapPin className="w-5 h-5 text-gray-400 mr-3 shrink-0 mt-0.5" />
+                <span>Tanzania</span>
               </li>
               <li className="flex items-center">
-                <span className="text-white mr-3">📞</span>
-                +255 743 924 467
+                <Phone className="w-5 h-5 text-gray-400 mr-3 shrink-0" />
+                <span>+255 743 924 467</span>
               </li>
               <li className="flex items-center">
-                <span className="text-white mr-3">✉️</span>
-                info@mccollinsgroup.com
+                <Mail className="w-5 h-5 text-gray-400 mr-3 shrink-0" />
+                <span>info@mccollinsgroup.com</span>
               </li>
             </ul>
           </div>
