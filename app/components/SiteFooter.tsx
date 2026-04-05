@@ -22,7 +22,7 @@ export default function Footer() {
                 McCollins Group
               </h3>
               <p className="text-gray-400 leading-relaxed max-w-sm">
-                Quality products across Fashion, Food, and Education. Delivering excellence to your doorstep.
+                Quality products in Fashion. Delivering excellence to your doorstep.
               </p>
             </div>
             
