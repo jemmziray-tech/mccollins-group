@@ -16,7 +16,7 @@ export default function AddProductPage() {
     brand: "",
     imageUrl: "",
     description: "",
-    category: "Shirts", // Default values matching your frontend filters
+    category: "Outerwear", // Updated default to match your screenshot!
     sizeType: "clothing", 
   });
 
@@ -31,7 +31,6 @@ export default function AddProductPage() {
       : formData.imageUrl;
 
     try {
-      // FIXED: Pointing to the correct API route we just built!
       const res = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -44,7 +43,7 @@ export default function AddProductPage() {
       
       // Clear the form for the next upload
       setFormData({
-        name: "", price: "", brand: "", imageUrl: "", description: "", category: "Shirts", sizeType: "clothing",
+        name: "", price: "", brand: "", imageUrl: "", description: "", category: "Outerwear", sizeType: "clothing",
       });
 
       // Optional: Redirect after a short delay
@@ -97,7 +96,7 @@ export default function AddProductPage() {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Product Name *</label>
                   <input required type="text" placeholder="e.g. Vintage Wash Denim Jacket"
-                    className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] transition-shadow"
+                    className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] transition-shadow text-gray-900 bg-white"
                     value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} 
                   />
                 </div>
@@ -105,7 +104,7 @@ export default function AddProductPage() {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Description</label>
                   <textarea rows={5} placeholder="Describe the product material, fit, and style..."
-                    className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] transition-shadow resize-none"
+                    className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] transition-shadow resize-none text-gray-900 bg-white"
                     value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} 
                   ></textarea>
                 </div>
@@ -121,7 +120,7 @@ export default function AddProductPage() {
                 <div className="flex-1">
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Image URL</label>
                   <input type="url" placeholder="https://images.unsplash.com/..."
-                    className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] transition-shadow"
+                    className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] transition-shadow text-gray-900 bg-white"
                     value={formData.imageUrl} onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} 
                   />
                   <p className="text-xs text-gray-500 mt-2">Paste a valid image link. Leave blank to use a placeholder.</p>
@@ -152,9 +151,9 @@ export default function AddProductPage() {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Price (Tsh) *</label>
                   <div className="relative">
-                    <span className="absolute left-3 top-2.5 text-gray-500 font-medium">Tsh</span>
+                    <span className="absolute left-3 top-2.5 text-gray-500 font-medium z-10">Tsh</span>
                     <input required type="number" placeholder="45000"
-                      className="w-full border border-gray-300 pl-12 pr-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] transition-shadow"
+                      className="w-full border border-gray-300 pl-12 pr-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] transition-shadow text-gray-900 bg-white relative"
                       value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} 
                     />
                   </div>
@@ -162,7 +161,7 @@ export default function AddProductPage() {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Brand *</label>
                   <input required type="text" placeholder="e.g. McCollins"
-                    className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] transition-shadow"
+                    className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] transition-shadow text-gray-900 bg-white"
                     value={formData.brand} onChange={(e) => setFormData({...formData, brand: e.target.value})} 
                   />
                 </div>
@@ -176,7 +175,7 @@ export default function AddProductPage() {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category</label>
                   <select 
-                    className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] bg-white"
+                    className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] text-gray-900 bg-white"
                     value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})}
                   >
                     <option value="Shirts">Shirts & Tees</option>
@@ -189,7 +188,7 @@ export default function AddProductPage() {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Size Type</label>
                   <select 
-                    className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] bg-white"
+                    className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] text-gray-900 bg-white"
                     value={formData.sizeType} onChange={(e) => setFormData({...formData, sizeType: e.target.value})}
                   >
                     <option value="clothing">Clothing (S, M, L, XL)</option>

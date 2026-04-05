@@ -83,7 +83,7 @@ export default function McCollinsGroupAmazon() {
   // WE NOW PULL EVERYTHING FROM THE GLOBAL CONTEXT
   const { cart, addToCart, removeFromCart, cartTotal, cartCount, isCartOpen, setIsCartOpen } = useCart();
 
-  const WHATSAPP_NUMBER = "255700000000"; 
+  const WHATSAPP_NUMBER = "255743924467"; 
 
   useEffect(() => {
     async function fetchProducts() {
@@ -92,7 +92,7 @@ export default function McCollinsGroupAmazon() {
         if (!res.ok) throw new Error("API Connection Failed");
         const data = await res.json();
         
-        if (data.length === 0 || true) { 
+        if (data.length === 0) { 
           setProducts(displayInventory);
         } else {
           setProducts(data);
