@@ -1,3 +1,4 @@
+// app/page.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -383,12 +384,22 @@ export default function McCollinsGroupAmazon() {
               <button onClick={() => setSelectedCategory("Accessories")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium transition-colors">Shop watches & more</button>
             </div>
 
+            {/* --- REPLACED SIGN-IN CARD WITH FOOTWEAR --- */}
             <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm hover:shadow-md transition-shadow duration-300">
-              <h2 className="text-xl font-bold mb-4">Sign in for the best experience</h2>
-              <Link href="/admin" className="w-full bg-[#FFD814] hover:bg-[#F7CA00] border border-[#FCD200] text-[#0F1111] text-sm py-2 rounded-lg text-center font-medium shadow-sm mb-4 transition-transform active:scale-95">Sign in securely</Link>
-              <div className="flex-grow relative mt-2 cursor-pointer border-t border-gray-200 pt-4 overflow-hidden rounded group">
-                <img src="https://images.unsplash.com/photo-1607083206968-13611e3d76db?q=80&w=1000" className="absolute inset-0 w-full h-full object-cover mt-4 rounded transition-transform duration-500 group-hover:scale-105" alt="Promo" />
+              <h2 className="text-xl font-bold mb-4">Trending Footwear</h2>
+              <div className="flex-grow relative mb-4 cursor-pointer overflow-hidden rounded group" onClick={() => setSelectedCategory("Footwear")}>
+                <img 
+                  src="https://images.unsplash.com/photo-1638247025967-b4e38f787b76?q=80&w=800&auto=format&fit=crop" 
+                  alt="Chelsea Boots" 
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute top-2 right-2 bg-white px-2 py-1 rounded text-xs font-bold text-gray-900 shadow-sm">
+                  Hot
+                </div>
               </div>
+              <button onClick={() => setSelectedCategory("Footwear")} className="text-left text-[#007185] hover:text-[#C7511F] hover:underline text-[13px] font-medium transition-colors">
+                Shop footwear collection
+              </button>
             </div>
           </div>
         )}
@@ -437,12 +448,28 @@ export default function McCollinsGroupAmazon() {
             </div>
           )}
         </div>
+        
+        {/* --- FULL WIDTH SIGN-IN STRIP (AMAZON STYLE) --- */}
+        <div className="w-full bg-white border-t border-b border-gray-200 mt-8 mb-8 py-8 flex flex-col items-center justify-center text-center px-4 shadow-sm rounded-sm">
+          <p className="text-sm font-medium text-gray-900 mb-2">
+            See personalized recommendations
+          </p>
+          <Link href="/login" className="w-full max-w-[240px]">
+            <button className="w-full bg-[#FFD814] hover:bg-[#F7CA00] border border-[#FCD200] text-[#0F1111] py-1.5 rounded-lg font-bold shadow-sm transition-transform active:scale-95 mb-2">
+              Sign in securely
+            </button>
+          </Link>
+          <p className="text-[11px] text-gray-600 font-medium tracking-wide">
+            New customer? <Link href="/login" className="text-[#007185] hover:text-[#C7511F] hover:underline ml-1">Start here.</Link>
+          </p>
+        </div>
+
       </div>
 
       {/* --- YOUR NEW MODERN FOOTER REPLACES THE OLD ONE --- */}
       <Footer />
 
-        <FashionAssistant />
+      <FashionAssistant />
     </div>
   );
 }
