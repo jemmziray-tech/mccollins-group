@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react"; // <-- ADDED FOR SESSION DETECTION
 import { 
   ShoppingCart, 
   Menu, 
@@ -82,6 +83,7 @@ const displayInventory = [
 ];
 
 export default function McCollinsGroupAmazon() {
+  const { data: session } = useSession(); // <-- GRAB LOGGED IN STATUS
   const [products, setProducts] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -140,7 +142,6 @@ export default function McCollinsGroupAmazon() {
 
   return (
       <div className="min-h-screen bg-[#EAEDED] font-sans text-[#0F1111] relative overflow-x-hidden animate-in fade-in duration-500 ease-in-out">
-      {/* Added animate-in and fade-in for smooth app-like page transitions */}
       
       {/* --- THE CART DRAWER (SLIDES FROM RIGHT) --- */}
       <div 
@@ -262,36 +263,8 @@ export default function McCollinsGroupAmazon() {
         </div>
       )}
 
-      {/* STICKY NAVBAR (MOBILE & DESKTOP FRIENDLY) */}
-      <nav className="bg-[#131921] text-white flex flex-col px-4 py-3 gap-3 sticky top-0 z-50 shadow-md transition-all duration-300">
-        
-        {/* Top Row: Logo, Admin, and Cart */}
-        <div className="flex items-center justify-between w-full">
-          {/* Left: Logo */}
-          <Link href="/" className="flex items-center border border-transparent hover:border-white p-1 rounded transition-colors duration-200">
-            <h1 className="text-2xl font-bold tracking-tighter">
-              McCollins<span className="text-[#febd69]">.</span>
-            </h1>
-          </Link>
-
-          {/* Right: Admin & Cart (Now ALWAYS visible) */}
-          <div className="flex items-center gap-4">
-            <Link href="/admin" className="text-sm font-medium hover:text-[#febd69] transition-colors duration-200">
-              Admin
-            </Link>
-            
-            <div onClick={() => setIsCartOpen(true)} className="flex items-center relative cursor-pointer border border-transparent hover:border-white p-1 rounded transition-colors duration-200">
-              <ShoppingCart className="w-7 h-7" />
-              {/* Floating Cart Number Badge */}
-              <span className="absolute -top-1 -right-1 bg-[#f08804] text-[#0F1111] text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
-                {cartCount} 
-              </span>
-              <span className="font-bold ml-1 hidden lg:block">Cart</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Row: Delivery (Desktop only) + Search Bar */}
+      {/* SEARCH BAR & CATEGORY NAV (Top Row Removed!) */}
+      <div className="bg-[#131921] text-white flex flex-col px-4 py-3 gap-3 shadow-md transition-all duration-300 relative z-40">
         <div className="flex items-center gap-4 w-full">
           <div className="hidden lg:flex items-center border border-transparent hover:border-white p-1 rounded cursor-pointer flex-shrink-0 transition-colors duration-200">
             <MapPin className="w-5 h-5 text-gray-300 mr-1 mt-2" />
@@ -327,7 +300,7 @@ export default function McCollinsGroupAmazon() {
             </button>
           </div>
         </div>
-      </nav>
+      </div>
 
       <div className="bg-[#232F3E] text-white px-4 py-1 flex items-center gap-4 text-sm font-medium">
         <button className="flex items-center gap-1 border border-transparent hover:border-white p-1 rounded transition-colors duration-200">
@@ -449,20 +422,22 @@ export default function McCollinsGroupAmazon() {
           )}
         </div>
         
-        {/* --- FULL WIDTH SIGN-IN STRIP (AMAZON STYLE) --- */}
-        <div className="w-full bg-white border-t border-b border-gray-200 mt-8 mb-8 py-8 flex flex-col items-center justify-center text-center px-4 shadow-sm rounded-sm">
-          <p className="text-sm font-medium text-gray-900 mb-2">
-            See personalized recommendations
-          </p>
-          <Link href="/login" className="w-full max-w-[240px]">
-            <button className="w-full bg-[#FFD814] hover:bg-[#F7CA00] border border-[#FCD200] text-[#0F1111] py-1.5 rounded-lg font-bold shadow-sm transition-transform active:scale-95 mb-2">
-              Sign in securely
-            </button>
-          </Link>
-          <p className="text-[11px] text-gray-600 font-medium tracking-wide">
-            New customer? <Link href="/login" className="text-[#007185] hover:text-[#C7511F] hover:underline ml-1">Start here.</Link>
-          </p>
-        </div>
+        {/* --- FULL WIDTH SIGN-IN STRIP (ONLY SHOWS IF LOGGED OUT) --- */}
+        {!session && (
+          <div className="w-full bg-white border-t border-b border-gray-200 mt-8 mb-8 py-8 flex flex-col items-center justify-center text-center px-4 shadow-sm rounded-sm">
+            <p className="text-sm font-medium text-gray-900 mb-2">
+              See personalized recommendations
+            </p>
+            <Link href="/login" className="w-full max-w-[240px]">
+              <button className="w-full bg-[#FFD814] hover:bg-[#F7CA00] border border-[#FCD200] text-[#0F1111] py-1.5 rounded-lg font-bold shadow-sm transition-transform active:scale-95 mb-2">
+                Sign in securely
+              </button>
+            </Link>
+            <p className="text-[11px] text-gray-600 font-medium tracking-wide">
+              New customer? <Link href="/login" className="text-[#007185] hover:text-[#C7511F] hover:underline ml-1">Start here.</Link>
+            </p>
+          </div>
+        )}
 
       </div>
 
