@@ -3,8 +3,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { signIn } from "next-auth/react"; // <-- IMPORTED NEXTAUTH
-import { Mail, Lock, User, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { signIn } from "next-auth/react";
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -14,11 +14,69 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [error, setError] = useState(""); // <-- NEW: Error state
+  const [isLoading, setIsLoading] = useState(false); // <-- NEW: Loading state
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Phase 3: We will connect Supabase Auth here for manual credentials later!
-    console.log(isLogin ? "Logging in..." : "Creating account...", { email, password, name });
+    setError("");
+    setIsLoading(true);
+
+    if (!isLogin) {
+      // --- REGISTRATION FLOW ---
+      try {
+        const res = await fetch("/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, name, password }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          setError(data.error || "Failed to register account.");
+          setIsLoading(false);
+          return;
+        }
+        
+        // If registration is successful, automatically log them in!
+        const signInRes = await signIn("credentials", {
+          email,
+          password,
+          redirect: false,
+        });
+
+        if (signInRes?.error) {
+          setError("Account created, but auto-login failed. Please log in.");
+          setIsLogin(true);
+        } else {
+          window.location.href = "/"; // Success! Go to homepage.
+        }
+
+      } catch (err) {
+        setError("Something went wrong on the server.");
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      // --- LOGIN FLOW ---
+      try {
+        const res = await signIn("credentials", {
+          email,
+          password,
+          redirect: false,
+        });
+
+        if (res?.error) {
+          setError("Invalid email or password.");
+        } else {
+          window.location.href = "/"; // Success! Go to homepage.
+        }
+      } catch (err) {
+        setError("Something went wrong.");
+      } finally {
+        setIsLoading(false);
+      }
+    }
   };
 
   return (
@@ -60,7 +118,14 @@ export default function LoginPage() {
           </span>
           <div className="flex-1 border-t border-gray-200"></div>
         </div>
-        {/* --- END GOOGLE BUTTON --- */}
+
+        {/* --- ERROR MESSAGE DISPLAY --- */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg flex items-center gap-2 text-sm font-medium animate-in fade-in">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           
@@ -138,10 +203,11 @@ export default function LoginPage() {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-[#FFD814] hover:bg-[#F7CA00] border border-[#FCD200] text-[#0F1111] py-3 rounded-lg font-bold shadow-sm flex justify-center items-center gap-2 transition-transform active:scale-95 mt-4"
+            disabled={isLoading}
+            className="w-full bg-[#FFD814] hover:bg-[#F7CA00] border border-[#FCD200] text-[#0F1111] py-3 rounded-lg font-bold shadow-sm flex justify-center items-center gap-2 transition-transform active:scale-95 mt-4 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {isLogin ? "Sign in" : "Create your McCollins account"}
-            {!isLogin && <ArrowRight className="w-4 h-4" />}
+            {isLoading ? "Please wait..." : isLogin ? "Sign in" : "Create your McCollins account"}
+            {!isLogin && !isLoading && <ArrowRight className="w-4 h-4" />}
           </button>
         </form>
 
@@ -156,7 +222,11 @@ export default function LoginPage() {
             {isLogin ? "New to McCollins?" : "Already have an account?"}
           </p>
           <button
-            onClick={() => setIsLogin(!isLogin)}
+            type="button"
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setError(""); // Clear errors when switching modes
+            }}
             className="w-full bg-white hover:bg-gray-50 border border-gray-300 text-[#0F1111] py-2.5 rounded-lg font-medium shadow-sm transition-colors"
           >
             {isLogin ? "Create your McCollins account" : "Sign in securely"}

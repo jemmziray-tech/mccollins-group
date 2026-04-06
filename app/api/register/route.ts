@@ -1,46 +1,41 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
+import bcrypt from "bcrypt";
 
 export async function POST(request: Request) {
   try {
-    // 1. Get the data from the frontend form
     const body = await request.json();
-    const { email, name, password, role } = body;
+    const { email, name, password } = body;
 
     if (!email || !name || !password) {
-      return new NextResponse("Missing information", { status: 400 });
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // 2. Check if the email is already registered
+    // 1. Check if the user already exists
     const existingUser = await prisma.user.findUnique({
-      where: {
-        email: email
-      }
+      where: { email }
     });
 
     if (existingUser) {
-      return new NextResponse("Email already exists", { status: 400 });
+      return NextResponse.json({ error: "Email already exists" }, { status: 400 });
     }
 
-    // 3. SECURE THE PASSWORD (Hash it)
-    const hashedPassword = await bcrypt.hash(password, 12);
+    // 2. Hash the password securely
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 4. Save the user to the database
+    // 3. Save the new user to the database
     const user = await prisma.user.create({
       data: {
         email,
         name,
         password: hashedPassword,
-        // If they register from the public page, force them to be a CUSTOMER
-        role: role || "CUSTOMER" 
+        // Role defaults to "CUSTOMER" based on your schema!
       }
     });
 
-    return NextResponse.json(user);
-
-  } catch (error: any) {
-    console.error("REGISTRATION_ERROR", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return NextResponse.json({ message: "User created successfully" }, { status: 201 });
+  } catch (error) {
+    console.error("REGISTRATION ERROR:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
