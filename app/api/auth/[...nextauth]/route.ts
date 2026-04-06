@@ -17,6 +17,7 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      allowDangerousEmailAccountLinking: true, // Allows users to link their Google account even if the email already exists in the database (useful for Admins who registered with email/password but want to switch to Google SSO)
     }),
 
     // 2. CREDENTIALS PROVIDER (Your existing custom email/password login)
