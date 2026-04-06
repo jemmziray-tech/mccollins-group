@@ -1,20 +1,19 @@
-import Provider from "./components/Provider";
-import SiteHeader from "./components/SiteHeader";
+// app/layout.tsx
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-// 1. IMPORT THE PROVIDER
+// Components & Context Providers
+import Provider from "./components/Provider";
 import { CartProvider } from "./context/CartContext";
-import { Inter } from "next/font/google";
+import SiteHeader from "./components/SiteHeader";
 
+// Font Configurations
 const inter = Inter({ subsets: ["latin"] });
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
-
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
@@ -33,10 +32,17 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className={inter.className}>
+        {/* NextAuth Session Provider */}
         <Provider>
+          {/* Shopping Cart Provider */}
           <CartProvider>
+            
+            {/* Our shiny new dynamic Navbar! */}
             <SiteHeader />
+            
+            {/* The rest of the website */}
             <main>{children}</main>
+            
           </CartProvider>
         </Provider>
       </body>

@@ -1,38 +1,41 @@
+// middleware.ts
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
-// This is the main Bouncer logic
+// 1. Add your VIP Admin emails here!
+const ADMIN_EMAILS = [
+  "jem.mziray@gmail.com",
+  "festomcrowland@gmail.com",
+  "nyombicolins04@gmail.com"
+];
+
 export default withAuth(
   function middleware(req) {
+    const token = req.nextauth.token;
     const path = req.nextUrl.pathname;
-    const userRole = req.nextauth.token?.role;
 
-    // SECURITY CHECK: If a user is trying to access the /admin portal...
+    // If they are trying to access the Admin panel...
     if (path.startsWith("/admin")) {
-      // ...but their database role is NOT "ADMIN"
-      if (userRole !== "ADMIN") {
-        // Kick them back to the public homepage immediately
+      // Check if they have the ADMIN role in the database
+      const isRoleAdmin = token?.role === "ADMIN";
+      // OR check if their email is on the VIP list!
+      const isEmailAdmin = token?.email ? ADMIN_EMAILS.includes(token.email) : false;
+
+      // If they are NEITHER, kick them back to the homepage
+      if (!isRoleAdmin && !isEmailAdmin) {
         return NextResponse.redirect(new URL("/", req.url));
       }
     }
-    
-    // If they pass the checks, let them through
-    return NextResponse.next();
   },
   {
     callbacks: {
-      // This forces NextAuth to check for a token. 
-      // If there is no token (user is not logged in), it automatically kicks them to our /login page.
+      // This tells the middleware to ALWAYS run, so we can handle the logic above
       authorized: ({ token }) => !!token,
     },
   }
 );
 
-// This section tells the Bouncer exactly which routes to protect.
-// It will ignore the homepage (/) and login page (/login) so anyone can visit them.
+// Protect these specific routes
 export const config = {
-  matcher: [
-    "/admin/:path*",    // Protects /admin and all pages inside it
-    "/customer/:path*", // Protects /customer and all pages inside it
-  ],
+  matcher: ["/admin/:path*"],
 };
