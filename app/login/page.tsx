@@ -3,6 +3,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { signIn } from "next-auth/react"; // <-- IMPORTED NEXTAUTH
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
@@ -16,7 +17,7 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Phase 3: We will connect Supabase Auth here!
+    // Phase 3: We will connect Supabase Auth here for manual credentials later!
     console.log(isLogin ? "Logging in..." : "Creating account...", { email, password, name });
   };
 
@@ -37,6 +38,30 @@ export default function LoginPage() {
           {isLogin ? "Sign in" : "Create account"}
         </h2>
 
+        {/* --- GOOGLE SIGN IN BUTTON --- */}
+        <button
+          type="button"
+          onClick={() => signIn("google", { callbackUrl: "/" })}
+          className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 font-medium py-2.5 rounded-lg hover:bg-gray-50 transition-colors mb-6 shadow-sm active:scale-95"
+        >
+          <img 
+            src="https://www.svgrepo.com/show/475656/google-color.svg" 
+            alt="Google logo" 
+            className="w-5 h-5" 
+          />
+          Continue with Google
+        </button>
+
+        {/* Divider */}
+        <div className="flex items-center mb-6">
+          <div className="flex-1 border-t border-gray-200"></div>
+          <span className="px-4 text-xs text-gray-500 uppercase tracking-wider font-semibold">
+            Or continue with email
+          </span>
+          <div className="flex-1 border-t border-gray-200"></div>
+        </div>
+        {/* --- END GOOGLE BUTTON --- */}
+
         <form onSubmit={handleSubmit} className="space-y-5">
           
           {/* Name Input (Only shows if creating an account) */}
@@ -53,7 +78,6 @@ export default function LoginPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="First and last name"
-                  // visibility fix: added 'placeholder:text-gray-500' 
                   className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 placeholder:text-gray-500 rounded-lg focus:ring-2 focus:ring-[#f08804] focus:border-[#f08804] outline-none transition-all sm:text-sm text-gray-900"
                 />
               </div>
@@ -73,7 +97,6 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                // visibility fix: added 'placeholder:text-gray-500'
                 className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 placeholder:text-gray-500 rounded-lg focus:ring-2 focus:ring-[#f08804] focus:border-[#f08804] outline-none transition-all sm:text-sm text-gray-900"
               />
             </div>
@@ -99,7 +122,6 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={isLogin ? "Enter your password" : "At least 6 characters"}
-                // visibility fix: added 'placeholder:text-gray-500' and 'text-gray-900'
                 className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 placeholder:text-gray-500 rounded-lg focus:ring-2 focus:ring-[#f08804] focus:border-[#f08804] outline-none transition-all sm:text-sm text-gray-900"
               />
               <button

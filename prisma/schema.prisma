@@ -1,3 +1,5 @@
+// prisma/schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,16 +10,66 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// --- USERS (For Authentication) ---
+// ==========================================
+// 1. NEXTAUTH SECURITY MODELS (Required)
+// ==========================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ==========================================
+// 2. YOUR BUSINESS MODELS
+// ==========================================
+
+// --- USERS (Merged with NextAuth) ---
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String   
-  name      String?
-  role      String   @default("CUSTOMER") // Can be "CUSTOMER" or "ADMIN"
-  orders    Order[]  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime? // Required by NextAuth
+  image         String?   // Grabs their Google Profile Picture!
+  password      String?   // Made optional because Google users don't use passwords
+  role          String    @default("CUSTOMER") // Can be "CUSTOMER" or "ADMIN"
+  
+  // Relations
+  accounts      Account[] // Required by NextAuth
+  sessions      Session[] // Required by NextAuth
+  orders        Order[]   // Connects to your Orders table
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 // --- PRODUCTS (The Inventory) ---

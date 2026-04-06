@@ -1,12 +1,25 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google"; // <-- NEW: Google Auth
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
 
+// --- MASTER ADMIN LIST ---
+// Put your real Gmail addresses here. 
+// Anyone on this list automatically gets full access to the Admin Dashboard.
+const ADMIN_EMAILS = ["jem.mziray@gmail.com", "nyombicolins04@gmail.com", "festomcrowland@gmail.com"];
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
+    // 1. GOOGLE PROVIDER (For fast Admin logins & Profile Pictures)
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    }),
+
+    // 2. CREDENTIALS PROVIDER (Your existing custom email/password login)
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -18,7 +31,6 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
 
-        // 1. Find the user in the database
         const user = await prisma.user.findUnique({
           where: { email: credentials.email }
         });
@@ -27,7 +39,6 @@ export const authOptions: NextAuthOptions = {
           throw new Error("User not found");
         }
 
-        // 2. Check if the password matches the hashed password in the DB
         const isCorrectPassword = await bcrypt.compare(
           credentials.password,
           user.password
@@ -37,29 +48,56 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid password");
         }
 
-        // 3. Return the user object to save in the session
         return {
           id: user.id,
           email: user.email,
           name: user.name,
-          role: user.role, // We pass the role so we know if they are an ADMIN
+          role: user.role,
+          image: user.image, // Pass their profile picture if they have one
         };
       }
     })
   ],
   callbacks: {
-    // This securely attaches the user's ID and Role to their active session
+    // TRIGGERED ON LOGIN: Auto-promotes admins in the database
+    async signIn({ user, account }) {
+      if (user.email && ADMIN_EMAILS.includes(user.email)) {
+        try {
+          // Update the database to ensure they are marked as an Admin forever
+          await prisma.user.update({
+            where: { email: user.email },
+            data: { role: "ADMIN" }
+          });
+          // Update the immediate object
+          (user as any).role = "ADMIN"; 
+        } catch (error) {
+          // Ignores error if the user is being created for the very first time
+        }
+      }
+      return true;
+    },
+
+    // JWT: Secures the session tokens
     async jwt({ token, user }) {
       if (user) {
-        token.role = (user as any).role;
+        token.role = (user as any).role || "CUSTOMER";
         token.id = user.id;
+        token.picture = user.image; // Grabs the Google profile picture!
+
+        // Ultimate failsafe: If they are on the Admin list, force their token to Admin
+        if (user.email && ADMIN_EMAILS.includes(user.email)) {
+          token.role = "ADMIN";
+        }
       }
       return token;
     },
+
+    // SESSION: Sends the secure data to your frontend UI
     async session({ session, token }) {
       if (session?.user) {
         (session.user as any).role = token.role;
         (session.user as any).id = token.id;
+        session.user.image = token.picture as string | null | undefined; // Passes the image to the frontend!
       }
       return session;
     }
@@ -69,7 +107,7 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
   pages: {
-    signIn: '/login', // Tells NextAuth to use our custom beautiful login page!
+    signIn: '/login', // Tells NextAuth to use your custom beautiful login page!
   }
 };
 
