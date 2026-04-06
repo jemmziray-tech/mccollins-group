@@ -6,9 +6,19 @@ export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// --- GET: Fetch all products for the storefront and admin ---
-export async function GET() {
+// --- GET: Fetch all products OR a single product ---
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    // If an ID is provided, return just that one product (used for the Edit page)
+    if (id) {
+      const product = await prisma.product.findUnique({ where: { id } });
+      return NextResponse.json(product);
+    }
+
+    // Otherwise, return all products (used for storefront and admin table)
     const products = await prisma.product.findMany({
       orderBy: { createdAt: "desc" }
     });
@@ -48,6 +58,37 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Database POST Error:", error);
     return NextResponse.json({ error: "Failed to save product to database" }, { status: 500 });
+  }
+}
+
+// --- PUT: Update an existing product via the Admin Panel ---
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json();
+    const { id, name, price, brand, imageUrl, description, category, sizeType } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: "Product ID is required for updating" }, { status: 400 });
+    }
+
+    // Update the database
+    const updatedProduct = await prisma.product.update({
+      where: { id },
+      data: {
+        name,
+        price: Number(price),
+        brand,
+        imageUrl,
+        description: description || null,
+        category: category || "Uncategorized",
+        sizeType: sizeType || "none",
+      },
+    });
+
+    return NextResponse.json(updatedProduct, { status: 200 });
+  } catch (error) {
+    console.error("Database PUT Error:", error);
+    return NextResponse.json({ error: "Failed to update product" }, { status: 500 });
   }
 }
 
