@@ -2,17 +2,20 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
-// Initialize the Google AI client using your API key from .env.local
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
-
 export async function POST(req: Request) {
   try {
-    const { message } = await req.json();
+    // 1. Check if the API key exists at runtime
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return NextResponse.json({ 
+        reply: "SYSTEM ERROR: Vercel cannot find the GEMINI_API_KEY. Did you spell it correctly in Vercel Settings?" 
+      });
+    }
 
-    // Use Gemini 1.5 Flash for fast, responsive chat
+    // 2. Initialize the AI safely inside the request
+    const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
-      // --- THIS IS THE NEW BRAIN OF YOUR AI ---
       systemInstruction: `You are the exclusive AI Fashion Guide for McCollins Group in Tanzania.
       
       CRITICAL RULE: McCollins Group is STRICTLY a premium MEN'S FASHION and lifestyle brand. 
@@ -29,8 +32,8 @@ export async function POST(req: Request) {
       Your Brands: "Colman Looks", "Urban TZ", and "Luxe Time".
 
       Contact Information:
-      - Sales & Orders: +255 678 405 111
-      - Customer Support: +255 693 485 566
+      - Sales & Orders: +255 743 924 467
+      - Customer Support: +255 000 000 000
 
       Your Persona:
       - Professional, stylish, helpful, and polite.
@@ -38,18 +41,18 @@ export async function POST(req: Request) {
       - Keep responses concise, friendly, and formatted nicely for a small chat window. Use emojis sparingly but tastefully.`
     });
 
-    // Generate the response
+    // 3. Process the message
+    const { message } = await req.json();
     const result = await model.generateContent(message);
     const response = await result.response;
-    const text = response.text();
+    
+    return NextResponse.json({ reply: response.text() });
 
-    return NextResponse.json({ reply: text });
-
-  } catch (error) {
+  } catch (error: any) {
+    // 4. CHEAT CODE: If Google rejects it, send the exact reason to the chat window!
     console.error("AI Error:", error);
-    return NextResponse.json(
-      { reply: "Samahani, mtandao wangu unasumbua kidogo. Tafadhali jaribu tena baadaye! (Sorry, my connection is fuzzy. Please try again!)" }, 
-      { status: 500 }
-    );
+    return NextResponse.json({ 
+      reply: `GOOGLE AI ERROR: ${error.message}` 
+    });
   }
 }
