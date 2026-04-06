@@ -1,10 +1,12 @@
+// app/api/products/route.ts
+
 // 1. Force Node.js runtime to prevent any Edge/Prisma crashes
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// GET: This allows your storefront to fetch all products from Supabase
+// --- GET: Fetch all products for the storefront and admin ---
 export async function GET() {
   try {
     const products = await prisma.product.findMany({
@@ -17,7 +19,7 @@ export async function GET() {
   }
 }
 
-// POST: This allows your Admin Panel to save new products to Supabase
+// --- POST: Save new products from the Admin Panel ---
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -46,5 +48,28 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Database POST Error:", error);
     return NextResponse.json({ error: "Failed to save product to database" }, { status: 500 });
+  }
+}
+
+// --- DELETE: Remove products via the Admin Panel ---
+export async function DELETE(request: Request) {
+  try {
+    // Extract the ID from the URL (e.g., /api/products?id=123)
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
+    }
+
+    // Delete from database
+    await prisma.product.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ message: "Product deleted successfully" }, { status: 200 });
+  } catch (error) {
+    console.error("Database DELETE Error:", error);
+    return NextResponse.json({ error: "Failed to delete product" }, { status: 500 });
   }
 }
