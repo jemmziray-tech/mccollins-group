@@ -5,13 +5,15 @@ import {
   Plus, 
   ArrowLeft, 
   Edit, 
-  Trash2, 
   DollarSign, 
   ShoppingBag, 
   AlertCircle,
   Package,
   Image as ImageIcon
 } from "lucide-react";
+
+// Import our new interactive Delete Button
+import DeleteButton from "./DeleteButton"; 
 
 // Secure Database Connection
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
@@ -143,7 +145,8 @@ export default async function AdminDashboard() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {/* Ready to wire up to an edit page */}
+                          
+                          {/* Edit Button */}
                           <Link 
                             href={`/admin/edit-product/${product.id}`}
                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" 
@@ -151,10 +154,10 @@ export default async function AdminDashboard() {
                           >
                             <Edit className="w-4 h-4" />
                           </Link>
-                          {/* Ready to wire up to a delete action */}
-                          <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete Product">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          
+                          {/* THE NEW INTERACTIVE DELETE BUTTON */}
+                          <DeleteButton productId={product.id} />
+                          
                         </div>
                       </td>
                     </tr>
