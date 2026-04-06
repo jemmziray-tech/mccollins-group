@@ -17,8 +17,20 @@ export default function SiteHeader() {
   const isLoading = status === "loading";
   const isLoggedIn = status === "authenticated";
   
-  // We check if their role is ADMIN, or fallback to checking the exact email
-  const isAdmin = session?.user?.role === "ADMIN" || session?.user?.email === "jem.mziray@gmail.com";
+  // We check if their role is ADMIN, or fallback to checking the exact email for that master admin access (this is for your personal accounts that you want to ensure have access even if the DB role gets messed up somehow)
+  // 1. List all your admin emails here! You can add as many as you want.
+  const ADMIN_EMAILS = [
+    "jem.mziray@gmail.com", 
+    "festomcrowland@gmail.com", 
+    "nyombicolins04@gmail.com"
+  ];
+
+  // 2. Safely grab the role without upsetting the ESLint teacher
+  const userRole = (session?.user as { role?: string })?.role;
+  const userEmail = session?.user?.email || "";
+
+  // 3. Check if they are an admin via database role OR if their email is on the list
+  const isAdmin = userRole === "ADMIN" || ADMIN_EMAILS.includes(userEmail);
   
   // Safely grab their profile picture and first name
   const userProfilePic = session?.user?.image;

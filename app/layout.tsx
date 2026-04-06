@@ -1,9 +1,14 @@
+import Provider from "./components/Provider";
+import SiteHeader from "./components/SiteHeader";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 // 1. IMPORT THE PROVIDER
 import { CartProvider } from "./context/CartContext";
+import { Inter } from "next/font/google";
+
+const inter = Inter({ subsets: ["latin"] });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,11 +32,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
-        {/* 2. WRAP THE CHILDREN */}
-        <CartProvider>
-          {children}
-        </CartProvider>
+      <body className={inter.className}>
+        <Provider>
+          <CartProvider>
+            <SiteHeader />
+            <main>{children}</main>
+          </CartProvider>
+        </Provider>
       </body>
     </html>
   );
