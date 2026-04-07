@@ -18,8 +18,9 @@ export async function GET(request: Request) {
       return NextResponse.json(product);
     }
 
-    // Otherwise, return all products (used for storefront and admin table)
+    // EXPERT FIX: Now it ONLY returns products where isAvailable is true!
     const products = await prisma.product.findMany({
+      where: { isAvailable: true }, // <--- THIS IS THE MAGIC LINE
       orderBy: { createdAt: "desc" }
     });
     return NextResponse.json(products);
