@@ -1,4 +1,6 @@
 // app/admin/page.tsx
+export const dynamic = "force-dynamic"; // <--- ADD THIS MAGIC LINE!
+
 import Link from "next/link";
 import { PrismaClient } from "@prisma/client";
 import { 
@@ -9,12 +11,13 @@ import {
   ShoppingBag, 
   AlertCircle,
   Package,
-  Image as ImageIcon
+  Image as ImageIcon,
 } from "lucide-react";
 
 // Import our interactive components
 import DeleteButton from "./DeleteButton";
 import OrderStatusSelect from "./OrderStatusSelect"; 
+
 
 // Secure Database Connection
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
