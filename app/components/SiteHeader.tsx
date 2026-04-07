@@ -34,7 +34,6 @@ export default function SiteHeader() {
   const firstName = session?.user?.name?.split(" ")[0] || "User";
 
   return (
-    // Changed px-6 to px-4 for mobile spacing!
     <nav className="bg-[#131921] text-white flex items-center justify-between px-4 md:px-6 py-3 sticky top-0 z-50 shadow-md">
       
       {/* Left: Logo */}
@@ -45,27 +44,36 @@ export default function SiteHeader() {
       </Link>
 
       {/* Right: Dynamic User and Cart Section */}
-      <div className="flex items-center gap-3 md:gap-6">
+      <div className="flex items-center gap-4 md:gap-6 mt-1 md:mt-0">
         
         {isLoading ? (
           <div className="w-8 h-8 rounded-full bg-gray-700 animate-pulse"></div>
         ) : isLoggedIn ? (
-          <div className="group relative flex items-center gap-2 cursor-pointer border border-transparent hover:border-white p-1 rounded transition-colors pb-2 -mb-2">
+          // LOGGED IN STATE
+          <div className="group relative flex items-center cursor-pointer border border-transparent hover:border-white p-1 rounded transition-colors pb-2 -mb-2">
             
-            {userProfilePic ? (
-              <img 
-                src={userProfilePic} 
-                alt="Profile" 
-                className="w-8 h-8 md:w-9 md:h-9 rounded-full border-2 border-transparent group-hover:border-[#febd69] transition-all object-cover" 
-              />
-            ) : (
-              <UserCircle className="w-8 h-8 md:w-9 md:h-9 text-gray-400 group-hover:text-[#febd69] transition-colors" />
-            )}
-            
-            {/* HIDDEN ON MOBILE: text-left */}
-            <div className="hidden md:block text-left leading-tight">
-              <span className="text-[#CCCCCC] text-[11px] font-light block">Hello, {firstName}</span>
-              <span className="font-bold text-sm">Account & Lists</span>
+            {/* Mobile: Pic + Name Stacked | PC: Pic + Full Text */}
+            <div className="flex flex-col md:flex-row items-center md:gap-2">
+              {userProfilePic ? (
+                <img 
+                  src={userProfilePic} 
+                  alt="Profile" 
+                  className="w-6 h-6 md:w-9 md:h-9 rounded-full border-2 border-transparent group-hover:border-[#febd69] transition-all object-cover" 
+                />
+              ) : (
+                <UserCircle className="w-6 h-6 md:w-9 md:h-9 text-white md:text-gray-400 group-hover:text-[#febd69] transition-colors" />
+              )}
+              
+              {/* Mobile First Name */}
+              <span className="text-[10px] font-bold mt-1 leading-none md:hidden text-white truncate max-w-[50px]">
+                {firstName}
+              </span>
+
+              {/* PC Full Greeting */}
+              <div className="hidden md:block text-left leading-tight">
+                <span className="text-[#CCCCCC] text-[11px] font-light block">Hello, {firstName}</span>
+                <span className="font-bold text-sm">Account & Lists</span>
+              </div>
             </div>
 
             {/* THE DROPDOWN MENU */}
@@ -97,9 +105,15 @@ export default function SiteHeader() {
             </div>
           </div>
         ) : (
-          // LOGGED OUT STATE: Shows Icon on Mobile, Text on PC
-          <Link href="/login" className="flex items-center gap-2 border border-transparent hover:border-white p-1 rounded transition-colors">
-            <UserCircle className="w-8 h-8 text-gray-400 md:hidden" />
+          // LOGGED OUT STATE
+          <Link href="/login" className="flex items-center md:gap-2 border border-transparent hover:border-white p-1 rounded transition-colors pb-2 -mb-2 md:pb-1 md:-mb-0">
+            {/* Mobile View: Icon + "Sign In" */}
+            <div className="flex flex-col items-center md:hidden">
+              <UserCircle className="w-6 h-6 text-white" />
+              <span className="text-[10px] font-bold mt-1 leading-none text-white">Sign In</span>
+            </div>
+
+            {/* PC View: Full Text */}
             <div className="hidden md:block text-left leading-tight">
               <span className="text-[#CCCCCC] text-[11px] block font-light">Hello, Guest</span>
               <span className="font-bold text-sm">Sign in / Register</span>
@@ -108,14 +122,23 @@ export default function SiteHeader() {
         )}
         
         {/* Cart Icon */}
-        <div onClick={() => setIsCartOpen(true)} className="flex items-center relative cursor-pointer border border-transparent hover:border-white p-1 rounded transition-colors duration-200">
-          <ShoppingCart className="w-6 h-6 md:w-7 md:h-7" />
-          {cartCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 bg-[#f08804] text-[#0F1111] text-[10px] md:text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm">
-              {cartCount} 
-            </span>
-          )}
-          <span className="font-bold ml-1 hidden lg:block text-sm mt-2">Cart</span>
+        <div onClick={() => setIsCartOpen(true)} className="flex items-center relative cursor-pointer border border-transparent hover:border-white p-1 rounded transition-colors duration-200 pb-2 -mb-2 md:pb-1 md:-mb-0">
+          
+          {/* Mobile: Icon + "Cart" */}
+          <div className="flex flex-col items-center relative">
+            <ShoppingCart className="w-6 h-6 md:w-7 md:h-7 text-white" />
+            <span className="text-[10px] font-bold mt-1 leading-none md:hidden text-white">Cart</span>
+            
+            {/* Floating Badge attached directly to the icon container */}
+            {cartCount > 0 && (
+              <span className="absolute -top-1.5 -right-2 md:-right-1.5 bg-[#f08804] text-[#0F1111] text-[10px] md:text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm">
+                {cartCount} 
+              </span>
+            )}
+          </div>
+          
+          {/* PC View: "Cart" text next to icon */}
+          <span className="font-bold ml-1 hidden md:block text-sm mt-2">Cart</span>
         </div>
 
       </div>
