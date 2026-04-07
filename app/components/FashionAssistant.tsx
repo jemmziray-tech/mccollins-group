@@ -4,10 +4,16 @@
 import React, { useState } from 'react';
 import { MessageCircle, X, Send, Loader2, Sparkles } from 'lucide-react';
 
+// 1. Define your quick questions
+const QUICK_QUESTIONS = [
+  "👕 Show me latest shirts",
+  "👖 Do you have denim?",
+  "🚚 How does delivery work?",
+  "💰 What is the price range?"
+];
+
 export default function FashionAssistant() {
   const [isOpen, setIsOpen] = useState(false);
-  
-  // We can eventually pull the user's name from your Auth context
   const [userName, setUserName] = useState<string | null>(null); 
 
   const [messages, setMessages] = useState<{ role: 'user' | 'bot'; text: string }[]>([
@@ -19,27 +25,27 @@ export default function FashionAssistant() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
+  // --- CORE MESSAGE LOGIC ---
+  // Extracted this into a separate function so both the "Enter" key and "Quick Chips" can use it
+  const processMessage = async (userText: string) => {
+    if (!userText.trim()) return;
 
-    const userText = input;
     setMessages(prev => [...prev, { role: 'user', text: userText }]);
-    setInput("");
+    setInput(""); // Clear the input box instantly
     setIsLoading(true);
 
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userText }),
+        body: JSON.stringify({ message: userText }), // Note: Your API currently expects { message: string } or { messages: array }. Adjust if needed based on your AI SDK!
       });
 
       if (!res.ok) throw new Error("Network response was not ok");
       
       const data = await res.json();
       
-      // --- BULLETPROOF EXTRACTION ---
+      // Bulletproof extraction
       let botText = "Sorry, I couldn't parse the response.";
       if (typeof data.reply === 'string') botText = data.reply;
       else if (data.reply?.reply) botText = data.reply.reply;
@@ -52,6 +58,12 @@ export default function FashionAssistant() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Triggered by the form submit (Enter key or Send button)
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    processMessage(input);
   };
 
   return (
@@ -96,24 +108,44 @@ export default function FashionAssistant() {
             )}
           </div>
 
-          {/* Input Form */}
-          <div className="p-3 bg-white border-t border-gray-100">
-            <form onSubmit={sendMessage} className="flex items-center gap-2">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask me anything..."
-                className="flex-1 bg-gray-100 border-transparent focus:bg-white focus:border-[#febd69] focus:ring-2 focus:ring-[#febd69]/20 rounded-xl px-4 py-2.5 text-sm transition-all outline-none text-gray-900"
-              />
-              <button 
-                type="submit" 
-                disabled={isLoading || !input.trim()}
-                className="bg-[#febd69] hover:bg-[#f3a847] text-[#0F1111] p-2.5 rounded-xl disabled:opacity-50 transition-all active:scale-95"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
+          {/* QUICK ACTION CHIPS & INPUT FORM WRAPPER */}
+          <div className="bg-white border-t border-gray-100 flex flex-col">
+            
+            {/* Quick Action Chips (Hidden scrollbar trick applied) */}
+            <div className="flex gap-2 overflow-x-auto pb-2 pt-3 px-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+              {QUICK_QUESTIONS.map((question, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => processMessage(question)}
+                  disabled={isLoading}
+                  className="whitespace-nowrap bg-gray-50 hover:bg-[#febd69] hover:text-[#131921] text-gray-600 text-[11px] px-3 py-1.5 rounded-full font-medium transition-colors border border-gray-200 shadow-sm disabled:opacity-50"
+                >
+                  {question}
+                </button>
+              ))}
+            </div>
+
+            {/* Input Form */}
+            <div className="p-3 pt-1">
+              <form onSubmit={handleFormSubmit} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Ask me anything..."
+                  className="flex-1 bg-gray-100 border-transparent focus:bg-white focus:border-[#febd69] focus:ring-2 focus:ring-[#febd69]/20 rounded-xl px-4 py-2.5 text-sm transition-all outline-none text-gray-900"
+                />
+                <button 
+                  type="submit" 
+                  disabled={isLoading || !input.trim()}
+                  className="bg-[#febd69] hover:bg-[#f3a847] text-[#0F1111] p-2.5 rounded-xl disabled:opacity-50 transition-all active:scale-95"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </form>
+            </div>
+
           </div>
         </div>
       )}
