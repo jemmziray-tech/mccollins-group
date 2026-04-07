@@ -1,9 +1,10 @@
 // app/api/chat/route.ts
+import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { streamText } from "ai"; 
+import { generateText } from "ai"; 
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
-// 1. Initialize Gemini using your specific environment variable
+// 1. Initialize Gemini
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
@@ -15,10 +16,10 @@ if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 export async function POST(req: Request) {
   try {
-    const { messages } = await req.json();
+    // FIX 1: Match the frontend payload exactly!
+    const { message } = await req.json();
 
     // 2. FETCH LIVE INVENTORY
-    // We only fetch Active products, and only the fields the AI needs to know
     const availableProducts = await prisma.product.findMany({
       where: { isAvailable: true },
       select: { name: true, price: true, category: true, description: true }
@@ -37,22 +38,24 @@ export async function POST(req: Request) {
       CRITICAL RULE: Here is our LIVE, REAL-TIME inventory. You MUST ONLY recommend products from this exact list. Do not make up products or prices.
       
       --- LIVE INVENTORY ---
-      ${inventoryList}
+      ${inventoryList.length > 0 ? inventoryList : "Currently out of stock of everything."}
       ----------------------
       
       If a customer asks for something not on this list, apologize and say it is currently out of stock.
     `;
 
-    // 5. SEND TO GEMINI WITH THE INJECTED BRAIN
-    const result = await streamText({
-      model: google("gemini-1.5-flash"), // Fastest model, perfect for chatbots!
+    // FIX 2: Generate standard text (no streaming) so the frontend can parse the JSON easily
+    const result = await generateText({
+      model: google("gemini-1.5-flash"),
       system: systemPrompt,
-      messages: messages,
+      prompt: message, // Pass the user's message here
     });
 
-    return result.toTextStreamResponse();
+    // Send the response back as a perfect JSON object
+    return NextResponse.json({ reply: result.text });
+    
   } catch (error) {
     console.error("Chat API Error:", error);
-    return new Response("Error processing chat", { status: 500 });
+    return NextResponse.json({ error: "Error processing chat" }, { status: 500 });
   }
 }
