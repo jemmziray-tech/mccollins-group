@@ -46,9 +46,9 @@ export async function POST(req: Request) {
 
     // FIX 2: Generate standard text (no streaming) so the frontend can parse the JSON easily
     const result = await generateText({
-      model: google("gemini-1.5-flash"),
+      model: google("gemini-pro"), // Changed this line!
       system: systemPrompt,
-      prompt: message, // Pass the user's message here
+      prompt: message,
     });
 
     // Send the response back as a perfect JSON object
