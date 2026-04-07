@@ -9,14 +9,12 @@ import {
   ShoppingBag, 
   AlertCircle,
   Package,
-  Image as ImageIcon,
-  Clock,
-  CheckCircle,
-  XCircle
+  Image as ImageIcon
 } from "lucide-react";
 
-// Import our interactive Delete Button
-import DeleteButton from "./DeleteButton"; 
+// Import our interactive components
+import DeleteButton from "./DeleteButton";
+import OrderStatusSelect from "./OrderStatusSelect"; 
 
 // Secure Database Connection
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
@@ -33,10 +31,10 @@ export default async function AdminDashboard() {
   const orders = await prisma.order.findMany({
     orderBy: { createdAt: "desc" },
     include: {
-      user: true, // Pulls in the Google account info if they were logged in
+      user: true, 
       items: {
         include: {
-          product: true, // Pulls in the actual product details for each item
+          product: true, 
         }
       }
     }
@@ -149,14 +147,13 @@ export default async function AdminDashboard() {
                   </tr>
                 ) : (
                   orders.map((order) => {
-                    // Calculate total items in this specific order
                     const itemCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
                     
                     return (
                       <tr key={order.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4">
                           <div className="font-mono text-xs text-gray-500 mb-1">
-                            #{order.id.slice(-6).toUpperCase()} {/* Show last 6 chars of ID */}
+                            #{order.id.slice(-6).toUpperCase()} 
                           </div>
                           <div className="text-sm font-medium text-gray-900">
                             {order.createdAt.toLocaleDateString("en-GB", { 
@@ -179,21 +176,8 @@ export default async function AdminDashboard() {
                           Tsh {order.totalAmount.toLocaleString()}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          {order.status === "PENDING" && (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-700">
-                              <Clock className="w-3 h-3" /> PENDING
-                            </span>
-                          )}
-                          {order.status === "COMPLETED" && (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
-                              <CheckCircle className="w-3 h-3" /> COMPLETED
-                            </span>
-                          )}
-                          {order.status === "CANCELLED" && (
-                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
-                              <XCircle className="w-3 h-3" /> CANCELLED
-                            </span>
-                          )}
+                           {/* THE NEW INTERACTIVE STATUS DROPDOWN! */}
+                           <OrderStatusSelect orderId={order.id} currentStatus={order.status} />
                         </td>
                       </tr>
                     );
