@@ -1,7 +1,7 @@
 // app/components/SiteHeader.tsx
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { ShoppingCart, UserCircle, LogOut, LayoutDashboard, User } from "lucide-react";
@@ -10,6 +10,9 @@ import { useCart } from "../context/CartContext";
 export default function SiteHeader() {
   const { cartCount, setIsCartOpen } = useCart();
   const { data: session, status } = useSession();
+  
+  // NEW: State to handle mobile tapping!
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
     if (session) {
@@ -50,7 +53,13 @@ export default function SiteHeader() {
           <div className="w-8 h-8 rounded-full bg-gray-700 animate-pulse"></div>
         ) : isLoggedIn ? (
           // LOGGED IN STATE
-          <div className="group relative flex items-center cursor-pointer border border-transparent hover:border-white p-1 rounded transition-colors pb-2 -mb-2">
+          <div 
+            className="relative flex items-center cursor-pointer border border-transparent hover:border-white p-1 rounded transition-colors pb-2 -mb-2"
+            // These 3 lines make it work perfectly on both PC (hover) and Mobile (tap)
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            onMouseEnter={() => setIsDropdownOpen(true)}
+            onMouseLeave={() => setIsDropdownOpen(false)}
+          >
             
             {/* Mobile: Pic + Name Stacked | PC: Pic + Full Text */}
             <div className="flex flex-col md:flex-row items-center md:gap-2">
@@ -58,10 +67,10 @@ export default function SiteHeader() {
                 <img 
                   src={userProfilePic} 
                   alt="Profile" 
-                  className="w-6 h-6 md:w-9 md:h-9 rounded-full border-2 border-transparent group-hover:border-[#febd69] transition-all object-cover" 
+                  className="w-6 h-6 md:w-9 md:h-9 rounded-full border-2 border-transparent hover:border-[#febd69] transition-all object-cover" 
                 />
               ) : (
-                <UserCircle className="w-6 h-6 md:w-9 md:h-9 text-white md:text-gray-400 group-hover:text-[#febd69] transition-colors" />
+                <UserCircle className="w-6 h-6 md:w-9 md:h-9 text-white md:text-gray-400 hover:text-[#febd69] transition-colors" />
               )}
               
               {/* Mobile First Name */}
@@ -76,8 +85,12 @@ export default function SiteHeader() {
               </div>
             </div>
 
-            {/* THE DROPDOWN MENU */}
-            <div className="absolute right-0 top-[100%] mt-1 w-56 bg-white text-gray-800 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden border border-gray-100">
+            {/* THE DROPDOWN MENU (Now controlled by React State instead of CSS) */}
+            <div 
+              className={`absolute right-0 top-[100%] mt-1 w-56 bg-white text-gray-800 rounded-lg shadow-xl transition-all duration-200 z-50 overflow-hidden border border-gray-100 ${
+                isDropdownOpen ? "opacity-100 visible" : "opacity-0 invisible"
+              }`}
+            >
               <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
                 <p className="text-sm font-semibold text-gray-900 truncate">{session?.user?.name}</p>
                 <p className="text-xs text-gray-500 truncate">{session?.user?.email}</p>
@@ -129,7 +142,7 @@ export default function SiteHeader() {
             <ShoppingCart className="w-6 h-6 md:w-7 md:h-7 text-white" />
             <span className="text-[10px] font-bold mt-1 leading-none md:hidden text-white">Cart</span>
             
-            {/* Floating Badge attached directly to the icon container */}
+            {/* Floating Badge */}
             {cartCount > 0 && (
               <span className="absolute -top-1.5 -right-2 md:-right-1.5 bg-[#f08804] text-[#0F1111] text-[10px] md:text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm">
                 {cartCount} 
