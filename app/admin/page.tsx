@@ -1,5 +1,5 @@
 // app/admin/page.tsx
-export const dynamic = "force-dynamic"; // <--- ADD THIS MAGIC LINE!
+export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { PrismaClient } from "@prisma/client";
@@ -11,13 +11,13 @@ import {
   ShoppingBag, 
   AlertCircle,
   Package,
-  Image as ImageIcon,
+  Image as ImageIcon
 } from "lucide-react";
 
 // Import our interactive components
 import DeleteButton from "./DeleteButton";
 import OrderStatusSelect from "./OrderStatusSelect"; 
-
+import ProductStatusToggle from "./ProductStatusToggle"; // <-- NEW IMPORT
 
 // Secure Database Connection
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
@@ -30,7 +30,7 @@ export default async function AdminDashboard() {
     orderBy: { createdAt: "desc" },
   });
 
-  // 2. FETCH ORDERS (With all nested user and item data!)
+  // 2. FETCH ORDERS
   const orders = await prisma.order.findMany({
     orderBy: { createdAt: "desc" },
     include: {
@@ -44,7 +44,6 @@ export default async function AdminDashboard() {
   });
 
   // 3. CALCULATE LIVE BUSINESS METRICS
-  // Only sum the revenue if the status is officially "COMPLETED"
   const totalRevenue = orders
     .filter(order => order.status === "COMPLETED")
     .reduce((sum, order) => sum + order.totalAmount, 0);
@@ -78,9 +77,8 @@ export default async function AdminDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         
-        {/* KPI Cards Section (NOW DYNAMIC!) */}
+        {/* KPI Cards Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* Revenue Card */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
             <div className="bg-green-100 p-4 rounded-full text-green-600">
               <DollarSign className="w-6 h-6" />
@@ -91,7 +89,6 @@ export default async function AdminDashboard() {
             </div>
           </div>
 
-          {/* Orders Card */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
             <div className="bg-blue-100 p-4 rounded-full text-blue-600">
               <ShoppingBag className="w-6 h-6" />
@@ -102,7 +99,6 @@ export default async function AdminDashboard() {
             </div>
           </div>
 
-          {/* Alerts Card */}
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
             <div className={`${pendingOrdersCount > 0 ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'} p-4 rounded-full`}>
               <AlertCircle className="w-6 h-6" />
@@ -116,7 +112,7 @@ export default async function AdminDashboard() {
           </div>
         </div>
 
-        {/* Recent Orders Section (NEW!) */}
+        {/* Recent Orders Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
           <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
             <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
@@ -128,7 +124,7 @@ export default async function AdminDashboard() {
           </div>
           
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500 bg-white">
                   <th className="px-6 py-4 font-semibold">Order ID & Date</th>
@@ -179,7 +175,6 @@ export default async function AdminDashboard() {
                           Tsh {order.totalAmount.toLocaleString()}
                         </td>
                         <td className="px-6 py-4 text-right">
-                           {/* THE NEW INTERACTIVE STATUS DROPDOWN! */}
                            <OrderStatusSelect orderId={order.id} currentStatus={order.status} />
                         </td>
                       </tr>
@@ -203,7 +198,7 @@ export default async function AdminDashboard() {
           </div>
           
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500 bg-white">
                   <th className="px-6 py-4 font-semibold">Product</th>
@@ -226,7 +221,7 @@ export default async function AdminDashboard() {
                   </tr>
                 ) : (
                   products.map((product: any) => (
-                    <tr key={product.id} className="hover:bg-gray-50 transition-colors group">
+                    <tr key={product.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden border border-gray-200 shrink-0 flex items-center justify-center relative">
@@ -241,13 +236,15 @@ export default async function AdminDashboard() {
                       </td>
                       <td className="px-6 py-4 text-gray-600 text-sm">{product.brand}</td>
                       <td className="px-6 py-4 text-gray-900 font-medium">Tsh {product.price.toLocaleString()}</td>
+                      
+                      {/* NEW: Interactive Toggle Component */}
                       <td className="px-6 py-4">
-                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
-                          Active
-                        </span>
+                        <ProductStatusToggle productId={product.id} initialStatus={product.isAvailable} />
                       </td>
+                      
+                      {/* FIX: Removed 'opacity-0' to keep buttons permanently visible on Mobile! */}
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center justify-end gap-2 transition-opacity">
                           <Link 
                             href={`/admin/edit-product/${product.id}`}
                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" 
