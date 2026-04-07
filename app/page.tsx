@@ -119,6 +119,41 @@ export default function McCollinsGroupAmazon() {
     setIsCheckingOut(true); // Spin the button!
 
     try {
+      const res = await fetch("/api/orders/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cart: cart,
+          totalAmount: cartTotal,
+          userEmail: session?.user?.email 
+        }),
+      });
+
+      // 🚨 THIS WILL TELL US EXACTLY WHAT IS WRONG!
+      if (!res.ok) {
+        alert(`🚨 Backend Error: Status ${res.status}. Is the API file in the right place?`);
+      } else {
+        alert("✅ Order saved to database perfectly!");
+      }
+    } catch (error) {
+      alert("🚨 Network Error: Next.js cannot find the API file at all.");
+    }
+
+    // 2. Build the WhatsApp String
+    let orderDetails = "Hujambo McCollins! Ninaomba ku-place order hii:\n\n";
+    cart.forEach(item => {
+      orderDetails += `▪️ ${item.quantity}x ${item.name} - Tsh ${(item.price * item.quantity).toLocaleString()}\n`;
+    });
+    orderDetails += `\n*TOTAL: Tsh ${cartTotal.toLocaleString()}*\n\nJe, hivi vitu vyote vipo store?`;
+
+    // 3. Fire WhatsApp
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(orderDetails)}`, "_blank");
+    
+    // 4. Reset the button
+    setIsCheckingOut(false);
+  };
+
+    try {
       // 1. Silently attempt to save the order to the database
       await fetch("/api/orders/create", {
         method: "POST",

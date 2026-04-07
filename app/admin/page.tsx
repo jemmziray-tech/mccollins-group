@@ -43,7 +43,11 @@ export default async function AdminDashboard() {
   });
 
   // 3. CALCULATE LIVE BUSINESS METRICS
-  const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+  // Only sum the revenue if the status is officially "COMPLETED"
+  const totalRevenue = orders
+    .filter(order => order.status === "COMPLETED")
+    .reduce((sum, order) => sum + order.totalAmount, 0);
+    
   const totalOrdersCount = orders.length;
   const pendingOrdersCount = orders.filter(order => order.status === "PENDING").length;
 
