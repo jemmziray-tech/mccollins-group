@@ -263,7 +263,7 @@ export default function McCollinsGroupAmazon() {
         </div>
       )}
 
-      {/* SEARCH BAR & CATEGORY NAV (Top Row Removed!) */}
+      {/* SEARCH BAR & CATEGORY NAV */}
       <div className="bg-[#131921] text-white flex flex-col px-4 py-3 gap-3 shadow-md transition-all duration-300 relative z-40">
         <div className="flex items-center gap-4 w-full">
           <div className="hidden lg:flex items-center border border-transparent hover:border-white p-1 rounded cursor-pointer flex-shrink-0 transition-colors duration-200">
@@ -311,16 +311,17 @@ export default function McCollinsGroupAmazon() {
         <span className="cursor-pointer border border-transparent hover:border-white p-1 rounded hidden md:inline transition-colors duration-200">Customer Service</span>
       </div>
 
-      {/* MASCULINE HERO BANNER */}
+      {/* MASCULINE HERO BANNER (MOBILE OPTIMIZED) */}
       <div className="relative w-full h-[300px] md:h-[400px] bg-gray-900 overflow-hidden">
         <img 
           src="https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?q=80&w=2071" 
           alt="Men's Fashion Banner" 
           className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-overlay animate-in zoom-in-105 duration-1000 ease-out"
         />
-        <div className="absolute top-1/4 left-10 md:left-20 text-white z-20 animate-in slide-in-from-left-8 duration-700 delay-150 fill-mode-both">
-          <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-2">Elevate Your<br/>Everyday Look.</h2>
-          <p className="text-lg text-gray-200">Premium menswear curated for Tanzania.</p>
+        {/* Changed left-10 to left-5 for mobile, and adjusted text sizes! */}
+        <div className="absolute top-1/4 left-5 md:left-20 text-white z-20 animate-in slide-in-from-left-4 md:slide-in-from-left-8 duration-700 delay-150 fill-mode-both pr-4">
+          <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-2 leading-tight">Elevate Your<br/>Everyday Look.</h2>
+          <p className="text-base md:text-lg text-gray-200">Premium menswear curated for Tanzania.</p>
         </div>
         <div className="absolute bottom-0 w-full h-48 bg-gradient-to-t from-[#EAEDED] to-transparent z-10"></div>
       </div>
