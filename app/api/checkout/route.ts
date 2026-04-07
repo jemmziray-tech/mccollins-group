@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     }
 
     // 4. Calculate the total price
-    const totalAmount = cart.reduce((sum: number, item: any) => sum + item.price, 0);
+    const totalAmount = cart.reduce((sum: number, item: any) => sum + (item.price * (item.quantity || 1)), 0);
 
     // 5. THE MAGIC: Save the Order AND the Items to the database at the same time!
     const order = await prisma.order.create({
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
         items: {
           create: cart.map((item: any) => ({
             productId: item.id,
-            quantity: 1, 
+            quantity: item.quantity || 1, 
             priceAtPurchase: item.price
           }))
         }
