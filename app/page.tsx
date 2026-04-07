@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image"; // <-- NEXT.JS IMAGE IMPORT
+import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { 
   ShoppingCart, 
@@ -13,14 +13,14 @@ import {
   MessageCircle,
   X,
   Trash2,
-  ShieldCheck
+  ShieldCheck,
+  Loader2 // <-- Added a loading spinner icon
 } from "lucide-react";
 
 import { useCart } from "./context/CartContext";
 import FashionAssistant from "./components/FashionAssistant";
 import Footer from "./components/SiteFooter"; 
 
-// --- CURATED MEN'S FASHION INVENTORY ---
 const displayInventory = [
   { 
     id: "prod_1", 
@@ -84,6 +84,9 @@ export default function McCollinsGroupAmazon() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
+  
+  // NEW: State to prevent spam-clicking the checkout button
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const { cart, addToCart, removeFromCart, cartTotal, cartCount, isCartOpen, setIsCartOpen } = useCart();
   const WHATSAPP_NUMBER = "255743924467"; 
@@ -110,14 +113,39 @@ export default function McCollinsGroupAmazon() {
     return matchesSearch && matchesCategory;
   });
 
-  const handleMasterCheckout = () => {
+  // EXPERT UPGRADE: Silent Database Save before WhatsApp routing!
+  const handleMasterCheckout = async () => {
     if (cart.length === 0) return;
+    setIsCheckingOut(true); // Spin the button!
+
+    try {
+      // 1. Silently attempt to save the order to the database
+      await fetch("/api/orders/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cart: cart,
+          totalAmount: cartTotal,
+          userEmail: session?.user?.email // Injects their email if they are logged in!
+        }),
+      });
+    } catch (error) {
+      // If it fails, we literally do nothing. The sale must go on!
+      console.error("Silent DB save failed, moving to WhatsApp anyway.");
+    }
+
+    // 2. Build the WhatsApp String
     let orderDetails = "Hujambo McCollins! Ninaomba ku-place order hii:\n\n";
     cart.forEach(item => {
       orderDetails += `▪️ ${item.quantity}x ${item.name} - Tsh ${(item.price * item.quantity).toLocaleString()}\n`;
     });
     orderDetails += `\n*TOTAL: Tsh ${cartTotal.toLocaleString()}*\n\nJe, hivi vitu vyote vipo store?`;
+
+    // 3. Fire WhatsApp
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(orderDetails)}`, "_blank");
+    
+    // 4. Reset the button
+    setIsCheckingOut(false);
   };
 
   return (
@@ -150,7 +178,6 @@ export default function McCollinsGroupAmazon() {
             <div className="space-y-6">
               {cart.map((item, index) => (
                 <div key={index} className="flex gap-4 animate-in slide-in-from-right-4 duration-300">
-                  {/* NEXT/IMAGE UPGRADE: Added relative to parent, swapped to <Image fill /> */}
                   <div className="w-20 h-20 bg-gray-100 rounded overflow-hidden flex-shrink-0 relative">
                     <Image 
                       src={item.imageUrl} 
@@ -184,9 +211,21 @@ export default function McCollinsGroupAmazon() {
               <span className="font-medium text-gray-600">Subtotal</span>
               <span className="text-xl font-bold text-gray-900">Tsh {cartTotal.toLocaleString()}</span>
             </div>
-            <button onClick={handleMasterCheckout} className="w-full bg-[#FFD814] hover:bg-[#F7CA00] border border-[#FCD200] text-[#0F1111] py-3.5 rounded-xl font-bold shadow-sm flex justify-center items-center gap-2 transition-transform active:scale-95">
-              <MessageCircle className="w-5 h-5" /> Checkout via WhatsApp
+            {/* UPDATED CHECKOUT BUTTON */}
+            <button 
+              onClick={handleMasterCheckout} 
+              disabled={isCheckingOut}
+              className={`w-full hover:bg-[#F7CA00] border border-[#FCD200] text-[#0F1111] py-3.5 rounded-xl font-bold shadow-sm flex justify-center items-center gap-2 transition-transform active:scale-95 ${isCheckingOut ? 'bg-[#F7CA00] opacity-80' : 'bg-[#FFD814]'}`}
+            >
+              {isCheckingOut ? (
+                <><Loader2 className="w-5 h-5 animate-spin" /> Processing Order...</>
+              ) : (
+                <><MessageCircle className="w-5 h-5" /> Checkout via WhatsApp</>
+              )}
             </button>
+            <p className="text-center text-xs text-gray-500 mt-3 flex items-center justify-center gap-1">
+              <ShieldCheck className="w-3 h-3"/> Safe and secure order processing
+            </p>
           </div>
         )}
       </div>
@@ -200,12 +239,11 @@ export default function McCollinsGroupAmazon() {
             </button>
 
             <div className="md:w-1/2 bg-gray-50 h-64 md:h-auto relative">
-               {/* NEXT/IMAGE UPGRADE */}
               <Image 
                 src={quickViewProduct.imageUrl} 
                 alt={quickViewProduct.name} 
                 fill
-                priority // Priority because it's a popup they want to see instantly
+                priority
                 sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-cover"
               />
@@ -261,7 +299,6 @@ export default function McCollinsGroupAmazon() {
 
       {/* MASCULINE HERO BANNER */}
       <div className="relative w-full h-[300px] md:h-[400px] bg-gray-900 overflow-hidden">
-        {/* NEXT/IMAGE UPGRADE: Added Priority for LCP! */}
         <Image 
           src="https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?q=80&w=2071" 
           alt="Men's Fashion Banner" 
@@ -344,7 +381,6 @@ export default function McCollinsGroupAmazon() {
               {displayedProducts.map((p: any, idx: number) => (
                 <div key={p.id} onClick={() => setQuickViewProduct(p)} className="group cursor-pointer flex flex-col animate-in fade-in slide-in-from-bottom-4 fill-mode-both" style={{ animationDelay: `${idx * 50}ms` }}>
                   <div className="bg-[#F8F8F8] h-48 w-full flex items-center justify-center mb-2 overflow-hidden rounded relative">
-                    {/* NEXT/IMAGE UPGRADE */}
                     <Image 
                       src={p.imageUrl} 
                       alt={p.name} 
