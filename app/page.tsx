@@ -14,7 +14,7 @@ import {
   X,
   Trash2,
   ShieldCheck,
-  Loader2 // <-- Added a loading spinner icon
+  Loader2
 } from "lucide-react";
 
 import { useCart } from "./context/CartContext";
@@ -85,7 +85,6 @@ export default function McCollinsGroupAmazon() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
   
-  // NEW: State to prevent spam-clicking the checkout button
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const { cart, addToCart, removeFromCart, cartTotal, cartCount, isCartOpen, setIsCartOpen } = useCart();
@@ -113,10 +112,10 @@ export default function McCollinsGroupAmazon() {
     return matchesSearch && matchesCategory;
   });
 
-  // EXPERT UPGRADE: Silent Database Save before WhatsApp routing!
+  // EXPERT UPGRADE: Cleaned up Single Checkout Function!
   const handleMasterCheckout = async () => {
     if (cart.length === 0) return;
-    setIsCheckingOut(true); // Spin the button!
+    setIsCheckingOut(true); 
 
     try {
       const res = await fetch("/api/orders/create", {
@@ -129,7 +128,7 @@ export default function McCollinsGroupAmazon() {
         }),
       });
 
-      // 🚨 THIS WILL TELL US EXACTLY WHAT IS WRONG!
+      // 🚨 DEBUG ALERTS
       if (!res.ok) {
         alert(`🚨 Backend Error: Status ${res.status}. Is the API file in the right place?`);
       } else {
@@ -139,47 +138,17 @@ export default function McCollinsGroupAmazon() {
       alert("🚨 Network Error: Next.js cannot find the API file at all.");
     }
 
-    // 2. Build the WhatsApp String
+    // Build the WhatsApp String
     let orderDetails = "Hujambo McCollins! Ninaomba ku-place order hii:\n\n";
     cart.forEach(item => {
       orderDetails += `▪️ ${item.quantity}x ${item.name} - Tsh ${(item.price * item.quantity).toLocaleString()}\n`;
     });
     orderDetails += `\n*TOTAL: Tsh ${cartTotal.toLocaleString()}*\n\nJe, hivi vitu vyote vipo store?`;
 
-    // 3. Fire WhatsApp
+    // Fire WhatsApp
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(orderDetails)}`, "_blank");
     
-    // 4. Reset the button
-    setIsCheckingOut(false);
-  };
-
-    try {
-      // 1. Silently attempt to save the order to the database
-      await fetch("/api/orders/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          cart: cart,
-          totalAmount: cartTotal,
-          userEmail: session?.user?.email // Injects their email if they are logged in!
-        }),
-      });
-    } catch (error) {
-      // If it fails, we literally do nothing. The sale must go on!
-      console.error("Silent DB save failed, moving to WhatsApp anyway.");
-    }
-
-    // 2. Build the WhatsApp String
-    let orderDetails = "Hujambo McCollins! Ninaomba ku-place order hii:\n\n";
-    cart.forEach(item => {
-      orderDetails += `▪️ ${item.quantity}x ${item.name} - Tsh ${(item.price * item.quantity).toLocaleString()}\n`;
-    });
-    orderDetails += `\n*TOTAL: Tsh ${cartTotal.toLocaleString()}*\n\nJe, hivi vitu vyote vipo store?`;
-
-    // 3. Fire WhatsApp
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(orderDetails)}`, "_blank");
-    
-    // 4. Reset the button
+    // Reset the button
     setIsCheckingOut(false);
   };
 
@@ -246,7 +215,6 @@ export default function McCollinsGroupAmazon() {
               <span className="font-medium text-gray-600">Subtotal</span>
               <span className="text-xl font-bold text-gray-900">Tsh {cartTotal.toLocaleString()}</span>
             </div>
-            {/* UPDATED CHECKOUT BUTTON */}
             <button 
               onClick={handleMasterCheckout} 
               disabled={isCheckingOut}
