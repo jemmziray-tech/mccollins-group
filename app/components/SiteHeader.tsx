@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from 'react';
-// Removed Search and MapPin from imports to keep your code perfectly clean!
 import { User, Heart, ShoppingBag, Menu, X, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from "next-auth/react";
@@ -45,20 +44,7 @@ export default function SiteHeader() {
   return (
     <header className="w-full relative z-50 font-sans">
       
-      {/* 1. TOP PROMO BAR (Ultra-Premium Minimalist Style) */}
-      <div className="bg-zinc-900 text-zinc-400 text-[10px] font-semibold tracking-[0.15em] uppercase py-3 px-4 justify-between items-center hidden md:flex w-full border-b border-black">
-        <div className="flex-1 text-center hover:text-white transition-colors cursor-default flex items-center justify-center gap-2">
-          <span>Free Delivery over 100,000 Tsh</span>
-        </div>
-        <div className="flex-1 text-center border-x border-zinc-700 hover:text-white transition-colors cursor-default flex items-center justify-center gap-2">
-          <span>Ladies Dresses: Take 2 Save 10,000 Tsh</span>
-        </div>
-        <div className="flex-1 text-center hover:text-white transition-colors cursor-default flex items-center justify-center gap-2">
-          <span>25% Off Kids Apparel</span>
-        </div>
-      </div>
-
-      {/* 2. MAIN HEADER */}
+      {/* 1. MAIN HEADER (Promo bar removed!) */}
       <div className="bg-black text-white px-4 md:px-6 py-5 flex items-center justify-between relative">
         
         {/* Left Side: Logo & Main Links */}
@@ -68,7 +54,7 @@ export default function SiteHeader() {
             <Menu className="w-6 h-6" />
           </button>
 
-          {/* Logo - RED DOT REMOVED */}
+          {/* Logo */}
           <Link href="/" className="text-xl md:text-2xl font-black tracking-tighter flex items-center">
             McCollins
           </Link>
@@ -110,12 +96,12 @@ export default function SiteHeader() {
           {/* Elegant Divider Line */}
           <div className="hidden md:block w-px h-5 bg-white/30 ml-2"></div>
 
-          {/* WISHLIST BUTTON (Now a real link) */}
+          {/* WISHLIST BUTTON */}
           <Link href="/wishlist" aria-label="Wishlist" className="hidden md:flex items-center hover:text-gray-300 transition-colors ml-2">
             <Heart className="w-5 h-5" strokeWidth={1.5} />
           </Link>
 
-          {/* CART BUTTON (Now a real link) */}
+          {/* CART BUTTON */}
           <Link href="/cart" aria-label="Cart" className="flex items-center hover:text-gray-300 transition-colors">
             <ShoppingBag className="w-5 h-5" strokeWidth={1.5} />
           </Link>
@@ -123,7 +109,7 @@ export default function SiteHeader() {
         </div>
       </div>
 
-      {/* 3. DESKTOP MEGA MENU DROPDOWN */}
+      {/* 2. DESKTOP MEGA MENU DROPDOWN */}
       {activeMenu && MEGA_MENU_DATA[activeMenu as keyof typeof MEGA_MENU_DATA] && (
         <div 
           className="hidden lg:block absolute top-full left-0 w-full bg-white text-black shadow-2xl border-t border-gray-200 py-10 px-12 transition-all duration-300 origin-top animate-in slide-in-from-top-2"
@@ -149,7 +135,7 @@ export default function SiteHeader() {
         </div>
       )}
 
-      {/* 4. MOBILE SLIDE-OUT MENU */}
+      {/* 3. MOBILE SLIDE-OUT MENU */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 bg-black/60 z-[100] lg:hidden transition-opacity" onClick={toggleMobileMenu} />
       )}
