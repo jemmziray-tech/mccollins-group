@@ -63,7 +63,7 @@ export default function SiteHeader() {
         {/* Left Side: Logo & Main Links */}
         <div className="flex items-center gap-12">
           {/* Mobile Hamburger */}
-          <button className="lg:hidden hover:text-gray-300" onClick={toggleMobileMenu}>
+          <button aria-label="Menu" className="lg:hidden hover:text-gray-300" onClick={toggleMobileMenu}>
             <Menu className="w-6 h-6" />
           </button>
 
@@ -90,8 +90,8 @@ export default function SiteHeader() {
 
         {/* Right Side: Icons & AUTH BUTTON */}
         <div className="flex items-center gap-4 md:gap-5 text-[12px] font-bold tracking-wider">
-          <button className="hover:text-gray-300"><Search className="w-5 h-5" strokeWidth={1.5} /></button>
-          <button className="hidden sm:block hover:text-gray-300"><MapPin className="w-5 h-5" strokeWidth={1.5} /></button>
+          <button aria-label="Search" className="hover:text-gray-300"><Search className="w-5 h-5" strokeWidth={1.5} /></button>
+          <button aria-label="Map" className="hidden sm:block hover:text-gray-300"><MapPin className="w-5 h-5" strokeWidth={1.5} /></button>
           
           {/* AUTHENTICATION SECTION */}
           <div className="hidden md:flex items-center border-l border-white/30 pl-5 ml-2">
@@ -108,8 +108,8 @@ export default function SiteHeader() {
             )}
           </div>
 
-          <button className="hidden md:block hover:text-gray-300 ml-2"><Heart className="w-5 h-5" strokeWidth={1.5} /></button>
-          <button className="hover:text-gray-300"><ShoppingBag className="w-5 h-5" strokeWidth={1.5} /></button>
+          <button aria-label="Heart" className="hidden md:block hover:text-gray-300 ml-2"><Heart className="w-5 h-5" strokeWidth={1.5} /></button>
+          <button aria-label="Cart" className="hover:text-gray-300"><ShoppingBag className="w-5 h-5" strokeWidth={1.5} /></button>
         </div>
       </div>
 
@@ -147,7 +147,7 @@ export default function SiteHeader() {
       <div className={`fixed top-0 left-0 h-full w-[85%] sm:w-[350px] bg-white z-[110] transform transition-transform duration-300 ease-in-out lg:hidden flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="bg-black text-white p-5 flex justify-between items-center">
           <span className="font-bold tracking-widest text-sm uppercase">Menu</span>
-          <button onClick={toggleMobileMenu} className="hover:text-gray-300">
+          <button aria-label="Close" onClick={toggleMobileMenu} className="hover:text-gray-300">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -166,7 +166,7 @@ export default function SiteHeader() {
             <div key={category} className="border-b border-gray-100">
               <button 
                 onClick={() => toggleMobileCategory(category)}
-                className="w-full flex justify-between items-center p-5 text-left font-bold text-[13px] tracking-wider uppercase hover:bg-gray-50"
+                className="w-full flex justify-between items-center p-5 text-left font-bold text-[13px] tracking-wider uppercase text-black hover:bg-gray-50"
               >
                 {category}
                 <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${expandedMobileMenu === category ? 'rotate-90' : ''}`} />
@@ -193,7 +193,7 @@ export default function SiteHeader() {
               )}
             </div>
           ))}
-          <Link href="/brands" onClick={toggleMobileMenu} className="block p-5 border-b border-gray-100 font-bold text-[13px] tracking-wider uppercase hover:bg-gray-50">BRANDS</Link>
+          <Link href="/brands" onClick={toggleMobileMenu} className="block p-5 border-b border-gray-100 font-bold text-[13px] tracking-wider uppercase text-black hover:bg-gray-50">BRANDS</Link>
         </div>
 
         <div className="p-5 bg-gray-50 border-t border-gray-200 grid grid-cols-2 gap-4 mt-auto">
