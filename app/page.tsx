@@ -20,8 +20,8 @@ import { useCart } from "./context/CartContext";
 import FashionAssistant from "./components/FashionAssistant";
 import Footer from "./components/SiteFooter"; 
 
-// 🟢 NEW IMPORTS: Bringing in your new Enterprise Header and Category Bubbles!
-import SiteHeader from "./components/SiteHeader";
+// 🟢 NEW IMPORTS: Bringing in your new Category Bubbles!
+// (We removed SiteHeader from here because it's already in layout.tsx)
 import CategoryBubbles from "./components/CategoryBubbles";
 
 const displayInventory = [
@@ -156,9 +156,6 @@ export default function McCollinsGroupAmazon() {
   return (
       <div className="min-h-screen bg-[#F7F8FA] font-sans text-[#0F1111] relative overflow-x-hidden animate-in fade-in duration-500 ease-in-out">
       
-      {/* 🟢 NEW: The Edgars-style Enterprise Header */}
-      <SiteHeader />
-
       {/* 🟢 NEW: The Category Bubbles */}
       <CategoryBubbles />
 

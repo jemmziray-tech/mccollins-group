@@ -3,16 +3,14 @@
 import React from 'react';
 import Link from 'next/link';
 
-// Mock data: Replace the image URLs with your actual category images
+// Updated: Removed "Brands" and "Dresses" to avoid duplicating the main header!
 const CATEGORIES = [
-  { name: "Brands", href: "/brands", image: "/api/placeholder/150/150" },
-  { name: "Women", href: "/women", image: "/api/placeholder/150/150" },
-  { name: "Dresses", href: "/dresses", image: "/api/placeholder/150/150" },
-  { name: "Men", href: "/men", image: "/api/placeholder/150/150" },
-  { name: "Kids", href: "/kids", image: "/api/placeholder/150/150" },
-  { name: "Shoes", href: "/shoes", image: "/api/placeholder/150/150" },
-  { name: "Accessories", href: "/accessories", image: "/api/placeholder/150/150" },
-  { name: "Sale", href: "/sale", image: "/api/placeholder/150/150" },
+  { name: "Women", href: "/women", image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=300&auto=format&fit=crop" },
+  { name: "Men", href: "/men", image: "https://images.unsplash.com/photo-1617137968427-85924c800a22?q=80&w=300&auto=format&fit=crop" },
+  { name: "Kids", href: "/kids", image: "https://images.unsplash.com/photo-1519241047957-be31d7379a5d?q=80&w=300&auto=format&fit=crop" },
+  { name: "Shoes", href: "/shoes", image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=300&auto=format&fit=crop" },
+  { name: "Accessories", href: "/accessories", image: "https://images.unsplash.com/photo-1622434641406-a158123450f9?q=80&w=300&auto=format&fit=crop" },
+  { name: "Sale", href: "/sale", image: "https://images.unsplash.com/photo-1607083206968-13611e3d76ba?q=80&w=300&auto=format&fit=crop" },
 ];
 
 export default function CategoryBubbles() {
@@ -21,7 +19,6 @@ export default function CategoryBubbles() {
       <div className="max-w-[1400px] mx-auto px-4 md:px-8">
         
         {/* The Scrolling Container */}
-        {/* We use arbitrary Tailwind values to hide the ugly native scrollbar but keep the scrolling functionality */}
         <div className="flex gap-4 md:gap-8 overflow-x-auto snap-x snap-mandatory pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           
           {CATEGORIES.map((category) => (
@@ -32,15 +29,11 @@ export default function CategoryBubbles() {
             >
               {/* The Bubble */}
               <div className="w-[85px] h-[85px] md:w-[110px] md:h-[110px] rounded-full overflow-hidden border border-gray-200 group-hover:border-black transition-colors duration-300 relative shadow-sm">
-                
-                {/* The Image inside the bubble */}
                 <img 
                   src={category.image} 
                   alt={category.name}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
-                
-                {/* Optional: A subtle dark overlay that fades in on hover to make it look premium */}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
               </div>
               
