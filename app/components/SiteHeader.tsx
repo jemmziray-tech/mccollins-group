@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Search, MapPin, User, Heart, ShoppingBag, Menu, X, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { useSession } from "next-auth/react";
 
 // Trimmed down data - Removed Beauty and Electronics
 const MEGA_MENU_DATA = {
@@ -24,7 +25,8 @@ export default function SiteHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // PLACEHOLDER: Replace this with your actual auth state (e.g., const { data: session } = useSession())
-  const isLoggedIn = false; 
+  const { data: session } = useSession();
+  const isLoggedIn = !!session; // This turns into 'true' if a session exists, and 'false' if it doesn't
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
