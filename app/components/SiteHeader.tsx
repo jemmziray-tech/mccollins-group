@@ -23,27 +23,42 @@ const MEGA_MENU_DATA = {
 export default function SiteHeader() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [expandedMobileMenu, setExpandedMobileMenu] = useState<string | null>(null);
 
-  // PLACEHOLDER: Replace this with your actual auth state (e.g., const { data: session } = useSession())
   const { data: session } = useSession();
-  const isLoggedIn = !!session; // This turns into 'true' if a session exists, and 'false' if it doesn't
+  const isLoggedIn = !!session;
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
     document.body.style.overflow = !isMobileMenuOpen ? 'hidden' : 'unset';
   };
 
+  const toggleMobileCategory = (category: string) => {
+    if (expandedMobileMenu === category) {
+      setExpandedMobileMenu(null);
+    } else {
+      setExpandedMobileMenu(category);
+    }
+  };
+
   return (
     <header className="w-full relative z-50 font-sans">
-      {/* 1. TOP PROMO BAR */}
-      <div className="bg-[#E3000F] text-white text-[11px] sm:text-[13px] font-bold tracking-wide py-2.5 px-4 justify-between items-center hidden md:flex">
-        <div className="w-1/3 text-left">Free Delivery on orders over 100,000 Tsh</div>
-        <div className="w-1/3 text-center border-x border-white/20">Ladies Dresses Take 2 Save 10,000 Tsh</div>
-        <div className="w-1/3 text-right">25% Off Selected Kids Apparel & Footwear</div>
+      
+      {/* 1. TOP PROMO BAR (Ultra-Premium Minimalist Style) */}
+      <div className="bg-zinc-900 text-zinc-400 text-[10px] font-semibold tracking-[0.15em] uppercase py-3 px-4 justify-between items-center hidden md:flex w-full border-b border-black">
+        <div className="flex-1 text-center hover:text-white transition-colors cursor-default flex items-center justify-center gap-2">
+          <span>Free Delivery over 100,000 Tsh</span>
+        </div>
+        <div className="flex-1 text-center border-x border-zinc-700 hover:text-white transition-colors cursor-default flex items-center justify-center gap-2">
+          <span>Ladies Dresses: Take 2 Save 10,000 Tsh</span>
+        </div>
+        <div className="flex-1 text-center hover:text-white transition-colors cursor-default flex items-center justify-center gap-2">
+          <span>25% Off Kids Apparel</span>
+        </div>
       </div>
 
       {/* 2. MAIN HEADER */}
-      <div className="bg-black text-white px-4 md:px-6 py-4 flex items-center justify-between relative">
+      <div className="bg-black text-white px-4 md:px-6 py-5 flex items-center justify-between relative">
         
         {/* Left Side: Logo & Main Links */}
         <div className="flex items-center gap-12">
@@ -52,10 +67,9 @@ export default function SiteHeader() {
             <Menu className="w-6 h-6" />
           </button>
 
-          {/* Logo */}
-          <Link href="/" className="text-xl md:text-2xl font-black tracking-tighter flex items-center gap-2">
+          {/* Logo - RED DOT REMOVED */}
+          <Link href="/" className="text-xl md:text-2xl font-black tracking-tighter flex items-center">
             McCollins
-            <div className="w-2 h-2 md:w-3 md:h-3 bg-[#E3000F]"></div>
           </Link>
 
           {/* Desktop Navigation Links */}
@@ -70,7 +84,6 @@ export default function SiteHeader() {
                 {category}
               </div>
             ))}
-            {/* Added Brands back, removed Beauty/Electronics */}
             <Link href="/brands" className="hover:text-gray-300">BRANDS</Link>
           </nav>
         </div>
@@ -90,7 +103,7 @@ export default function SiteHeader() {
             ) : (
               <Link href="/login" className="flex items-center gap-2 hover:text-gray-300 transition-colors">
                 <User className="w-5 h-5" strokeWidth={1.5} />
-                <span>SIGN IN / REGISTER</span>
+                <span>SIGN IN</span>
               </Link>
             )}
           </div>
@@ -144,26 +157,50 @@ export default function SiteHeader() {
           <div className="border-b-4 border-gray-100">
              <Link href={isLoggedIn ? "/account" : "/login"} onClick={toggleMobileMenu} className="w-full flex items-center gap-3 p-5 font-bold text-[13px] tracking-wider uppercase bg-gray-50 hover:bg-gray-100 text-[#E3000F]">
                 <User className="w-5 h-5" />
-                {isLoggedIn ? "MY ACCOUNT" : "SIGN IN / REGISTER"}
+                {isLoggedIn ? "MY ACCOUNT" : "SIGN IN"}
              </Link>
           </div>
 
+          {/* INTERACTIVE MOBILE ACCORDION LOGIC */}
           {Object.keys(MEGA_MENU_DATA).map((category) => (
             <div key={category} className="border-b border-gray-100">
-              <button className="w-full flex justify-between items-center p-5 text-left font-bold text-[13px] tracking-wider uppercase hover:bg-gray-50">
+              <button 
+                onClick={() => toggleMobileCategory(category)}
+                className="w-full flex justify-between items-center p-5 text-left font-bold text-[13px] tracking-wider uppercase hover:bg-gray-50"
+              >
                 {category}
-                <ChevronRight className="w-4 h-4 text-gray-400" />
+                <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${expandedMobileMenu === category ? 'rotate-90' : ''}`} />
               </button>
+              
+              {/* Expanded Sub-menu */}
+              {expandedMobileMenu === category && (
+                <div className="bg-white px-5 pb-5 animate-in slide-in-from-top-2 duration-200">
+                  {Object.entries(MEGA_MENU_DATA[category as keyof typeof MEGA_MENU_DATA]).map(([subCategory, links]) => (
+                    <div key={subCategory} className="mb-4 last:mb-0">
+                      <h4 className="font-bold text-[11px] text-gray-900 uppercase tracking-widest mb-2">{subCategory}</h4>
+                      <ul className="space-y-3 border-l-2 border-gray-100 pl-3 ml-1">
+                        {links.map(link => (
+                          <li key={link}>
+                            <Link href="#" onClick={toggleMobileMenu} className="text-[13px] text-gray-600 hover:text-black">
+                              {link}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
-          <Link href="/brands" className="block p-5 border-b border-gray-100 font-bold text-[13px] tracking-wider uppercase hover:bg-gray-50">BRANDS</Link>
+          <Link href="/brands" onClick={toggleMobileMenu} className="block p-5 border-b border-gray-100 font-bold text-[13px] tracking-wider uppercase hover:bg-gray-50">BRANDS</Link>
         </div>
 
-        <div className="p-5 bg-gray-50 border-t border-gray-200 grid grid-cols-2 gap-4">
-          <Link href="/wishlist" className="flex items-center gap-2 text-[13px] font-medium text-gray-700 hover:text-black">
+        <div className="p-5 bg-gray-50 border-t border-gray-200 grid grid-cols-2 gap-4 mt-auto">
+          <Link href="/wishlist" onClick={toggleMobileMenu} className="flex items-center justify-center gap-2 text-[13px] font-medium text-gray-700 hover:text-black bg-white py-2 rounded border border-gray-200">
             <Heart className="w-4 h-4" /> Wishlist
           </Link>
-          <Link href="/cart" className="flex items-center gap-2 text-[13px] font-medium text-gray-700 hover:text-black">
+          <Link href="/cart" onClick={toggleMobileMenu} className="flex items-center justify-center gap-2 text-[13px] font-medium text-gray-700 hover:text-black bg-white py-2 rounded border border-gray-200">
              <ShoppingBag className="w-4 h-4" /> Cart
           </Link>
         </div>
