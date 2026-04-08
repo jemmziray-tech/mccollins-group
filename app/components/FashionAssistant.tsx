@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { X, Send, Loader2, Sparkles } from 'lucide-react';
+import { MessageCircle, X, Send, Loader2, Sparkles } from 'lucide-react';
 
 // 1. Define your quick questions
 const QUICK_QUESTIONS = [
@@ -14,7 +14,7 @@ const QUICK_QUESTIONS = [
 
 export default function FashionAssistant() {
   const [isOpen, setIsOpen] = useState(false);
-  const [userName] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null); 
 
   const [messages, setMessages] = useState<{ role: 'user' | 'bot'; text: string }[]>([
     { 
