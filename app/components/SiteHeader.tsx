@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Search, MapPin, User, Heart, ShoppingBag, Menu, X, ChevronRight } from 'lucide-react';
+// Removed Search and MapPin from imports to keep your code perfectly clean!
+import { User, Heart, ShoppingBag, Menu, X, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from "next-auth/react";
 
@@ -88,13 +89,11 @@ export default function SiteHeader() {
           </nav>
         </div>
 
-        {/* Right Side: Icons & AUTH BUTTON */}
+        {/* Right Side: Cleaned up Icons & AUTH BUTTON */}
         <div className="flex items-center gap-4 md:gap-5 text-[12px] font-bold tracking-wider">
-          <button aria-label="Search" className="hover:text-gray-300"><Search className="w-5 h-5" strokeWidth={1.5} /></button>
-          <button aria-label="Map" className="hidden sm:block hover:text-gray-300"><MapPin className="w-5 h-5" strokeWidth={1.5} /></button>
           
           {/* AUTHENTICATION SECTION */}
-          <div className="hidden md:flex items-center border-l border-white/30 pl-5 ml-2">
+          <div className="hidden md:flex items-center">
             {isLoggedIn ? (
               <Link href="/account" className="flex items-center gap-2 hover:text-gray-300 transition-colors">
                 <User className="w-5 h-5" strokeWidth={1.5} />
@@ -108,8 +107,19 @@ export default function SiteHeader() {
             )}
           </div>
 
-          <button aria-label="Heart" className="hidden md:block hover:text-gray-300 ml-2"><Heart className="w-5 h-5" strokeWidth={1.5} /></button>
-          <button aria-label="Cart" className="hover:text-gray-300"><ShoppingBag className="w-5 h-5" strokeWidth={1.5} /></button>
+          {/* Elegant Divider Line */}
+          <div className="hidden md:block w-px h-5 bg-white/30 ml-2"></div>
+
+          {/* WISHLIST BUTTON (Now a real link) */}
+          <Link href="/wishlist" aria-label="Wishlist" className="hidden md:flex items-center hover:text-gray-300 transition-colors ml-2">
+            <Heart className="w-5 h-5" strokeWidth={1.5} />
+          </Link>
+
+          {/* CART BUTTON (Now a real link) */}
+          <Link href="/cart" aria-label="Cart" className="flex items-center hover:text-gray-300 transition-colors">
+            <ShoppingBag className="w-5 h-5" strokeWidth={1.5} />
+          </Link>
+          
         </div>
       </div>
 
