@@ -1,160 +1,161 @@
-// app/components/SiteHeader.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
-import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
-import { ShoppingCart, UserCircle, LogOut, LayoutDashboard, User } from "lucide-react";
-import { useCart } from "../context/CartContext"; 
+import React, { useState } from 'react';
+import { Search, MapPin, User, Heart, ShoppingBag, Menu, X, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
+
+const MEGA_MENU_DATA = {
+  FASHION: {
+    Clothing: ["New Arrivals", "Dresses", "Jeans", "Jackets & Coats", "Knitwear", "Tops & T-Shirts"],
+    Shoes: ["Boots", "Heels & Wedges", "Sneakers", "Pumps & Slip-Ons", "Sandals", "Slippers"],
+    "Formal Wear": ["Formal Dresses", "Tops & Shirts", "Shorts", "Skirts", "Pants", "Suits"],
+    Accessories: ["Bags & Purses", "Belts", "Jewellery", "Sunglasses", "Watches", "Hats & Caps"]
+  },
+  DRESSES: {
+    "By Length": ["Mini", "Midi", "Maxi", "Midaxi", "Knee-Length"],
+    "By Style": ["Wrap", "Bodycon", "Shirt", "Slip", "A-Line"],
+    "Occasion": ["Casual", "Party", "Workwear", "Wedding Guest", "Evening"]
+  }
+};
 
 export default function SiteHeader() {
-  const { cartCount, setIsCartOpen } = useCart();
-  const { data: session, status } = useSession();
-  
-  // NEW: State to handle mobile tapping!
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    if (session) {
-      console.log("🚨 X-RAY VISION - CURRENT SESSION:", session);
+  // Helper function to lock body scroll when mobile menu is open
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+    if (!isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
     }
-  }, [session]);
-
-  const isLoading = status === "loading";
-  const isLoggedIn = status === "authenticated";
-  
-  const ADMIN_EMAILS = [
-    "jem.mziray@gmail.com", 
-    "festomcrowland@gmail.com", 
-    "nyombicolins04@gmail.com"
-  ];
-
-  const userRole = (session?.user as { role?: string })?.role;
-  const userEmail = session?.user?.email || "";
-  const isAdmin = userRole === "ADMIN" || ADMIN_EMAILS.includes(userEmail);
-  
-  const userProfilePic = session?.user?.image;
-  const firstName = session?.user?.name?.split(" ")[0] || "User";
+  };
 
   return (
-    <nav className="bg-[#131921] text-white flex items-center justify-between px-4 md:px-6 py-3 sticky top-0 z-50 shadow-md">
-      
-      {/* Left: Logo */}
-      <Link href="/" className="flex items-center border border-transparent hover:border-white p-1 rounded transition-colors">
-        <h1 className="text-xl md:text-2xl font-bold tracking-tighter">
-          McCollins<span className="text-[#febd69]">.</span>
-        </h1>
-      </Link>
+    <header className="w-full relative z-50 font-sans">
+      {/* 1. TOP PROMO BAR (Hidden on Mobile) */}
+      <div className="bg-[#E3000F] text-white text-[11px] sm:text-[13px] font-bold tracking-wide py-2.5 px-4 justify-between items-center hidden md:flex">
+        <div className="w-1/3 text-left">Free Delivery on orders over 100,000 Tsh</div>
+        <div className="w-1/3 text-center border-x border-white/20">Ladies Dresses Take 2 Save 10,000 Tsh</div>
+        <div className="w-1/3 text-right">25% Off Selected Kids Apparel & Footwear</div>
+      </div>
 
-      {/* Right: Dynamic User and Cart Section */}
-      <div className="flex items-center gap-4 md:gap-6 mt-1 md:mt-0">
+      {/* 2. MAIN HEADER */}
+      <div className="bg-black text-white px-4 md:px-6 py-4 flex items-center justify-between relative">
         
-        {isLoading ? (
-          <div className="w-8 h-8 rounded-full bg-gray-700 animate-pulse"></div>
-        ) : isLoggedIn ? (
-          // LOGGED IN STATE
-          <div 
-            className="relative flex items-center cursor-pointer border border-transparent hover:border-white p-1 rounded transition-colors pb-2 -mb-2"
-            // These 3 lines make it work perfectly on both PC (hover) and Mobile (tap)
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            onMouseEnter={() => setIsDropdownOpen(true)}
-            onMouseLeave={() => setIsDropdownOpen(false)}
-          >
-            
-            {/* Mobile: Pic + Name Stacked | PC: Pic + Full Text */}
-            <div className="flex flex-col md:flex-row items-center md:gap-2">
-              {userProfilePic ? (
-                <img 
-                  src={userProfilePic} 
-                  alt="Profile" 
-                  className="w-6 h-6 md:w-9 md:h-9 rounded-full border-2 border-transparent hover:border-[#febd69] transition-all object-cover" 
-                />
-              ) : (
-                <UserCircle className="w-6 h-6 md:w-9 md:h-9 text-white md:text-gray-400 hover:text-[#febd69] transition-colors" />
-              )}
-              
-              {/* Mobile First Name */}
-              <span className="text-[10px] font-bold mt-1 leading-none md:hidden text-white truncate max-w-[50px]">
-                {firstName}
-              </span>
+        {/* Left Side: Logo & Main Links */}
+        <div className="flex items-center gap-12">
+          {/* Mobile Hamburger Button */}
+          <button className="lg:hidden hover:text-gray-300" onClick={toggleMobileMenu}>
+            <Menu className="w-6 h-6" />
+          </button>
 
-              {/* PC Full Greeting */}
-              <div className="hidden md:block text-left leading-tight">
-                <span className="text-[#CCCCCC] text-[11px] font-light block">Hello, {firstName}</span>
-                <span className="font-bold text-sm">Account & Lists</span>
-              </div>
-            </div>
-
-            {/* THE DROPDOWN MENU (Now controlled by React State instead of CSS) */}
-            <div 
-              className={`absolute right-0 top-[100%] mt-1 w-56 bg-white text-gray-800 rounded-lg shadow-xl transition-all duration-200 z-50 overflow-hidden border border-gray-100 ${
-                isDropdownOpen ? "opacity-100 visible" : "opacity-0 invisible"
-              }`}
-            >
-              <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-                <p className="text-sm font-semibold text-gray-900 truncate">{session?.user?.name}</p>
-                <p className="text-xs text-gray-500 truncate">{session?.user?.email}</p>
-              </div>
-
-              <div className="py-2">
-                {isAdmin && (
-                  <Link href="/admin" className="flex items-center gap-3 px-4 py-3 md:py-2 text-sm font-bold text-[#C7511F] hover:bg-[#fff9f2] transition-colors">
-                    <LayoutDashboard className="w-4 h-4" />
-                    Admin Dashboard
-                  </Link>
-                )}
-                <Link href="/customer" className="flex items-center gap-3 px-4 py-3 md:py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors">
-                  <User className="w-4 h-4 text-gray-400" />
-                  My Profile
-                </Link>
-                <button 
-                  onClick={() => signOut({ callbackUrl: '/' })} 
-                  className="w-full flex items-center gap-3 px-4 py-3 md:py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors text-left"
-                >
-                  <LogOut className="w-4 h-4 text-red-500" />
-                  Sign Out
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          // LOGGED OUT STATE
-          <Link href="/login" className="flex items-center md:gap-2 border border-transparent hover:border-white p-1 rounded transition-colors pb-2 -mb-2 md:pb-1 md:-mb-0">
-            {/* Mobile View: Icon + "Sign In" */}
-            <div className="flex flex-col items-center md:hidden">
-              <UserCircle className="w-6 h-6 text-white" />
-              <span className="text-[10px] font-bold mt-1 leading-none text-white">Sign In</span>
-            </div>
-
-            {/* PC View: Full Text */}
-            <div className="hidden md:block text-left leading-tight">
-              <span className="text-[#CCCCCC] text-[11px] block font-light">Hello, Guest</span>
-              <span className="font-bold text-sm">Sign in / Register</span>
-            </div>
+          {/* Logo */}
+          <Link href="/" className="text-xl md:text-2xl font-black tracking-tighter flex items-center gap-2">
+            McCollins
+            <div className="w-2 h-2 md:w-3 md:h-3 bg-[#E3000F]"></div>
           </Link>
-        )}
-        
-        {/* Cart Icon */}
-        <div onClick={() => setIsCartOpen(true)} className="flex items-center relative cursor-pointer border border-transparent hover:border-white p-1 rounded transition-colors duration-200 pb-2 -mb-2 md:pb-1 md:-mb-0">
-          
-          {/* Mobile: Icon + "Cart" */}
-          <div className="flex flex-col items-center relative">
-            <ShoppingCart className="w-6 h-6 md:w-7 md:h-7 text-white" />
-            <span className="text-[10px] font-bold mt-1 leading-none md:hidden text-white">Cart</span>
-            
-            {/* Floating Badge */}
-            {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-2 md:-right-1.5 bg-[#f08804] text-[#0F1111] text-[10px] md:text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm">
-                {cartCount} 
-              </span>
-            )}
-          </div>
-          
-          {/* PC View: "Cart" text next to icon */}
-          <span className="font-bold ml-1 hidden md:block text-sm mt-2">Cart</span>
+
+          {/* Desktop Navigation Links */}
+          <nav className="hidden lg:flex items-center gap-8 text-[12px] font-bold tracking-widest uppercase mt-1">
+            {Object.keys(MEGA_MENU_DATA).map((category) => (
+              <div 
+                key={category}
+                className="cursor-pointer h-full py-4 border-b-2 border-transparent hover:border-white transition-all"
+                onMouseEnter={() => setActiveMenu(category)}
+                onMouseLeave={() => setActiveMenu(null)}
+              >
+                {category}
+              </div>
+            ))}
+            <Link href="/beauty" className="hover:text-gray-300">BEAUTY</Link>
+            <Link href="/electronics" className="hover:text-gray-300">ELECTRONICS</Link>
+            <Link href="/brands" className="hover:text-gray-300">BRANDS</Link>
+          </nav>
         </div>
 
+        {/* Right Side: Icons */}
+        <div className="flex items-center gap-4 md:gap-5">
+          <button className="hover:text-gray-300"><Search className="w-5 h-5" strokeWidth={1.5} /></button>
+          <button className="hidden sm:block hover:text-gray-300"><MapPin className="w-5 h-5" strokeWidth={1.5} /></button>
+          <button className="hidden md:block hover:text-gray-300"><User className="w-5 h-5" strokeWidth={1.5} /></button>
+          <button className="hidden md:block hover:text-gray-300"><Heart className="w-5 h-5" strokeWidth={1.5} /></button>
+          <button className="hover:text-gray-300"><ShoppingBag className="w-5 h-5" strokeWidth={1.5} /></button>
+        </div>
       </div>
-    </nav>
+
+      {/* 3. DESKTOP MEGA MENU DROPDOWN */}
+      {activeMenu && MEGA_MENU_DATA[activeMenu as keyof typeof MEGA_MENU_DATA] && (
+        <div 
+          className="hidden lg:block absolute top-full left-0 w-full bg-white text-black shadow-2xl border-t border-gray-200 py-10 px-12 transition-all duration-300 origin-top animate-in slide-in-from-top-2"
+          onMouseEnter={() => setActiveMenu(activeMenu)}
+          onMouseLeave={() => setActiveMenu(null)}
+        >
+          <div className="max-w-[1400px] mx-auto grid grid-cols-4 gap-8">
+            {Object.entries(MEGA_MENU_DATA[activeMenu as keyof typeof MEGA_MENU_DATA]).map(([columnTitle, links]) => (
+              <div key={columnTitle}>
+                <h3 className="font-bold text-[13px] mb-4 uppercase tracking-wider">{columnTitle}</h3>
+                <ul className="space-y-3">
+                  {links.map((link) => (
+                    <li key={link}>
+                      <Link href={`#`} className="text-[13px] text-gray-600 hover:text-black hover:underline transition-all">
+                        {link}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 4. MOBILE SLIDE-OUT MENU */}
+      {/* Black Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-[100] lg:hidden transition-opacity"
+          onClick={toggleMobileMenu}
+        />
+      )}
+      
+      {/* White Drawer */}
+      <div className={`fixed top-0 left-0 h-full w-[85%] sm:w-[350px] bg-white z-[110] transform transition-transform duration-300 ease-in-out lg:hidden flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        {/* Mobile Menu Header */}
+        <div className="bg-black text-white p-5 flex justify-between items-center">
+          <span className="font-bold tracking-widest text-sm uppercase">Menu</span>
+          <button onClick={toggleMobileMenu} className="hover:text-gray-300">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* Mobile Menu Links */}
+        <div className="flex-1 overflow-y-auto py-2">
+          {Object.keys(MEGA_MENU_DATA).map((category) => (
+            <div key={category} className="border-b border-gray-100">
+              <button className="w-full flex justify-between items-center p-5 text-left font-bold text-[13px] tracking-wider uppercase hover:bg-gray-50">
+                {category}
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+          ))}
+          <Link href="/beauty" className="block p-5 border-b border-gray-100 font-bold text-[13px] tracking-wider uppercase hover:bg-gray-50">BEAUTY</Link>
+          <Link href="/electronics" className="block p-5 border-b border-gray-100 font-bold text-[13px] tracking-wider uppercase hover:bg-gray-50">ELECTRONICS</Link>
+          <Link href="/brands" className="block p-5 border-b border-gray-100 font-bold text-[13px] tracking-wider uppercase hover:bg-gray-50">BRANDS</Link>
+        </div>
+
+        {/* Mobile Menu Footer (Quick Links) */}
+        <div className="p-5 bg-gray-50 border-t border-gray-200 grid grid-cols-2 gap-4">
+          <Link href="/account" className="flex items-center gap-2 text-[13px] font-medium text-gray-700 hover:text-black">
+            <User className="w-4 h-4" /> Account
+          </Link>
+          <Link href="/wishlist" className="flex items-center gap-2 text-[13px] font-medium text-gray-700 hover:text-black">
+            <Heart className="w-4 h-4" /> Wishlist
+          </Link>
+        </div>
+      </div>
+
+    </header>
   );
 }
