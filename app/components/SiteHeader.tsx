@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Search, MapPin, User, Heart, ShoppingBag, Menu, X, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
+// Trimmed down data - Removed Beauty and Electronics
 const MEGA_MENU_DATA = {
   FASHION: {
     Clothing: ["New Arrivals", "Dresses", "Jeans", "Jackets & Coats", "Knitwear", "Tops & T-Shirts"],
@@ -22,19 +23,17 @@ export default function SiteHeader() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Helper function to lock body scroll when mobile menu is open
+  // PLACEHOLDER: Replace this with your actual auth state (e.g., const { data: session } = useSession())
+  const isLoggedIn = false; 
+
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
-    if (!isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
+    document.body.style.overflow = !isMobileMenuOpen ? 'hidden' : 'unset';
   };
 
   return (
     <header className="w-full relative z-50 font-sans">
-      {/* 1. TOP PROMO BAR (Hidden on Mobile) */}
+      {/* 1. TOP PROMO BAR */}
       <div className="bg-[#E3000F] text-white text-[11px] sm:text-[13px] font-bold tracking-wide py-2.5 px-4 justify-between items-center hidden md:flex">
         <div className="w-1/3 text-left">Free Delivery on orders over 100,000 Tsh</div>
         <div className="w-1/3 text-center border-x border-white/20">Ladies Dresses Take 2 Save 10,000 Tsh</div>
@@ -46,7 +45,7 @@ export default function SiteHeader() {
         
         {/* Left Side: Logo & Main Links */}
         <div className="flex items-center gap-12">
-          {/* Mobile Hamburger Button */}
+          {/* Mobile Hamburger */}
           <button className="lg:hidden hover:text-gray-300" onClick={toggleMobileMenu}>
             <Menu className="w-6 h-6" />
           </button>
@@ -69,18 +68,32 @@ export default function SiteHeader() {
                 {category}
               </div>
             ))}
-            <Link href="/beauty" className="hover:text-gray-300">BEAUTY</Link>
-            <Link href="/electronics" className="hover:text-gray-300">ELECTRONICS</Link>
+            {/* Added Brands back, removed Beauty/Electronics */}
             <Link href="/brands" className="hover:text-gray-300">BRANDS</Link>
           </nav>
         </div>
 
-        {/* Right Side: Icons */}
-        <div className="flex items-center gap-4 md:gap-5">
+        {/* Right Side: Icons & AUTH BUTTON */}
+        <div className="flex items-center gap-4 md:gap-5 text-[12px] font-bold tracking-wider">
           <button className="hover:text-gray-300"><Search className="w-5 h-5" strokeWidth={1.5} /></button>
           <button className="hidden sm:block hover:text-gray-300"><MapPin className="w-5 h-5" strokeWidth={1.5} /></button>
-          <button className="hidden md:block hover:text-gray-300"><User className="w-5 h-5" strokeWidth={1.5} /></button>
-          <button className="hidden md:block hover:text-gray-300"><Heart className="w-5 h-5" strokeWidth={1.5} /></button>
+          
+          {/* AUTHENTICATION SECTION */}
+          <div className="hidden md:flex items-center border-l border-white/30 pl-5 ml-2">
+            {isLoggedIn ? (
+              <Link href="/account" className="flex items-center gap-2 hover:text-gray-300 transition-colors">
+                <User className="w-5 h-5" strokeWidth={1.5} />
+                <span>ACCOUNT</span>
+              </Link>
+            ) : (
+              <Link href="/login" className="flex items-center gap-2 hover:text-gray-300 transition-colors">
+                <User className="w-5 h-5" strokeWidth={1.5} />
+                <span>SIGN IN / REGISTER</span>
+              </Link>
+            )}
+          </div>
+
+          <button className="hidden md:block hover:text-gray-300 ml-2"><Heart className="w-5 h-5" strokeWidth={1.5} /></button>
           <button className="hover:text-gray-300"><ShoppingBag className="w-5 h-5" strokeWidth={1.5} /></button>
         </div>
       </div>
@@ -112,17 +125,11 @@ export default function SiteHeader() {
       )}
 
       {/* 4. MOBILE SLIDE-OUT MENU */}
-      {/* Black Overlay */}
       {isMobileMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black/60 z-[100] lg:hidden transition-opacity"
-          onClick={toggleMobileMenu}
-        />
+        <div className="fixed inset-0 bg-black/60 z-[100] lg:hidden transition-opacity" onClick={toggleMobileMenu} />
       )}
       
-      {/* White Drawer */}
       <div className={`fixed top-0 left-0 h-full w-[85%] sm:w-[350px] bg-white z-[110] transform transition-transform duration-300 ease-in-out lg:hidden flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        {/* Mobile Menu Header */}
         <div className="bg-black text-white p-5 flex justify-between items-center">
           <span className="font-bold tracking-widest text-sm uppercase">Menu</span>
           <button onClick={toggleMobileMenu} className="hover:text-gray-300">
@@ -130,8 +137,15 @@ export default function SiteHeader() {
           </button>
         </div>
 
-        {/* Mobile Menu Links */}
         <div className="flex-1 overflow-y-auto py-2">
+          {/* Mobile Auth Button */}
+          <div className="border-b-4 border-gray-100">
+             <Link href={isLoggedIn ? "/account" : "/login"} onClick={toggleMobileMenu} className="w-full flex items-center gap-3 p-5 font-bold text-[13px] tracking-wider uppercase bg-gray-50 hover:bg-gray-100 text-[#E3000F]">
+                <User className="w-5 h-5" />
+                {isLoggedIn ? "MY ACCOUNT" : "SIGN IN / REGISTER"}
+             </Link>
+          </div>
+
           {Object.keys(MEGA_MENU_DATA).map((category) => (
             <div key={category} className="border-b border-gray-100">
               <button className="w-full flex justify-between items-center p-5 text-left font-bold text-[13px] tracking-wider uppercase hover:bg-gray-50">
@@ -140,18 +154,15 @@ export default function SiteHeader() {
               </button>
             </div>
           ))}
-          <Link href="/beauty" className="block p-5 border-b border-gray-100 font-bold text-[13px] tracking-wider uppercase hover:bg-gray-50">BEAUTY</Link>
-          <Link href="/electronics" className="block p-5 border-b border-gray-100 font-bold text-[13px] tracking-wider uppercase hover:bg-gray-50">ELECTRONICS</Link>
           <Link href="/brands" className="block p-5 border-b border-gray-100 font-bold text-[13px] tracking-wider uppercase hover:bg-gray-50">BRANDS</Link>
         </div>
 
-        {/* Mobile Menu Footer (Quick Links) */}
         <div className="p-5 bg-gray-50 border-t border-gray-200 grid grid-cols-2 gap-4">
-          <Link href="/account" className="flex items-center gap-2 text-[13px] font-medium text-gray-700 hover:text-black">
-            <User className="w-4 h-4" /> Account
-          </Link>
           <Link href="/wishlist" className="flex items-center gap-2 text-[13px] font-medium text-gray-700 hover:text-black">
             <Heart className="w-4 h-4" /> Wishlist
+          </Link>
+          <Link href="/cart" className="flex items-center gap-2 text-[13px] font-medium text-gray-700 hover:text-black">
+             <ShoppingBag className="w-4 h-4" /> Cart
           </Link>
         </div>
       </div>
