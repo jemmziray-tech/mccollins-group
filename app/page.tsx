@@ -91,7 +91,7 @@ export default function McCollinsGroupAmazon() {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const { cart, addToCart, removeFromCart, cartTotal, cartCount, isCartOpen, setIsCartOpen } = useCart();
-  const WHATSAPP_NUMBER = "255743924467"; 
+  const WHATSAPP_NUMBER = "255678405111"; 
 
   useEffect(() => {
     async function fetchProducts() {
