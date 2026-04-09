@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, UploadCloud, Loader2, CheckCircle, Trash2, LayoutGrid } from "lucide-react";
 
-// 🟢 NEW: Your exact Mega Menu structure to keep the database perfectly synced!
+// Mega Menu structure to keep the database perfectly synced
 const MEGA_MENU_DATA = {
   FASHION: {
     Clothing: ["New Arrivals", "Dresses", "Jeans", "Jackets & Coats", "Knitwear", "Tops & T-Shirts"],
@@ -29,6 +29,7 @@ type DraftProduct = {
   brand: string;
   category: string;
   description: string;
+  sizes: string; // 🟢 NEW: Added sizes string
 };
 
 export default function AddProductPage() {
@@ -47,9 +48,10 @@ export default function AddProductPage() {
       previewUrl: URL.createObjectURL(file),
       name: "",
       price: "",
-      brand: "McCollins", 
-      category: "Tops & T-Shirts", // 🟢 Updated default to match your new list
+      brand: "Colman Looks", 
+      category: "Tops & T-Shirts",
       description: "", 
+      sizes: "S, M, L, XL", // 🟢 NEW: Default common sizes to save typing!
     }));
 
     setDrafts((prev) => [...prev, ...newDrafts]);
@@ -97,6 +99,12 @@ export default function AddProductPage() {
            throw new Error(`Supabase Upload Blocked: ${errorText}`);
         }
 
+        // 🟢 NEW: Clean up the comma-separated string into a neat array
+        const sizeArray = draft.sizes
+          .split(',')
+          .map(s => s.trim())
+          .filter(s => s.length > 0);
+
         return {
           name: draft.name,
           price: Number(draft.price),
@@ -105,6 +113,7 @@ export default function AddProductPage() {
           description: draft.description || null,
           category: draft.category,
           sizeType: "clothing",
+          sizes: sizeArray, // 🟢 Injecting our clean array here!
           isAvailable: true,
         };
       });
@@ -159,7 +168,12 @@ export default function AddProductPage() {
               disabled={isSubmitting}
               className="bg-[#FFD814] hover:bg-[#F7CA00] border border-[#FCD200] text-[#0F1111] px-6 py-2.5 rounded-lg font-bold shadow-sm flex items-center gap-2 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? <><Loader2 className="w-4 h-4 animate-spin"/> Uploading...</> : <><UploadCloud className="w-4 h-4"/> Publish {drafts.length} Products</>}
+              {/* 🟢 THE FIX: Smart grammar for 1 Product vs 2 Products */}
+              {isSubmitting ? (
+                <><Loader2 className="w-4 h-4 animate-spin"/> Uploading...</>
+              ) : (
+                <><UploadCloud className="w-4 h-4"/> Publish {drafts.length} {drafts.length === 1 ? 'Product' : 'Products'}</>
+              )}
             </button>
           )}
         </div>
@@ -224,7 +238,6 @@ export default function AddProductPage() {
                       <div>
                         <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Category *</label>
                         <div className="relative">
-                          {/* 🟢 THE FIX: Organized Dropdown directly fed by the Mega Menu! */}
                           <select 
                             value={draft.category} 
                             onChange={(e) => updateDraft(draft.id, 'category', e.target.value)} 
@@ -241,15 +254,19 @@ export default function AddProductPage() {
                               ))
                             ))}
                           </select>
-                          {/* Custom Dropdown Arrow */}
                           <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                             ▼
                           </div>
                         </div>
                       </div>
 
-                      {/* Description */}
-                      <div className="sm:col-span-2 mt-1">
+                      {/* 🟢 NEW: Sizes & Description Row */}
+                      <div>
+                         <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Sizes Available</label>
+                         <input type="text" value={draft.sizes} onChange={(e) => updateDraft(draft.id, 'sizes', e.target.value)} placeholder="e.g. S, M, L or 40, 41, 42" className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none font-medium text-gray-900 text-sm" />
+                      </div>
+
+                      <div>
                          <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Description (Optional)</label>
                          <input type="text" value={draft.description} onChange={(e) => updateDraft(draft.id, 'description', e.target.value)} placeholder="Add a short description..." className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none text-gray-600 text-sm" />
                       </div>

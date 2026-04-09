@@ -5,7 +5,7 @@ import { User, Heart, ShoppingBag, Menu, X, ChevronRight, Search } from 'lucide-
 import Link from 'next/link';
 import { useSession } from "next-auth/react";
 import { useRouter } from 'next/navigation'; 
-import { useWishlist } from '@/app/context/WishlistContext'; // 🟢 NEW: Imported Wishlist Memory
+import { useWishlist } from '@/app/context/WishlistContext'; 
 
 const MEGA_MENU_DATA = {
   FASHION: {
@@ -29,11 +29,8 @@ export default function SiteHeader() {
   const [searchInput, setSearchInput] = useState("");
   const router = useRouter();
   
-  // 🟢 NEW: Pull in the Wishlist Count
   const { wishlistCount } = useWishlist();
-
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const { data: session } = useSession();
   const isLoggedIn = !!session;
 
@@ -93,7 +90,7 @@ export default function SiteHeader() {
                 {category}
               </div>
             ))}
-            <Link href="/brands" className="hover:text-gray-300 py-4 flex items-center h-full">BRANDS</Link>
+            {/* BRANDS LINK REMOVED FROM HERE */}
           </nav>
         </div>
 
@@ -129,7 +126,6 @@ export default function SiteHeader() {
 
           <div className="hidden md:block w-px h-5 bg-white/30 ml-2"></div>
 
-          {/* 🟢 THE FIX: Wishlist Icon with Notification Badge! */}
           <Link href="/wishlist" aria-label="Wishlist" className="hidden md:flex items-center hover:text-gray-300 transition-colors ml-2 relative">
             <Heart className="w-5 h-5" strokeWidth={1.5} />
             {wishlistCount > 0 && (
@@ -247,12 +243,11 @@ export default function SiteHeader() {
               )}
             </div>
           ))}
-          <Link href="/brands" onClick={toggleMobileMenu} className="block p-5 border-b border-gray-100 font-bold text-[13px] tracking-wider uppercase text-black hover:bg-gray-50">BRANDS</Link>
+          {/* BRANDS LINK REMOVED FROM HERE */}
         </div>
 
         <div className="p-5 bg-gray-50 border-t border-gray-200 grid grid-cols-2 gap-4 mt-auto">
           
-          {/* 🟢 THE FIX: Mobile Wishlist Icon with Notification Badge! */}
           <Link href="/wishlist" onClick={toggleMobileMenu} className="flex items-center justify-center gap-2 text-[13px] font-medium text-gray-700 hover:text-black bg-white py-2 rounded border border-gray-200 relative">
             <Heart className="w-4 h-4" /> 
             Wishlist
