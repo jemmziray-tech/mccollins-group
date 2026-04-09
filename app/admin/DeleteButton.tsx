@@ -1,35 +1,38 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import React, { useState } from 'react';
+import { Trash2, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function DeleteButton({ productId }: { productId: string }) {
-  const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
+  const router = useRouter();
 
   const handleDelete = async () => {
-    // Add a simple confirmation dialog so the admin doesn't delete by mistake!
-    const confirmed = window.confirm("Are you sure you want to delete this product? This action cannot be undone.");
-    if (!confirmed) return;
+    // 1. Safety Check
+    const confirmDelete = window.confirm("Are you sure you want to permanently delete this product? This cannot be undone.");
+    if (!confirmDelete) return;
 
+    // 2. Trigger Loading State
     setIsDeleting(true);
 
     try {
-      const res = await fetch(`/api/products?id=${productId}`, {
-        method: "DELETE",
+      // 3. Call the DELETE API Route
+      const response = await fetch(`/api/products?id=${productId}`, {
+        method: 'DELETE',
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to delete product");
+      if (response.ok) {
+        // 4. Refresh the page data instantly behind the scenes!
+        router.refresh();
+      } else {
+        const data = await response.json();
+        alert(`Failed to delete: ${data.error}`);
+        setIsDeleting(false); // Only turn off loading if it failed (if it succeeded, the page refreshes anyway)
       }
-
-      // Tell Next.js to refresh the server component so the product disappears!
-      router.refresh();
     } catch (error) {
       console.error(error);
-      alert("Failed to delete product.");
-    } finally {
+      alert("Network error occurred while trying to delete.");
       setIsDeleting(false);
     }
   };
@@ -38,12 +41,10 @@ export default function DeleteButton({ productId }: { productId: string }) {
     <button 
       onClick={handleDelete}
       disabled={isDeleting}
-      className={`p-2 rounded-lg transition-colors ${
-        isDeleting ? "text-gray-400 bg-gray-50 cursor-not-allowed" : "text-red-600 hover:bg-red-50"
-      }`} 
+      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
       title="Delete Product"
     >
-      <Trash2 className="w-4 h-4" />
+      {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
     </button>
   );
 }

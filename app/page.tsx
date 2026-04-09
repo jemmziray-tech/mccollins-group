@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
+import { useSearchParams, useRouter } from "next/navigation"; 
 import { 
   ShoppingCart, 
   Menu, 
@@ -13,15 +14,14 @@ import {
   X,
   Trash2,
   ShieldCheck,
-  Loader2
+  Loader2,
+  Heart // 🟢 Added Heart icon
 } from "lucide-react";
 
 import { useCart } from "./context/CartContext";
+import { useWishlist } from "./context/WishlistContext"; // 🟢 NEW: Imported Wishlist Memory
 import FashionAssistant from "./components/FashionAssistant";
 import Footer from "./components/SiteFooter"; 
-
-// 🟢 NEW IMPORTS: Bringing in your new Category Bubbles!
-// (We removed SiteHeader from here because it's already in layout.tsx)
 import CategoryBubbles from "./components/CategoryBubbles";
 
 const displayInventory = [
@@ -42,42 +42,6 @@ const displayInventory = [
     category: "Outerwear",
     imageUrl: "https://images.unsplash.com/photo-1555583743-991174c11425?q=80&w=800",
     description: "A rugged, timeless denim jacket with a vintage wash. Perfect for layering over tees or hoodies."
-  },
-  { 
-    id: "prod_3", 
-    name: "Slim Fit Black Jeans", 
-    brand: "Colman Looks", 
-    price: 35000, 
-    category: "Denim",
-    imageUrl: "https://images.unsplash.com/photo-1542272604-787c3835535d?q=80&w=800",
-    description: "Premium stretch denim that moves with you. A staple black jean for any modern wardrobe."
-  },
-  { 
-    id: "prod_4", 
-    name: "Heavyweight Street Hoodie", 
-    brand: "Urban TZ", 
-    price: 30000, 
-    category: "Outerwear",
-    imageUrl: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=800",
-    description: "Ultra-soft heavyweight fleece. Drop shoulders and a relaxed fit for ultimate comfort."
-  },
-  { 
-    id: "prod_5", 
-    name: "Leather Chelsea Boots", 
-    brand: "Colman Looks", 
-    price: 85000, 
-    category: "Footwear",
-    imageUrl: "https://images.unsplash.com/photo-1499013819532-e4ff41b00669?q=80&w=800",
-    description: "Genuine suede leather with a durable rubber sole. Elevates any casual or smart-casual outfit."
-  },
-  { 
-    id: "prod_6", 
-    name: "Minimalist Silver Watch", 
-    brand: "Luxe Time", 
-    price: 55000, 
-    category: "Accessories",
-    imageUrl: "https://images.unsplash.com/photo-1622434641406-a158123450f9?q=80&w=800",
-    description: "Stainless steel mesh band with a clean, minimalist watch face. Water-resistant and elegant."
   }
 ];
 
@@ -87,11 +51,17 @@ export default function McCollinsGroupAmazon() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
-  
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const { cart, addToCart, removeFromCart, cartTotal, cartCount, isCartOpen, setIsCartOpen } = useCart();
+  
+  // 🟢 NEW: Pull in the Wishlist functions
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+
   const WHATSAPP_NUMBER = "255678405111"; 
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchProducts() {
@@ -108,10 +78,35 @@ export default function McCollinsGroupAmazon() {
     fetchProducts();
   }, []);
 
+  useEffect(() => {
+    const queryFromMenu = searchParams.get('q');
+    const categoryFromMenu = searchParams.get('category');
+    
+    if (queryFromMenu) {
+      setSearchQuery(queryFromMenu);
+      setTimeout(() => window.scrollTo({ top: 600, behavior: 'smooth' }), 100);
+    } else {
+      setSearchQuery("");
+    }
+
+    if (categoryFromMenu) {
+      setSelectedCategory(categoryFromMenu);
+    } else {
+      setSelectedCategory("All");
+    }
+  }, [searchParams]);
+
   const displayedProducts = products.filter((product) => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          product.brand.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
+    if (searchQuery === "") return matchesCategory;
+
+    const searchTerms = searchQuery.toLowerCase().split(' ').filter(term => term !== '&' && term !== 'and' && term.trim() !== '');
+    const matchesSearch = searchTerms.some(term => 
+      (product.name && product.name.toLowerCase().includes(term)) || 
+      (product.brand && product.brand.toLowerCase().includes(term)) ||
+      (product.category && product.category.toLowerCase().includes(term))
+    );
+
     return matchesSearch && matchesCategory;
   });
 
@@ -130,33 +125,43 @@ export default function McCollinsGroupAmazon() {
         }),
       });
 
-      if (!res.ok) {
-        alert(`🚨 Backend Error: Status ${res.status}. Is the API file in the right place?`);
-      } else {
-        alert("✅ Order saved to database perfectly!");
-      }
+      if (!res.ok) alert(`🚨 Backend Error: Status ${res.status}`);
+      else alert("✅ Order saved to database perfectly!");
     } catch (error) {
-      alert("🚨 Network Error: Next.js cannot find the API file at all.");
+      alert("🚨 Network Error.");
     }
 
-    // Build the WhatsApp String
     let orderDetails = "Hujambo McCollins! Ninaomba ku-place order hii:\n\n";
     cart.forEach(item => {
       orderDetails += `▪️ ${item.quantity}x ${item.name} - Tsh ${(item.price * item.quantity).toLocaleString()}\n`;
     });
     orderDetails += `\n*TOTAL: Tsh ${cartTotal.toLocaleString()}*\n\nJe, hivi vitu vyote vipo store?`;
 
-    // Fire WhatsApp
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(orderDetails)}`, "_blank");
-    
-    // Reset the button
     setIsCheckingOut(false);
+  };
+
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setSelectedCategory("All");
+    router.push("/");
+  };
+
+  // 🟢 NEW: Smart Wishlist Toggle Function
+  const toggleWishlist = (e: React.MouseEvent, product: any) => {
+    e.preventDefault(); // Prevents the browser from opening the Link!
+    e.stopPropagation(); // Stops the click from bubbling up
+    
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(product);
+    }
   };
 
   return (
       <div className="min-h-screen bg-[#F7F8FA] font-sans text-[#0F1111] relative overflow-x-hidden animate-in fade-in duration-500 ease-in-out">
       
-      {/* 🟢 NEW: The Category Bubbles */}
       <CategoryBubbles />
 
       {/* --- THE SLIDE-OUT CART DRAWER --- */}
@@ -341,7 +346,7 @@ export default function McCollinsGroupAmazon() {
             <span className="text-gray-500 text-sm mb-1 font-bold">{displayedProducts.length} items</span>
             
             {(searchQuery !== "" || selectedCategory !== "All") && (
-              <button onClick={() => { setSearchQuery(""); setSelectedCategory("All"); }} className="ml-auto text-black hover:text-[#E3000F] hover:underline text-sm font-bold uppercase transition-colors">
+              <button onClick={clearAllFilters} className="ml-auto text-black hover:text-[#E3000F] hover:underline text-sm font-bold uppercase transition-colors cursor-pointer">
                 Clear Filters
               </button>
             )}
@@ -350,25 +355,46 @@ export default function McCollinsGroupAmazon() {
           {displayedProducts.length === 0 ? (
             <div className="text-center py-20 animate-in fade-in duration-500">
               <h3 className="text-xl font-bold text-gray-700">No products found.</h3>
+              <p className="text-gray-500 mt-2">Try clearing your filters or selecting a different category.</p>
+              <button onClick={clearAllFilters} className="mt-4 bg-black text-white px-6 py-2 rounded font-bold uppercase tracking-wider text-xs">View All Products</button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-6 gap-y-10">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-10">
               {displayedProducts.map((p: any, idx: number) => (
-                <div key={p.id} onClick={() => setQuickViewProduct(p)} className="group cursor-pointer flex flex-col animate-in fade-in slide-in-from-bottom-4 fill-mode-both" style={{ animationDelay: `${idx * 50}ms` }}>
-                  <div className="bg-[#F8F8F8] h-56 w-full flex items-center justify-center mb-3 overflow-hidden rounded relative border border-gray-100">
-                    <Image 
-                      src={p.imageUrl} 
-                      alt={p.name} 
-                      fill
-                      sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 16vw"
-                      className="object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110" 
-                    />
-                    <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
-                      <span className="bg-white text-black text-[11px] px-4 py-2 rounded-full shadow-lg uppercase font-bold tracking-widest transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">Quick View</span>
+                
+                // 🟢 Parent div controls positioning so the Link and Button can live together peacefully!
+                <div key={p.id} className="group flex flex-col relative animate-in fade-in slide-in-from-bottom-4 fill-mode-both" style={{ animationDelay: `${idx * 50}ms` }}>
+                  
+                  {/* 🟢 SMART HEART BUTTON: Has a safe 'padding' area for fat fingers on mobile */}
+                  <button 
+                    onClick={(e) => toggleWishlist(e, p)}
+                    className="absolute top-2 right-2 z-20 p-2 bg-white/80 hover:bg-white backdrop-blur-sm rounded-full shadow-sm transition-all hover:scale-110 active:scale-95"
+                    aria-label="Save to Wishlist"
+                  >
+                    <Heart className={`w-4 h-4 transition-colors ${isInWishlist(p.id) ? 'fill-[#E3000F] text-[#E3000F]' : 'text-gray-600 hover:text-black'}`} />
+                  </button>
+
+                  <Link href={`/product/${p.id}`} className="cursor-pointer block w-full">
+                    <div className="bg-[#F8F8F8] h-56 w-full flex items-center justify-center mb-3 overflow-hidden rounded relative border border-gray-100">
+                      <Image 
+                        src={p.imageUrl} 
+                        alt={p.name} 
+                        fill
+                        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 16vw"
+                        className="object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110 p-2" 
+                      />
+                      <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300 pointer-events-none">
+                        <span className="bg-white text-black text-[11px] px-4 py-2 rounded-full shadow-lg uppercase font-bold tracking-widest transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+                          View Details
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <h4 className="text-[13px] font-bold text-gray-900 group-hover:text-[#E3000F] line-clamp-2 leading-tight transition-colors uppercase tracking-wide">{p.name}</h4>
-                  <div className="text-lg font-bold text-[#0F1111] mt-2"><span className="text-[10px] align-top relative top-1 text-gray-500">TSH</span> {Number(p.price || 0).toLocaleString()}</div>
+                    <h4 className="text-[13px] font-bold text-gray-900 group-hover:text-[#E3000F] line-clamp-2 leading-tight transition-colors uppercase tracking-wide">{p.name}</h4>
+                    <div className="text-lg font-bold text-[#0F1111] mt-2">
+                      <span className="text-[10px] align-top relative top-1 text-gray-500">TSH</span> {Number(p.price || 0).toLocaleString()}
+                    </div>
+                  </Link>
+                  
                 </div>
               ))}
             </div>

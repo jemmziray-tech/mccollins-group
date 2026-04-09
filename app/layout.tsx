@@ -6,6 +6,7 @@ import "./globals.css";
 // Components & Context Providers
 import Provider from "./components/Provider";
 import { CartProvider } from "./context/CartContext";
+import { WishlistProvider } from "./context/WishlistContext"; // 🟢 NEW: Imported the Wishlist Brain!
 import SiteHeader from "./components/SiteHeader";
 
 // Font Configurations
@@ -34,16 +35,23 @@ export default function RootLayout({
       <body className={inter.className}>
         {/* NextAuth Session Provider */}
         <Provider>
+          
           {/* Shopping Cart Provider */}
           <CartProvider>
             
-            {/* Our shiny new dynamic Navbar! */}
-            <SiteHeader />
-            
-            {/* The rest of the website */}
-            <main>{children}</main>
+            {/* 🟢 NEW: Wishlist Provider wrapping the entire site! */}
+            <WishlistProvider>
+              
+              {/* Our shiny new dynamic Navbar! */}
+              <SiteHeader />
+              
+              {/* The rest of the website */}
+              <main>{children}</main>
+              
+            </WishlistProvider>
             
           </CartProvider>
+          
         </Provider>
       </body>
     </html>

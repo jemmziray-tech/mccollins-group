@@ -115,3 +115,26 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Failed to delete product" }, { status: 500 });
   }
 }
+
+// --- PATCH: Toggle Product Visibility ---
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const { id, isAvailable } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
+    }
+
+    // Instantly update just the visibility status
+    const updatedProduct = await prisma.product.update({
+      where: { id },
+      data: { isAvailable },
+    });
+
+    return NextResponse.json(updatedProduct, { status: 200 });
+  } catch (error) {
+    console.error("Database PATCH Error:", error);
+    return NextResponse.json({ error: "Failed to toggle product status" }, { status: 500 });
+  }
+}

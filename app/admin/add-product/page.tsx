@@ -1,4 +1,3 @@
-// app/admin/add-product/page.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -6,15 +5,15 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, UploadCloud, Loader2, CheckCircle, Trash2, LayoutGrid } from "lucide-react";
 
-// The shape of our temporary local products before they go to the database
 type DraftProduct = {
-  id: string; // Temporary ID for React
+  id: string; 
   file: File;
   previewUrl: string;
   name: string;
   price: string;
   brand: string;
   category: string;
+  description: string;
 };
 
 export default function AddProductPage() {
@@ -23,42 +22,36 @@ export default function AddProductPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // 1. HANDLE BATCH FILE DROPS
   const handleFilesSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
-    // Convert the files into our "Draft" objects
     const newDrafts = files.map((file) => ({
       id: Math.random().toString(36).substring(7),
       file,
       previewUrl: URL.createObjectURL(file),
       name: "",
       price: "",
-      brand: "McCollins", // Default brand to save typing!
-      category: "Shirts", // Default category
+      brand: "McCollins", 
+      category: "Shirts", 
+      description: "", 
     }));
 
     setDrafts((prev) => [...prev, ...newDrafts]);
-    // Clear the input so you can select more files if needed
     e.target.value = '';
   };
 
-  // 2. UPDATE A SPECIFIC DRAFT'S DATA
   const updateDraft = (id: string, field: keyof DraftProduct, value: string) => {
     setDrafts((prev) => 
       prev.map((draft) => draft.id === id ? { ...draft, [field]: value } : draft)
     );
   };
 
-  // 3. REMOVE A DRAFT BEFORE UPLOADING
   const removeDraft = (id: string) => {
     setDrafts((prev) => prev.filter((draft) => draft.id !== id));
   };
 
-  // 4. THE MASTER BATCH UPLOAD FUNCTION
   const handlePublishAll = async () => {
-    // Validation
     const hasEmptyFields = drafts.some(d => !d.name || !d.price || !d.brand);
     if (hasEmptyFields) {
       alert("Please fill out the Name, Price, and Brand for all selected images!");
@@ -70,11 +63,11 @@ export default function AddProductPage() {
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     try {
-      // Step A: Upload all images to Supabase CONCURRENTLY for maximum speed
       const uploadPromises = drafts.map(async (draft) => {
         const fileExt = draft.file.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
         
+        // 1. UPLOAD TO SUPABASE
         const res = await fetch(`${supabaseUrl}/storage/v1/object/products/${fileName}`, {
           method: "POST",
           headers: {
@@ -84,34 +77,37 @@ export default function AddProductPage() {
           body: draft.file,
         });
 
-        if (!res.ok) throw new Error("Image upload failed");
+        if (!res.ok) {
+           const errorText = await res.text();
+           throw new Error(`Supabase Upload Blocked: ${errorText}`);
+        }
 
-        // Return the clean data object ready for Prisma
         return {
           name: draft.name,
           price: Number(draft.price),
           brand: draft.brand,
           imageUrl: `${supabaseUrl}/storage/v1/object/public/products/${fileName}`,
-          description: "Premium McCollins Fashion", // Default description for batch uploads
+          description: draft.description || null,
           category: draft.category,
           sizeType: "clothing",
           isAvailable: true,
         };
       });
 
-      // Wait for all image uploads to finish
       const finalProductsArray = await Promise.all(uploadPromises);
 
-      // Step B: Send the entire array to our new Bulk API route
+      // 2. SEND TO DATABASE
       const dbRes = await fetch("/api/products/bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(finalProductsArray),
       });
 
-      if (!dbRes.ok) throw new Error("Failed to save products to database.");
+      if (!dbRes.ok) {
+         const dbError = await dbRes.text();
+         throw new Error(`Database Error: ${dbError}`);
+      }
 
-      // Step C: Celebrate!
       setSuccess(true);
       setTimeout(() => {
         router.push("/admin");
@@ -120,7 +116,7 @@ export default function AddProductPage() {
 
     } catch (error: any) {
       console.error(error);
-      alert("An error occurred during the batch upload.");
+      alert(error.message || "An error occurred during the batch upload.");
       setIsSubmitting(false);
     }
   };
@@ -142,7 +138,6 @@ export default function AddProductPage() {
             <p className="text-gray-500 text-sm mt-1">Select multiple photos to quickly add inventory.</p>
           </div>
           
-          {/* Action Button (Top Right) */}
           {drafts.length > 0 && !success && (
             <button 
               onClick={handlePublishAll}
@@ -164,7 +159,6 @@ export default function AddProductPage() {
         ) : (
           <div className="space-y-6">
             
-            {/* THE MASTER DROPZONE */}
             <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-200">
               <label htmlFor="multi-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-[#f2f8f9] hover:border-[#007185] rounded-lg cursor-pointer transition-colors group">
                 <div className="flex flex-col items-center justify-center pt-5 pb-6 text-gray-500 group-hover:text-[#007185]">
@@ -176,40 +170,45 @@ export default function AddProductPage() {
               </label>
             </div>
 
-            {/* THE DYNAMIC QUICK-EDIT LIST */}
             {drafts.length > 0 && (
               <div className="space-y-4 animate-in fade-in duration-500">
                 {drafts.map((draft, index) => (
                   <div key={draft.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-6 relative group">
                     
-                    {/* Delete Button */}
                     <button onClick={() => removeDraft(draft.id)} className="absolute -top-3 -right-3 bg-white border border-gray-200 p-1.5 rounded-full text-gray-400 hover:text-red-500 hover:border-red-200 shadow-sm transition-colors z-10 hidden md:block group-hover:block">
                       <Trash2 className="w-4 h-4" />
                     </button>
 
-                    {/* Image Preview */}
                     <div className="w-full md:w-40 h-40 bg-gray-100 rounded-lg overflow-hidden shrink-0 border border-gray-200">
                       <img src={draft.previewUrl} alt="Preview" className="w-full h-full object-cover" />
                     </div>
 
-                    {/* Quick Edit Inputs */}
-                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-                      <div className="sm:col-span-2">
-                        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Product {index + 1} Name</label>
-                        <input type="text" value={draft.name} onChange={(e) => updateDraft(draft.id, 'name', e.target.value)} placeholder="e.g. Minimalist Black Hoodie" className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-2 outline-none font-medium text-gray-900 transition-colors" />
+                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 items-start">
+                      
+                      {/* Name & Brand Row */}
+                      <div className="sm:col-span-2 grid grid-cols-2 gap-4">
+                        <div>
+                           <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Name *</label>
+                           <input type="text" value={draft.name} onChange={(e) => updateDraft(draft.id, 'name', e.target.value)} placeholder="e.g. Minimalist Hoodie" className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none font-medium text-gray-900 text-sm" />
+                        </div>
+                        <div>
+                           <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Brand *</label>
+                           <input type="text" value={draft.brand} onChange={(e) => updateDraft(draft.id, 'brand', e.target.value)} placeholder="e.g. McCollins" className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none font-medium text-gray-900 text-sm" />
+                        </div>
                       </div>
 
+                      {/* Price & Category Row */}
                       <div>
-                        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Price (Tsh)</label>
+                        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Price (Tsh) *</label>
                         <div className="relative">
-                          <span className="absolute left-2 top-2 text-gray-400 text-sm font-bold">Tsh</span>
-                          <input type="number" value={draft.price} onChange={(e) => updateDraft(draft.id, 'price', e.target.value)} placeholder="35000" className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent pl-10 pr-2 py-2 outline-none font-bold text-[#B12704] transition-colors" />
+                          <span className="absolute left-2 top-1.5 text-gray-400 text-sm font-bold">Tsh</span>
+                          <input type="number" value={draft.price} onChange={(e) => updateDraft(draft.id, 'price', e.target.value)} placeholder="35000" className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent pl-10 pr-2 py-1.5 outline-none font-bold text-[#B12704] text-sm" />
                         </div>
                       </div>
 
                       <div>
                         <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Category</label>
-                        <select value={draft.category} onChange={(e) => updateDraft(draft.id, 'category', e.target.value)} className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-2 outline-none text-gray-700 transition-colors cursor-pointer">
+                        <select value={draft.category} onChange={(e) => updateDraft(draft.id, 'category', e.target.value)} className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none text-gray-700 text-sm cursor-pointer">
                           <option value="Shirts">Shirts & Tees</option>
                           <option value="Denim">Jeans & Denim</option>
                           <option value="Outerwear">Jackets & Outerwear</option>
@@ -218,8 +217,13 @@ export default function AddProductPage() {
                         </select>
                       </div>
 
-                      {/* Mobile Delete Button */}
-                      <button onClick={() => removeDraft(draft.id)} className="md:hidden w-full flex items-center justify-center gap-2 text-red-500 text-sm font-bold py-2 bg-red-50 rounded-lg mt-2">
+                      {/* Description */}
+                      <div className="sm:col-span-2 mt-1">
+                         <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Description (Optional)</label>
+                         <input type="text" value={draft.description} onChange={(e) => updateDraft(draft.id, 'description', e.target.value)} placeholder="Add a short description..." className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none text-gray-600 text-sm" />
+                      </div>
+
+                      <button onClick={() => removeDraft(draft.id)} className="md:hidden w-full flex items-center justify-center gap-2 text-red-500 text-sm font-bold py-2 bg-red-50 rounded-lg mt-2 sm:col-span-2">
                         <Trash2 className="w-4 h-4" /> Remove Item
                       </button>
                     </div>

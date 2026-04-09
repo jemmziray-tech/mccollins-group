@@ -1,9 +1,8 @@
-// app/admin/ProductStatusToggle.tsx
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 export default function ProductStatusToggle({ productId, initialStatus }: { productId: string, initialStatus: boolean }) {
   const [isAvailable, setIsAvailable] = useState(initialStatus);
@@ -11,45 +10,58 @@ export default function ProductStatusToggle({ productId, initialStatus }: { prod
   const router = useRouter();
 
   const toggleStatus = async () => {
-    const newStatus = !isAvailable; // Flips true to false, or false to true
     setIsLoading(true);
+    const newStatus = !isAvailable;
     
+    // Optimistically update the UI so it feels instant
+    setIsAvailable(newStatus);
+
     try {
-      const res = await fetch("/api/products/update-status", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId, isAvailable: newStatus }),
+      // Call our new PATCH API route
+      const response = await fetch('/api/products', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: productId, isAvailable: newStatus })
       });
-      
-      if (res.ok) {
-        setIsAvailable(newStatus);
-        router.refresh(); // Refreshes the page data silently
+
+      if (!response.ok) {
+        // If the database fails, revert the toggle back to normal
+        setIsAvailable(!newStatus);
+        alert("Failed to update product visibility.");
       } else {
-        alert("Failed to update product status.");
+        router.refresh();
       }
     } catch (error) {
-      alert("Network error updating status.");
+      setIsAvailable(!newStatus);
+      alert("Network error occurred.");
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   return (
-    <button
-      onClick={toggleStatus}
-      disabled={isLoading}
-      className={`relative inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 shadow-sm border ${
-        isAvailable 
-          ? "bg-green-50 text-green-700 border-green-200 hover:bg-green-100" 
-          : "bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100"
-      }`}
-    >
+    <div className="flex items-center gap-3">
+      <button 
+        onClick={toggleStatus}
+        disabled={isLoading}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none ${
+          isAvailable ? 'bg-green-500' : 'bg-gray-300'
+        } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+      >
+        <span 
+          className={`inline-block h-4 w-4 transform rounded-full bg-white transition duration-300 ${
+            isAvailable ? 'translate-x-6' : 'translate-x-1'
+          }`}
+        />
+      </button>
+      
       {isLoading ? (
-        <Loader2 className="w-3 h-3 animate-spin" />
+        <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
       ) : (
-        <span className={`w-2 h-2 rounded-full ${isAvailable ? "bg-green-500 animate-pulse" : "bg-gray-400"}`}></span>
+        <span className={`text-xs font-bold uppercase tracking-wider ${isAvailable ? 'text-green-600' : 'text-gray-500'}`}>
+          {isAvailable ? 'Visible' : 'Hidden'}
+        </span>
       )}
-      {isAvailable ? "Active" : "Hidden"}
-    </button>
+    </div>
   );
 }

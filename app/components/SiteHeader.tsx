@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from 'react';
-import { User, Heart, ShoppingBag, Menu, X, ChevronRight } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { User, Heart, ShoppingBag, Menu, X, ChevronRight, Search } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from "next-auth/react";
+import { useRouter } from 'next/navigation'; 
+import { useWishlist } from '@/app/context/WishlistContext'; // 🟢 NEW: Imported Wishlist Memory
 
-// Trimmed down data - Removed Beauty and Electronics
 const MEGA_MENU_DATA = {
   FASHION: {
     Clothing: ["New Arrivals", "Dresses", "Jeans", "Jackets & Coats", "Knitwear", "Tops & T-Shirts"],
@@ -24,9 +25,28 @@ export default function SiteHeader() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedMobileMenu, setExpandedMobileMenu] = useState<string | null>(null);
+  
+  const [searchInput, setSearchInput] = useState("");
+  const router = useRouter();
+  
+  // 🟢 NEW: Pull in the Wishlist Count
+  const { wishlistCount } = useWishlist();
+
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: session } = useSession();
   const isLoggedIn = !!session;
+
+  const handleMouseEnter = (category: string) => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setActiveMenu(category);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setActiveMenu(null);
+    }, 350); 
+  };
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -34,51 +54,65 @@ export default function SiteHeader() {
   };
 
   const toggleMobileCategory = (category: string) => {
-    if (expandedMobileMenu === category) {
-      setExpandedMobileMenu(null);
-    } else {
-      setExpandedMobileMenu(category);
+    if (expandedMobileMenu === category) setExpandedMobileMenu(null);
+    else setExpandedMobileMenu(category);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchInput.trim()) {
+      router.push(`/?q=${encodeURIComponent(searchInput.trim())}`);
+      setSearchInput(""); 
+      if (isMobileMenuOpen) toggleMobileMenu(); 
     }
   };
 
   return (
     <header className="w-full relative z-50 font-sans">
       
-      {/* 1. MAIN HEADER (Promo bar removed!) */}
-      <div className="bg-black text-white px-4 md:px-6 py-5 flex items-center justify-between relative">
+      {/* MAIN HEADER */}
+      <div className="bg-black text-white px-4 md:px-6 py-5 flex items-center justify-between relative z-50">
         
-        {/* Left Side: Logo & Main Links */}
         <div className="flex items-center gap-12">
-          {/* Mobile Hamburger */}
           <button aria-label="Menu" className="lg:hidden hover:text-gray-300" onClick={toggleMobileMenu}>
             <Menu className="w-6 h-6" />
           </button>
 
-          {/* Logo */}
           <Link href="/" className="text-xl md:text-2xl font-black tracking-tighter flex items-center">
             McCollins
           </Link>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-8 text-[12px] font-bold tracking-widest uppercase mt-1">
+          <nav className="hidden lg:flex items-center gap-8 text-[12px] font-bold tracking-widest uppercase mt-1 h-full">
             {Object.keys(MEGA_MENU_DATA).map((category) => (
               <div 
                 key={category}
-                className="cursor-pointer h-full py-4 border-b-2 border-transparent hover:border-white transition-all"
-                onMouseEnter={() => setActiveMenu(category)}
-                onMouseLeave={() => setActiveMenu(null)}
+                className="cursor-pointer py-4 flex items-center border-b-2 border-transparent hover:border-white transition-all h-full"
+                onMouseEnter={() => handleMouseEnter(category)}
+                onMouseLeave={handleMouseLeave}
               >
                 {category}
               </div>
             ))}
-            <Link href="/brands" className="hover:text-gray-300">BRANDS</Link>
+            <Link href="/brands" className="hover:text-gray-300 py-4 flex items-center h-full">BRANDS</Link>
           </nav>
         </div>
 
-        {/* Right Side: Cleaned up Icons & AUTH BUTTON */}
+        {/* Right Side: Search & Icons */}
         <div className="flex items-center gap-4 md:gap-5 text-[12px] font-bold tracking-wider">
           
-          {/* AUTHENTICATION SECTION */}
+          <form onSubmit={handleSearchSubmit} className="hidden lg:flex items-center relative mr-2">
+            <input 
+              type="text" 
+              placeholder="Search products..." 
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="bg-zinc-900 border border-zinc-700 text-white px-4 py-2 pr-10 rounded-full outline-none focus:border-white transition-colors w-[200px] xl:w-[250px] text-xs placeholder:text-gray-500 font-medium"
+            />
+            <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
+              <Search className="w-4 h-4" />
+            </button>
+          </form>
+
           <div className="hidden md:flex items-center">
             {isLoggedIn ? (
               <Link href="/account" className="flex items-center gap-2 hover:text-gray-300 transition-colors">
@@ -93,37 +127,44 @@ export default function SiteHeader() {
             )}
           </div>
 
-          {/* Elegant Divider Line */}
           <div className="hidden md:block w-px h-5 bg-white/30 ml-2"></div>
 
-          {/* WISHLIST BUTTON */}
-          <Link href="/wishlist" aria-label="Wishlist" className="hidden md:flex items-center hover:text-gray-300 transition-colors ml-2">
+          {/* 🟢 THE FIX: Wishlist Icon with Notification Badge! */}
+          <Link href="/wishlist" aria-label="Wishlist" className="hidden md:flex items-center hover:text-gray-300 transition-colors ml-2 relative">
             <Heart className="w-5 h-5" strokeWidth={1.5} />
+            {wishlistCount > 0 && (
+              <span className="absolute -top-1.5 -right-2 bg-[#E3000F] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] text-center border border-black animate-in zoom-in">
+                {wishlistCount}
+              </span>
+            )}
           </Link>
 
-          {/* CART BUTTON */}
-          <Link href="/cart" aria-label="Cart" className="flex items-center hover:text-gray-300 transition-colors">
+          <Link href="/cart" aria-label="Cart" className="flex items-center hover:text-gray-300 transition-colors relative">
             <ShoppingBag className="w-5 h-5" strokeWidth={1.5} />
           </Link>
-          
         </div>
       </div>
 
-      {/* 2. DESKTOP MEGA MENU DROPDOWN */}
+      {/* DESKTOP MEGA MENU DROPDOWN */}
       {activeMenu && MEGA_MENU_DATA[activeMenu as keyof typeof MEGA_MENU_DATA] && (
         <div 
-          className="hidden lg:block absolute top-full left-0 w-full bg-white text-black shadow-2xl border-t border-gray-200 py-10 px-12 transition-all duration-300 origin-top animate-in slide-in-from-top-2"
-          onMouseEnter={() => setActiveMenu(activeMenu)}
-          onMouseLeave={() => setActiveMenu(null)}
+          className="hidden lg:block absolute top-full left-0 w-full bg-white text-black shadow-2xl border-t border-gray-200 py-10 px-12 transition-all duration-300 origin-top animate-in slide-in-from-top-2 z-40"
+          onMouseEnter={() => handleMouseEnter(activeMenu)}
+          onMouseLeave={handleMouseLeave}
         >
-          <div className="max-w-[1400px] mx-auto grid grid-cols-4 gap-8">
+          <div className="absolute -top-8 left-0 w-full h-8 bg-transparent" />
+          <div className="max-w-[1400px] mx-auto grid grid-cols-4 gap-8 relative z-10">
             {Object.entries(MEGA_MENU_DATA[activeMenu as keyof typeof MEGA_MENU_DATA]).map(([columnTitle, links]) => (
               <div key={columnTitle}>
                 <h3 className="font-bold text-[13px] mb-4 uppercase tracking-wider">{columnTitle}</h3>
                 <ul className="space-y-3">
                   {links.map((link) => (
                     <li key={link}>
-                      <Link href={`#`} className="text-[13px] text-gray-600 hover:text-black hover:underline transition-all">
+                      <Link 
+                        href={`/?q=${encodeURIComponent(link)}`} 
+                        onClick={() => setActiveMenu(null)}
+                        className="text-[13px] text-gray-600 hover:text-black hover:underline transition-all"
+                      >
                         {link}
                       </Link>
                     </li>
@@ -135,7 +176,7 @@ export default function SiteHeader() {
         </div>
       )}
 
-      {/* 3. MOBILE SLIDE-OUT MENU */}
+      {/* MOBILE SLIDE-OUT MENU */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 bg-black/60 z-[100] lg:hidden transition-opacity" onClick={toggleMobileMenu} />
       )}
@@ -148,16 +189,30 @@ export default function SiteHeader() {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto py-2">
-          {/* Mobile Auth Button */}
+        <div className="flex-1 overflow-y-auto">
+          
+          <div className="p-4 border-b border-gray-100 bg-gray-50">
+            <form onSubmit={handleSearchSubmit} className="relative">
+              <input 
+                type="text" 
+                placeholder="Search for items..." 
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="w-full bg-white border border-gray-200 text-black px-4 py-3 pr-10 rounded-lg outline-none focus:border-black transition-colors text-sm"
+              />
+              <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <Search className="w-5 h-5" />
+              </button>
+            </form>
+          </div>
+
           <div className="border-b-4 border-gray-100">
-             <Link href={isLoggedIn ? "/account" : "/login"} onClick={toggleMobileMenu} className="w-full flex items-center gap-3 p-5 font-bold text-[13px] tracking-wider uppercase bg-gray-50 hover:bg-gray-100 text-[#E3000F]">
+             <Link href={isLoggedIn ? "/account" : "/login"} onClick={toggleMobileMenu} className="w-full flex items-center gap-3 p-5 font-bold text-[13px] tracking-wider uppercase hover:bg-gray-50 text-[#E3000F]">
                 <User className="w-5 h-5" />
                 {isLoggedIn ? "MY ACCOUNT" : "SIGN IN"}
              </Link>
           </div>
 
-          {/* INTERACTIVE MOBILE ACCORDION LOGIC */}
           {Object.keys(MEGA_MENU_DATA).map((category) => (
             <div key={category} className="border-b border-gray-100">
               <button 
@@ -168,7 +223,6 @@ export default function SiteHeader() {
                 <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${expandedMobileMenu === category ? 'rotate-90' : ''}`} />
               </button>
               
-              {/* Expanded Sub-menu */}
               {expandedMobileMenu === category && (
                 <div className="bg-white px-5 pb-5 animate-in slide-in-from-top-2 duration-200">
                   {Object.entries(MEGA_MENU_DATA[category as keyof typeof MEGA_MENU_DATA]).map(([subCategory, links]) => (
@@ -177,7 +231,11 @@ export default function SiteHeader() {
                       <ul className="space-y-3 border-l-2 border-gray-100 pl-3 ml-1">
                         {links.map(link => (
                           <li key={link}>
-                            <Link href="#" onClick={toggleMobileMenu} className="text-[13px] text-gray-600 hover:text-black">
+                            <Link 
+                              href={`/?q=${encodeURIComponent(link)}`} 
+                              onClick={toggleMobileMenu} 
+                              className="text-[13px] text-gray-600 hover:text-black"
+                            >
                               {link}
                             </Link>
                           </li>
@@ -193,15 +251,23 @@ export default function SiteHeader() {
         </div>
 
         <div className="p-5 bg-gray-50 border-t border-gray-200 grid grid-cols-2 gap-4 mt-auto">
-          <Link href="/wishlist" onClick={toggleMobileMenu} className="flex items-center justify-center gap-2 text-[13px] font-medium text-gray-700 hover:text-black bg-white py-2 rounded border border-gray-200">
-            <Heart className="w-4 h-4" /> Wishlist
+          
+          {/* 🟢 THE FIX: Mobile Wishlist Icon with Notification Badge! */}
+          <Link href="/wishlist" onClick={toggleMobileMenu} className="flex items-center justify-center gap-2 text-[13px] font-medium text-gray-700 hover:text-black bg-white py-2 rounded border border-gray-200 relative">
+            <Heart className="w-4 h-4" /> 
+            Wishlist
+            {wishlistCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-[#E3000F] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center border border-white">
+                {wishlistCount}
+              </span>
+            )}
           </Link>
+
           <Link href="/cart" onClick={toggleMobileMenu} className="flex items-center justify-center gap-2 text-[13px] font-medium text-gray-700 hover:text-black bg-white py-2 rounded border border-gray-200">
              <ShoppingBag className="w-4 h-4" /> Cart
           </Link>
         </div>
       </div>
-
     </header>
   );
 }

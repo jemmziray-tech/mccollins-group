@@ -17,7 +17,7 @@ import {
 // Import our interactive components
 import DeleteButton from "./DeleteButton";
 import OrderStatusSelect from "./OrderStatusSelect"; 
-import ProductStatusToggle from "./ProductStatusToggle"; // <-- NEW IMPORT
+import ProductStatusToggle from "./ProductStatusToggle";
 
 // Secure Database Connection
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
@@ -198,20 +198,21 @@ export default async function AdminDashboard() {
           </div>
           
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[600px]">
+            <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
                 <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500 bg-white">
                   <th className="px-6 py-4 font-semibold">Product</th>
+                  <th className="px-6 py-4 font-semibold">Category</th>
                   <th className="px-6 py-4 font-semibold">Brand</th>
                   <th className="px-6 py-4 font-semibold">Price</th>
-                  <th className="px-6 py-4 font-semibold">Status</th>
+                  <th className="px-6 py-4 font-semibold">Visibility</th>
                   <th className="px-6 py-4 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {products.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-16 text-center">
+                    <td colSpan={6} className="px-6 py-16 text-center">
                       <div className="flex flex-col items-center justify-center text-gray-400">
                         <Package className="w-12 h-12 mb-3 text-gray-300" />
                         <p className="text-gray-500 font-medium">No products found in the database.</p>
@@ -234,15 +235,18 @@ export default async function AdminDashboard() {
                           <span className="font-semibold text-gray-800">{product.name}</span>
                         </div>
                       </td>
+                      <td className="px-6 py-4 text-gray-600 text-sm">
+                        <span className="bg-gray-100 px-2 py-1 rounded text-xs font-medium">
+                          {product.category || "Uncategorized"}
+                        </span>
+                      </td>
                       <td className="px-6 py-4 text-gray-600 text-sm">{product.brand}</td>
                       <td className="px-6 py-4 text-gray-900 font-medium">Tsh {product.price.toLocaleString()}</td>
                       
-                      {/* NEW: Interactive Toggle Component */}
                       <td className="px-6 py-4">
                         <ProductStatusToggle productId={product.id} initialStatus={product.isAvailable} />
                       </td>
                       
-                      {/* FIX: Removed 'opacity-0' to keep buttons permanently visible on Mobile! */}
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2 transition-opacity">
                           <Link 

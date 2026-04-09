@@ -108,7 +108,7 @@ model OrderItem {
   orderId         String
   order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId       String
-  product         Product  @relation(fields: [productId], references: [id])
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   quantity        Int
   size            String?  // Saves the specific size they ordered (e.g., "XL")
   priceAtPurchase Float    // Freezes the price in case you change it later
