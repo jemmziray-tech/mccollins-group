@@ -5,6 +5,21 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, UploadCloud, Loader2, CheckCircle, Trash2, LayoutGrid } from "lucide-react";
 
+// 🟢 NEW: Your exact Mega Menu structure to keep the database perfectly synced!
+const MEGA_MENU_DATA = {
+  FASHION: {
+    Clothing: ["New Arrivals", "Dresses", "Jeans", "Jackets & Coats", "Knitwear", "Tops & T-Shirts"],
+    Shoes: ["Boots", "Heels & Wedges", "Sneakers", "Pumps & Slip-Ons", "Sandals", "Slippers"],
+    "Formal Wear": ["Formal Dresses", "Tops & Shirts", "Shorts", "Skirts", "Pants", "Suits"],
+    Accessories: ["Bags & Purses", "Belts", "Jewellery", "Sunglasses", "Watches", "Hats & Caps"]
+  },
+  DRESSES: {
+    "By Length": ["Mini", "Midi", "Maxi", "Midaxi", "Knee-Length"],
+    "By Style": ["Wrap", "Bodycon", "Shirt", "Slip", "A-Line"],
+    "Occasion": ["Casual", "Party", "Workwear", "Wedding Guest", "Evening"]
+  }
+};
+
 type DraftProduct = {
   id: string; 
   file: File;
@@ -33,7 +48,7 @@ export default function AddProductPage() {
       name: "",
       price: "",
       brand: "McCollins", 
-      category: "Shirts", 
+      category: "Tops & T-Shirts", // 🟢 Updated default to match your new list
       description: "", 
     }));
 
@@ -207,14 +222,30 @@ export default function AddProductPage() {
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Category</label>
-                        <select value={draft.category} onChange={(e) => updateDraft(draft.id, 'category', e.target.value)} className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none text-gray-700 text-sm cursor-pointer">
-                          <option value="Shirts">Shirts & Tees</option>
-                          <option value="Denim">Jeans & Denim</option>
-                          <option value="Outerwear">Jackets & Outerwear</option>
-                          <option value="Footwear">Shoes & Boots</option>
-                          <option value="Accessories">Accessories</option>
-                        </select>
+                        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Category *</label>
+                        <div className="relative">
+                          {/* 🟢 THE FIX: Organized Dropdown directly fed by the Mega Menu! */}
+                          <select 
+                            value={draft.category} 
+                            onChange={(e) => updateDraft(draft.id, 'category', e.target.value)} 
+                            className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none text-gray-900 font-medium text-sm cursor-pointer appearance-none"
+                          >
+                            <option value="" disabled>Select Category...</option>
+                            {Object.entries(MEGA_MENU_DATA).map(([mainNav, subMenus]) => (
+                              Object.entries(subMenus).map(([groupName, items]) => (
+                                <optgroup key={`${mainNav}-${groupName}`} label={`${mainNav} > ${groupName}`}>
+                                  {items.map(item => (
+                                    <option key={item} value={item}>{item}</option>
+                                  ))}
+                                </optgroup>
+                              ))
+                            ))}
+                          </select>
+                          {/* Custom Dropdown Arrow */}
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                            ▼
+                          </div>
+                        </div>
                       </div>
 
                       {/* Description */}
