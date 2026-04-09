@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
@@ -15,11 +15,11 @@ import {
   Trash2,
   ShieldCheck,
   Loader2,
-  Heart // 🟢 Added Heart icon
+  Heart
 } from "lucide-react";
 
 import { useCart } from "./context/CartContext";
-import { useWishlist } from "./context/WishlistContext"; // 🟢 NEW: Imported Wishlist Memory
+import { useWishlist } from "./context/WishlistContext"; 
 import FashionAssistant from "./components/FashionAssistant";
 import Footer from "./components/SiteFooter"; 
 import CategoryBubbles from "./components/CategoryBubbles";
@@ -45,7 +45,8 @@ const displayInventory = [
   }
 ];
 
-export default function McCollinsGroupAmazon() {
+// 🟢 THE FIX STEP 1: Rename the main function to a local component
+function StoreContent() {
   const { data: session } = useSession();
   const [products, setProducts] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -54,8 +55,6 @@ export default function McCollinsGroupAmazon() {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const { cart, addToCart, removeFromCart, cartTotal, cartCount, isCartOpen, setIsCartOpen } = useCart();
-  
-  // 🟢 NEW: Pull in the Wishlist functions
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
   const WHATSAPP_NUMBER = "255678405111"; 
@@ -147,10 +146,9 @@ export default function McCollinsGroupAmazon() {
     router.push("/");
   };
 
-  // 🟢 NEW: Smart Wishlist Toggle Function
   const toggleWishlist = (e: React.MouseEvent, product: any) => {
-    e.preventDefault(); // Prevents the browser from opening the Link!
-    e.stopPropagation(); // Stops the click from bubbling up
+    e.preventDefault(); 
+    e.stopPropagation(); 
     
     if (isInWishlist(product.id)) {
       removeFromWishlist(product.id);
@@ -278,11 +276,11 @@ export default function McCollinsGroupAmazon() {
         </div>
       )}
 
-      {/* MASCULINE HERO BANNER */}
+      {/* HERO BANNER */}
       <div className="relative w-full h-[300px] md:h-[450px] bg-gray-900 overflow-hidden">
         <Image 
           src="https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?q=80&w=2071" 
-          alt="Men's Fashion Banner" 
+          alt="Fashion Banner" 
           fill
           priority
           sizes="100vw"
@@ -290,7 +288,7 @@ export default function McCollinsGroupAmazon() {
         />
         <div className="absolute top-1/3 left-5 md:left-20 text-white z-20 animate-in slide-in-from-left-4 md:slide-in-from-left-8 duration-700 delay-150 fill-mode-both pr-4">
           <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-2 leading-tight uppercase">Elevate Your<br/>Everyday Look.</h2>
-          <p className="text-base md:text-lg text-gray-200">Premium menswear curated for Tanzania.</p>
+          <p className="text-base md:text-lg text-gray-200">Premium fashion curated for Tanzania.</p>
         </div>
       </div>
 
@@ -362,10 +360,8 @@ export default function McCollinsGroupAmazon() {
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-10">
               {displayedProducts.map((p: any, idx: number) => (
                 
-                // 🟢 Parent div controls positioning so the Link and Button can live together peacefully!
                 <div key={p.id} className="group flex flex-col relative animate-in fade-in slide-in-from-bottom-4 fill-mode-both" style={{ animationDelay: `${idx * 50}ms` }}>
                   
-                  {/* 🟢 SMART HEART BUTTON: Has a safe 'padding' area for fat fingers on mobile */}
                   <button 
                     onClick={(e) => toggleWishlist(e, p)}
                     className="absolute top-2 right-2 z-20 p-2 bg-white/80 hover:bg-white backdrop-blur-sm rounded-full shadow-sm transition-all hover:scale-110 active:scale-95"
@@ -414,5 +410,14 @@ export default function McCollinsGroupAmazon() {
       <Footer />
       <FashionAssistant />
     </div>
+  );
+}
+
+// 🟢 THE FIX STEP 2: Create a new default export wrapped in Suspense!
+export default function McCollinsGroupAmazonExport() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-gray-400" /></div>}>
+      <StoreContent />
+    </Suspense>
   );
 }
