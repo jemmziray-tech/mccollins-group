@@ -58,15 +58,15 @@ model User {
   id            String    @id @default(cuid())
   name          String?
   email         String?   @unique
-  emailVerified DateTime? // Required by NextAuth
-  image         String?   // Grabs their Google Profile Picture!
-  password      String?   // Made optional because Google users don't use passwords
-  role          String    @default("CUSTOMER") // Can be "CUSTOMER" or "ADMIN"
+  emailVerified DateTime? 
+  image         String?   
+  password      String?   
+  role          String    @default("CUSTOMER") 
   
   // Relations
-  accounts      Account[] // Required by NextAuth
-  sessions      Session[] // Required by NextAuth
-  orders        Order[]   // Connects to your Orders table
+  accounts      Account[] 
+  sessions      Session[] 
+  orders        Order[]   
   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -81,7 +81,12 @@ model Product {
   brand       String   
   imageUrl    String
   category    String      @default("Uncategorized")
-  sizeType    String      @default("none") // "clothing", "shoes", or "none"
+  
+  // 🟢 NEW: Added Department and Sizes!
+  department  String      @default("Unisex") 
+  sizes       String[]    @default([])
+  
+  sizeType    String      @default("none") 
   isAvailable Boolean     @default(true)
   orderItems  OrderItem[] 
   createdAt   DateTime    @default(now())
@@ -91,7 +96,7 @@ model Product {
 // --- ORDERS (Customer Purchases) ---
 model Order {
   id            String      @id @default(cuid())
-  userId        String?     // Optional for guest checkouts
+  userId        String?     
   user          User?       @relation(fields: [userId], references: [id])
   customerName  String?    
   customerPhone String?
@@ -110,6 +115,6 @@ model OrderItem {
   productId       String
   product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   quantity        Int
-  size            String?  // Saves the specific size they ordered (e.g., "XL")
-  priceAtPurchase Float    // Freezes the price in case you change it later
+  size            String?  
+  priceAtPurchase Float    
 }

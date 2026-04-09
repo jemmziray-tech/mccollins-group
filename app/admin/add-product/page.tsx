@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, UploadCloud, Loader2, CheckCircle, Trash2, LayoutGrid } from "lucide-react";
 
-// Mega Menu structure to keep the database perfectly synced
 const MEGA_MENU_DATA = {
   FASHION: {
     Clothing: ["New Arrivals", "Dresses", "Jeans", "Jackets & Coats", "Knitwear", "Tops & T-Shirts"],
@@ -28,8 +27,9 @@ type DraftProduct = {
   price: string;
   brand: string;
   category: string;
+  department: string; // 🟢 NEW: Department Field!
   description: string;
-  sizes: string; // 🟢 NEW: Added sizes string
+  sizes: string; 
 };
 
 export default function AddProductPage() {
@@ -50,8 +50,9 @@ export default function AddProductPage() {
       price: "",
       brand: "Colman Looks", 
       category: "Tops & T-Shirts",
+      department: "Men", // 🟢 Default to Men
       description: "", 
-      sizes: "S, M, L, XL", // 🟢 NEW: Default common sizes to save typing!
+      sizes: "S, M, L, XL", 
     }));
 
     setDrafts((prev) => [...prev, ...newDrafts]);
@@ -84,7 +85,6 @@ export default function AddProductPage() {
         const fileExt = draft.file.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
         
-        // 1. UPLOAD TO SUPABASE
         const res = await fetch(`${supabaseUrl}/storage/v1/object/products/${fileName}`, {
           method: "POST",
           headers: {
@@ -99,7 +99,6 @@ export default function AddProductPage() {
            throw new Error(`Supabase Upload Blocked: ${errorText}`);
         }
 
-        // 🟢 NEW: Clean up the comma-separated string into a neat array
         const sizeArray = draft.sizes
           .split(',')
           .map(s => s.trim())
@@ -112,15 +111,15 @@ export default function AddProductPage() {
           imageUrl: `${supabaseUrl}/storage/v1/object/public/products/${fileName}`,
           description: draft.description || null,
           category: draft.category,
+          department: draft.department, // 🟢 Sending Department to the DB!
           sizeType: "clothing",
-          sizes: sizeArray, // 🟢 Injecting our clean array here!
+          sizes: sizeArray, 
           isAvailable: true,
         };
       });
 
       const finalProductsArray = await Promise.all(uploadPromises);
 
-      // 2. SEND TO DATABASE
       const dbRes = await fetch("/api/products/bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -168,7 +167,6 @@ export default function AddProductPage() {
               disabled={isSubmitting}
               className="bg-[#FFD814] hover:bg-[#F7CA00] border border-[#FCD200] text-[#0F1111] px-6 py-2.5 rounded-lg font-bold shadow-sm flex items-center gap-2 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {/* 🟢 THE FIX: Smart grammar for 1 Product vs 2 Products */}
               {isSubmitting ? (
                 <><Loader2 className="w-4 h-4 animate-spin"/> Uploading...</>
               ) : (
@@ -212,30 +210,40 @@ export default function AddProductPage() {
                       <img src={draft.previewUrl} alt="Preview" className="w-full h-full object-cover" />
                     </div>
 
-                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 items-start">
+                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-3 items-start">
                       
-                      {/* Name & Brand Row */}
-                      <div className="sm:col-span-2 grid grid-cols-2 gap-4">
-                        <div>
-                           <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Name *</label>
-                           <input type="text" value={draft.name} onChange={(e) => updateDraft(draft.id, 'name', e.target.value)} placeholder="e.g. Minimalist Hoodie" className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none font-medium text-gray-900 text-sm" />
-                        </div>
-                        <div>
-                           <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Brand *</label>
-                           <input type="text" value={draft.brand} onChange={(e) => updateDraft(draft.id, 'brand', e.target.value)} placeholder="e.g. McCollins" className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none font-medium text-gray-900 text-sm" />
-                        </div>
+                      <div className="sm:col-span-2">
+                         <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Name *</label>
+                         <input type="text" value={draft.name} onChange={(e) => updateDraft(draft.id, 'name', e.target.value)} placeholder="e.g. Minimalist Hoodie" className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none font-medium text-gray-900 text-sm" />
+                      </div>
+                      
+                      <div>
+                         <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Price (Tsh) *</label>
+                         <div className="relative">
+                           <span className="absolute left-2 top-1.5 text-gray-400 text-sm font-bold">Tsh</span>
+                           <input type="number" value={draft.price} onChange={(e) => updateDraft(draft.id, 'price', e.target.value)} placeholder="35000" className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent pl-10 pr-2 py-1.5 outline-none font-bold text-[#B12704] text-sm" />
+                         </div>
                       </div>
 
-                      {/* Price & Category Row */}
+                      {/* 🟢 NEW: Department Dropdown */}
                       <div>
-                        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Price (Tsh) *</label>
+                        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Department *</label>
                         <div className="relative">
-                          <span className="absolute left-2 top-1.5 text-gray-400 text-sm font-bold">Tsh</span>
-                          <input type="number" value={draft.price} onChange={(e) => updateDraft(draft.id, 'price', e.target.value)} placeholder="35000" className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent pl-10 pr-2 py-1.5 outline-none font-bold text-[#B12704] text-sm" />
+                          <select 
+                            value={draft.department} 
+                            onChange={(e) => updateDraft(draft.id, 'department', e.target.value)} 
+                            className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none text-gray-900 font-medium text-sm cursor-pointer appearance-none"
+                          >
+                            <option value="Men">Men</option>
+                            <option value="Women">Women</option>
+                            <option value="Kids">Kids</option>
+                            <option value="Unisex">Unisex</option>
+                          </select>
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
                         </div>
                       </div>
 
-                      <div>
+                      <div className="sm:col-span-2">
                         <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Category *</label>
                         <div className="relative">
                           <select 
@@ -254,24 +262,21 @@ export default function AddProductPage() {
                               ))
                             ))}
                           </select>
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                            ▼
-                          </div>
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">▼</div>
                         </div>
                       </div>
 
-                      {/* 🟢 NEW: Sizes & Description Row */}
                       <div>
-                         <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Sizes Available</label>
-                         <input type="text" value={draft.sizes} onChange={(e) => updateDraft(draft.id, 'sizes', e.target.value)} placeholder="e.g. S, M, L or 40, 41, 42" className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none font-medium text-gray-900 text-sm" />
+                         <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Sizes</label>
+                         <input type="text" value={draft.sizes} onChange={(e) => updateDraft(draft.id, 'sizes', e.target.value)} placeholder="S, M, L..." className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none font-medium text-gray-900 text-sm" />
                       </div>
 
-                      <div>
-                         <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Description (Optional)</label>
+                      <div className="sm:col-span-2">
+                         <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Description</label>
                          <input type="text" value={draft.description} onChange={(e) => updateDraft(draft.id, 'description', e.target.value)} placeholder="Add a short description..." className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none text-gray-600 text-sm" />
                       </div>
 
-                      <button onClick={() => removeDraft(draft.id)} className="md:hidden w-full flex items-center justify-center gap-2 text-red-500 text-sm font-bold py-2 bg-red-50 rounded-lg mt-2 sm:col-span-2">
+                      <button onClick={() => removeDraft(draft.id)} className="md:hidden w-full flex items-center justify-center gap-2 text-red-500 text-sm font-bold py-2 bg-red-50 rounded-lg mt-2 sm:col-span-3">
                         <Trash2 className="w-4 h-4" /> Remove Item
                       </button>
                     </div>

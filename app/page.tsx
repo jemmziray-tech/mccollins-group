@@ -103,7 +103,9 @@ function StoreContent() {
     const matchesSearch = searchTerms.some(term => 
       (product.name && product.name.toLowerCase().includes(term)) || 
       (product.brand && product.brand.toLowerCase().includes(term)) ||
-      (product.category && product.category.toLowerCase().includes(term))
+      (product.category && product.category.toLowerCase().includes(term)) ||
+      // 🟢 NEW: The search engine now checks your new Department tag!
+      (product.department && product.department.toLowerCase().includes(term))
     );
 
     return matchesSearch && matchesCategory;

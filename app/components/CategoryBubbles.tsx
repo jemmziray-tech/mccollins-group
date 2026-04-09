@@ -3,14 +3,14 @@
 import React from 'react';
 import Link from 'next/link';
 
-// Updated: Removed "Brands" and "Dresses" to avoid duplicating the main header!
+// 🟢 THE FIX: Routing directly to the smart search/filter queries!
 const CATEGORIES = [
-  { name: "Women", href: "/women", image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=300&auto=format&fit=crop" },
-  { name: "Men", href: "/men", image: "https://images.unsplash.com/photo-1617137968427-85924c800a22?q=80&w=300&auto=format&fit=crop" },
-  { name: "Kids", href: "/kids", image: "https://images.unsplash.com/photo-1519241047957-be31d7379a5d?q=80&w=300&auto=format&fit=crop" },
-  { name: "Shoes", href: "/shoes", image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=300&auto=format&fit=crop" },
-  { name: "Accessories", href: "/accessories", image: "https://images.unsplash.com/photo-1622434641406-a158123450f9?q=80&w=300&auto=format&fit=crop" },
-  { name: "Sale", href: "/sale", image: "https://images.unsplash.com/photo-1607083206968-13611e3d76ba?q=80&w=300&auto=format&fit=crop" },
+  { name: "Women", href: "/?q=women", image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=300&auto=format&fit=crop" },
+  { name: "Men", href: "/?q=men", image: "https://images.unsplash.com/photo-1617137968427-85924c800a22?q=80&w=300&auto=format&fit=crop" },
+  { name: "Kids", href: "/?q=kids", image: "https://images.unsplash.com/photo-1519241047957-be31d7379a5d?q=80&w=300&auto=format&fit=crop" },
+  { name: "Shoes", href: "/?category=Shoes", image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=300&auto=format&fit=crop" },
+  { name: "Accessories", href: "/?category=Accessories", image: "https://images.unsplash.com/photo-1622434641406-a158123450f9?q=80&w=300&auto=format&fit=crop" },
+  { name: "Sale", href: "/?q=sale", image: "https://images.unsplash.com/photo-1607083206968-13611e3d76ba?q=80&w=300&auto=format&fit=crop" },
 ];
 
 export default function CategoryBubbles() {
@@ -19,7 +19,7 @@ export default function CategoryBubbles() {
       <div className="max-w-[1400px] mx-auto px-4 md:px-8">
         
         {/* The Scrolling Container */}
-        <div className="flex gap-4 md:gap-8 overflow-x-auto snap-x snap-mandatory pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="flex gap-4 md:gap-8 overflow-x-auto snap-x snap-mandatory pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] justify-start md:justify-center">
           
           {CATEGORIES.map((category) => (
             <Link 
