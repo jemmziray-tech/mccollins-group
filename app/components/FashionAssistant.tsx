@@ -1,10 +1,10 @@
-// app/components/FashionAssistant.tsx
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MessageCircle, X, Send, Loader2, Sparkles } from 'lucide-react';
+import { useSession } from 'next-auth/react'; 
+import ReactMarkdown from 'react-markdown'; // 🟢 NEW: Import the markdown renderer!
 
-// 1. Define your quick questions
 const QUICK_QUESTIONS = [
   "👕 Show me latest shirts",
   "👖 Do you have denim?",
@@ -13,39 +13,49 @@ const QUICK_QUESTIONS = [
 ];
 
 export default function FashionAssistant() {
+  const { data: session } = useSession(); 
   const [isOpen, setIsOpen] = useState(false);
-  const [userName, setUserName] = useState<string | null>(null); 
-
+  
   const [messages, setMessages] = useState<{ role: 'user' | 'bot'; text: string }[]>([
-    { 
-      role: 'bot', 
-      text: `Hi ${userName || 'there'}! I am the McCollins AI Assistant. Looking for something specific in our collection today?` 
-    }
+    { role: 'bot', text: `Hi there! I am the McCollins AI Assistant. Looking for something specific in our collection today?` }
   ]);
+  
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // --- CORE MESSAGE LOGIC ---
-  // Extracted this into a separate function so both the "Enter" key and "Quick Chips" can use it
+  useEffect(() => {
+    if (session?.user?.name) {
+      const firstName = session.user.name.split(' ')[0]; 
+      setMessages([
+        { role: 'bot', text: `Hi **${firstName}**! I am the McCollins AI Assistant. Looking for something specific in our collection today?` }
+      ]);
+    }
+  }, [session]);
+
   const processMessage = async (userText: string) => {
     if (!userText.trim()) return;
 
+    const currentHistory = [...messages];
+
     setMessages(prev => [...prev, { role: 'user', text: userText }]);
-    setInput(""); // Clear the input box instantly
+    setInput(""); 
     setIsLoading(true);
 
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userText }), // Note: Your API currently expects { message: string } or { messages: array }. Adjust if needed based on your AI SDK!
+        body: JSON.stringify({ 
+          message: userText,
+          userName: session?.user?.name || "a Guest",
+          history: currentHistory 
+        }), 
       });
 
       if (!res.ok) throw new Error("Network response was not ok");
       
       const data = await res.json();
       
-      // Bulletproof extraction
       let botText = "Sorry, I couldn't parse the response.";
       if (typeof data.reply === 'string') botText = data.reply;
       else if (data.reply?.reply) botText = data.reply.reply;
@@ -60,7 +70,6 @@ export default function FashionAssistant() {
     }
   };
 
-  // Triggered by the form submit (Enter key or Send button)
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     processMessage(input);
@@ -68,11 +77,9 @@ export default function FashionAssistant() {
 
   return (
     <div className="fixed bottom-24 right-8 z-50 font-sans">
-      {/* The Chat Window */}
       {isOpen && (
         <div className="mb-4 w-[320px] sm:w-[380px] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col h-[450px] animate-in slide-in-from-bottom-4 duration-300">
           
-          {/* Header - Sleek Dark Design */}
           <div className="bg-[#131921] text-white p-4 flex justify-between items-center shadow-md">
             <div className="flex items-center gap-2">
               <div className="bg-blue-500 p-1 rounded-lg">
@@ -85,7 +92,6 @@ export default function FashionAssistant() {
             </button>
           </div>
 
-          {/* Chat History */}
           <div className="flex-1 p-4 overflow-y-auto bg-[#F7F8FA] space-y-4">
             {messages.map((msg, idx) => (
               <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -94,7 +100,14 @@ export default function FashionAssistant() {
                     ? 'bg-[#131921] text-white rounded-tr-none shadow-md' 
                     : 'bg-white border border-gray-200 text-gray-800 rounded-tl-none shadow-sm'
                 }`}>
-                  {msg.text}
+                  {/* 🟢 NEW: Render Markdown for the Bot, keep User plain text */}
+                  {msg.role === 'bot' ? (
+                    <div className="[&>p]:mb-2 last:[&>p]:mb-0 [&>ul]:list-disc [&>ul]:pl-5 [&>li]:mb-1 [&_strong]:font-bold [&_strong]:text-[#131921]">
+                      <ReactMarkdown>{msg.text}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    msg.text
+                  )}
                 </div>
               </div>
             ))}
@@ -108,10 +121,7 @@ export default function FashionAssistant() {
             )}
           </div>
 
-          {/* QUICK ACTION CHIPS & INPUT FORM WRAPPER */}
           <div className="bg-white border-t border-gray-100 flex flex-col">
-            
-            {/* Quick Action Chips (Hidden scrollbar trick applied) */}
             <div className="flex gap-2 overflow-x-auto pb-2 pt-3 px-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
               {QUICK_QUESTIONS.map((question, index) => (
                 <button
@@ -126,7 +136,6 @@ export default function FashionAssistant() {
               ))}
             </div>
 
-            {/* Input Form */}
             <div className="p-3 pt-1">
               <form onSubmit={handleFormSubmit} className="flex items-center gap-2">
                 <input
@@ -145,12 +154,10 @@ export default function FashionAssistant() {
                 </button>
               </form>
             </div>
-
           </div>
         </div>
       )}
 
-      {/* Floating Toggle Button */}
       {!isOpen && (
         <button 
           onClick={() => setIsOpen(true)}
