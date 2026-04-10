@@ -1,61 +1,53 @@
 // app/api/chat/route.ts
-import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import { generateText } from "ai"; 
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { NextResponse } from 'next/server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// 1. Initialize Gemini
-const google = createGoogleGenerativeAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
-
-// Secure Database Connection
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-const prisma = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+// Initialize the AI with your secure environment variable
+const apiKey = process.env.GEMINI_API_KEY;
+const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 export async function POST(req: Request) {
-  try {
-    // FIX 1: Match the frontend payload exactly!
-    const { message } = await req.json();
-
-    // 2. FETCH LIVE INVENTORY
-    const availableProducts = await prisma.product.findMany({
-      where: { isAvailable: true },
-      select: { name: true, price: true, category: true, description: true }
+  // Security Check: Make sure you have your API key set up!
+  if (!genAI) {
+    return NextResponse.json({ 
+      reply: "Oops! My developer hasn't given me my API Key yet. (Missing GEMINI_API_KEY in .env file)" 
     });
+  }
 
-    // 3. BUILD THE INVENTORY CONTEXT STRING
-    const inventoryList = availableProducts
-      .map(p => `- ${p.name} (${p.category}): Tsh ${p.price.toLocaleString()}. Details: ${p.description}`)
-      .join("\n");
+  try {
+    // 1. Grab the message from your frontend chat window
+    const body = await req.json();
+    const userMessage = body.message;
 
-    // 4. CREATE THE MASTER SYSTEM PROMPT
+    // 2. Load the fast, conversational AI model
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    // 3. Give the AI its personality and rules!
     const systemPrompt = `
-      You are the official McCollins Fashion AI Assistant. You are polite, stylish, and brief.
-      Your job is to help customers find clothes and answer questions.
+      You are the McCollins Group Fashion Assistant. 
+      You are a stylish, helpful, and friendly AI working for a premium clothing store in Tanzania. 
+      The store's private label is called "Colman Looks".
       
-      CRITICAL RULE: Here is our LIVE, REAL-TIME inventory. You MUST ONLY recommend products from this exact list. Do not make up products or prices.
-      
-      --- LIVE INVENTORY ---
-      ${inventoryList.length > 0 ? inventoryList : "Currently out of stock of everything."}
-      ----------------------
-      
-      If a customer asks for something not on this list, apologize and say it is currently out of stock.
+      Rules:
+      - Keep your answers concise, friendly, and under 3 sentences if possible.
+      - If asked about delivery, say it is handled securely via WhatsApp across Tanzania.
+      - If asked about the brand, proudly talk about Colman Looks.
+      - Respond to this customer's message: "${userMessage}"
     `;
 
-    // FIX 2: Generate standard text (no streaming) so the frontend can parse the JSON easily
-    const result = await generateText({
-      model: google("gemini-1.5-flash"), // Changed this line!
-      system: systemPrompt,
-      prompt: message,
-    });
+    // 4. Generate the response
+    const result = await model.generateContent(systemPrompt);
+    const response = await result.response;
+    const text = response.text();
 
-    // Send the response back as a perfect JSON object
-    return NextResponse.json({ reply: result.text });
-    
+    // 5. Send it perfectly back to the frontend chat bubble
+    return NextResponse.json({ reply: text });
+
   } catch (error) {
-    console.error("Chat API Error:", error);
-    return NextResponse.json({ error: "Error processing chat" }, { status: 500 });
+    console.error("AI Chat Error:", error);
+    return NextResponse.json(
+      { reply: "Sorry, my fashion circuits are a bit crossed right now! Try again in a moment." }, 
+      { status: 500 }
+    );
   }
 }
