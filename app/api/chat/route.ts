@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const userMessage = body.message;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const systemPrompt = `
       You are the McCollins Group Fashion Assistant. 
