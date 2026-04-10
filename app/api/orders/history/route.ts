@@ -10,14 +10,12 @@ export async function GET(request: Request) {
     const email = searchParams.get("email");
 
     if (!email) {
-      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+      return NextResponse.json({ error: "Email is required to fetch history." }, { status: 400 });
     }
 
     // Fetch orders belonging ONLY to this user email, sorted by newest first
     const orders = await prisma.order.findMany({
       where: {
-        // If your schema uses something else to link users, adjust this!
-        // Assuming your Order model has a `userEmail` string field or connects via User model.
         user: {
           email: email
         }
@@ -28,7 +26,7 @@ export async function GET(request: Request) {
       include: {
         items: {
           include: {
-            product: true // Get the product details inside the order
+            product: true // 🟢 This pulls in the product name, image, and price for the dashboard!
           }
         }
       }

@@ -2,36 +2,31 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { User, Package, Settings, LogOut, ShieldAlert, Clock, ArrowRight, Loader2, ShoppingBag } from 'lucide-react';
+import { User, Package, LogOut, ShieldAlert, Clock, ArrowRight, Loader2, ShoppingBag } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react'; 
 import { useRouter } from 'next/navigation';
 
 export default function AccountPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('orders'); // Default to orders
+  const [activeTab, setActiveTab] = useState('orders'); 
   
-  // Real Database State
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
 
-  // 1. VIP ADMIN LIST
   const ADMIN_EMAILS = [
     "jem.mziray@gmail.com",
     "nyombicolins04@gmail.com", 
     "festomcrowland@gmail.com" 
   ];
 
-  // 2. Check if logged-in user is an Admin
   const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email); 
 
-  // 3. FETCH REAL ORDERS FROM DATABASE
   useEffect(() => {
     async function fetchMyOrders() {
       if (!session?.user?.email) return;
       
       try {
-        // We will create this API route in the next step!
         const res = await fetch(`/api/orders/history?email=${session.user.email}`);
         if (!res.ok) throw new Error("Failed to fetch orders");
         
@@ -49,7 +44,6 @@ export default function AccountPage() {
     }
   }, [session]);
 
-  // SECURITY: Redirect if not logged in
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
@@ -95,13 +89,6 @@ export default function AccountPage() {
                   className={`flex items-center gap-3 p-4 text-left font-bold text-[12px] tracking-wider uppercase transition-colors border-l-4 ${activeTab === 'profile' ? 'border-black bg-gray-50 text-black' : 'border-transparent text-gray-500 hover:bg-gray-50 hover:text-black'}`}
                 >
                   <User className="w-4 h-4" /> Profile Details
-                </button>
-
-                <button 
-                  onClick={() => setActiveTab('settings')}
-                  className={`flex items-center gap-3 p-4 text-left font-bold text-[12px] tracking-wider uppercase transition-colors border-l-4 ${activeTab === 'settings' ? 'border-black bg-gray-50 text-black' : 'border-transparent text-gray-500 hover:bg-gray-50 hover:text-black'}`}
-                >
-                  <Settings className="w-4 h-4" /> Settings
                 </button>
 
                 {/* THE SECRET ADMIN BUTTON */}
@@ -216,18 +203,6 @@ export default function AccountPage() {
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* SETTINGS TAB */}
-            {activeTab === 'settings' && (
-              <div className="animate-in fade-in duration-300">
-                <h2 className="text-2xl font-bold mb-6">Account Settings</h2>
-                <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center py-16">
-                  <Settings className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-sm font-medium text-gray-600 mb-2">Settings & Address Management</p>
-                  <p className="text-xs text-gray-400">Currently, all checkout locations are handled securely via WhatsApp.</p>
                 </div>
               </div>
             )}

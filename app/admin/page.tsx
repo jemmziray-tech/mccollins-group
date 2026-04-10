@@ -100,12 +100,12 @@ export default async function AdminDashboard() {
           </div>
 
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
-            <div className={`${pendingOrdersCount > 0 ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'} p-4 rounded-full`}>
+            <div className="bg-orange-100 p-4 rounded-full text-orange-600">
               <AlertCircle className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Action Required</p>
-              <h3 className={`text-2xl font-bold ${pendingOrdersCount > 0 ? 'text-orange-600' : 'text-gray-700'}`}>
+              <p className="text-sm font-medium text-gray-500">Pending Orders</p>
+              <h3 className="text-2xl font-bold text-orange-600">
                 {pendingOrdersCount} Pending
               </h3>
             </div>
@@ -202,17 +202,16 @@ export default async function AdminDashboard() {
               <thead>
                 <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500 bg-white">
                   <th className="px-6 py-4 font-semibold">Product</th>
-                  <th className="px-6 py-4 font-semibold">Category</th>
-                  <th className="px-6 py-4 font-semibold">Brand</th>
+                  <th className="px-6 py-4 font-semibold">Dept / Category</th>
                   <th className="px-6 py-4 font-semibold">Price</th>
-                  <th className="px-6 py-4 font-semibold">Visibility</th>
+                  <th className="px-6 py-4 font-semibold text-center">Visibility</th>
                   <th className="px-6 py-4 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {products.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-16 text-center">
+                    <td colSpan={5} className="px-6 py-16 text-center">
                       <div className="flex flex-col items-center justify-center text-gray-400">
                         <Package className="w-12 h-12 mb-3 text-gray-300" />
                         <p className="text-gray-500 font-medium">No products found in the database.</p>
@@ -232,18 +231,30 @@ export default async function AdminDashboard() {
                               <ImageIcon className="w-5 h-5 text-gray-400" />
                             )}
                           </div>
-                          <span className="font-semibold text-gray-800">{product.name}</span>
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-gray-800 line-clamp-1">{product.name}</span>
+                            <span className="text-xs text-gray-400 font-mono mt-0.5">#{product.id.slice(0, 8)}</span>
+                          </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-gray-600 text-sm">
-                        <span className="bg-gray-100 px-2 py-1 rounded text-xs font-medium">
-                          {product.category || "Uncategorized"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-gray-600 text-sm">{product.brand}</td>
-                      <td className="px-6 py-4 text-gray-900 font-medium">Tsh {product.price.toLocaleString()}</td>
                       
+                      {/* 🟢 NEW: Department & Category Column */}
                       <td className="px-6 py-4">
+                        <div className="flex flex-col items-start gap-1">
+                          <span className="bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                            {product.department || "Unisex"}
+                          </span>
+                          <span className="text-gray-600 text-xs font-medium">
+                            {product.category || "Uncategorized"}
+                          </span>
+                        </div>
+                      </td>
+                      
+                      <td className="px-6 py-4 text-gray-900 font-bold text-sm">
+                        Tsh {product.price.toLocaleString()}
+                      </td>
+                      
+                      <td className="px-6 py-4 text-center">
                         <ProductStatusToggle productId={product.id} initialStatus={product.isAvailable} />
                       </td>
                       

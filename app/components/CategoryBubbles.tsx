@@ -3,14 +3,12 @@
 import React from 'react';
 import Link from 'next/link';
 
-// 🟢 THE FIX: Routing directly to the smart search/filter queries!
 const CATEGORIES = [
   { name: "Women", href: "/?q=women", image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=300&auto=format&fit=crop" },
   { name: "Men", href: "/?q=men", image: "https://images.unsplash.com/photo-1617137968427-85924c800a22?q=80&w=300&auto=format&fit=crop" },
   { name: "Kids", href: "/?q=kids", image: "https://images.unsplash.com/photo-1519241047957-be31d7379a5d?q=80&w=300&auto=format&fit=crop" },
   { name: "Shoes", href: "/?category=Shoes", image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=300&auto=format&fit=crop" },
   { name: "Accessories", href: "/?category=Accessories", image: "https://images.unsplash.com/photo-1622434641406-a158123450f9?q=80&w=300&auto=format&fit=crop" },
-  { name: "Sale", href: "/?q=sale", image: "https://images.unsplash.com/photo-1607083206968-13611e3d76ba?q=80&w=300&auto=format&fit=crop" },
 ];
 
 export default function CategoryBubbles() {
