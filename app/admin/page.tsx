@@ -18,8 +18,8 @@ import {
 
 // Import our interactive components
 import DeleteButton from "./DeleteButton";
-import OrderStatusSelect from "./OrderStatusSelect"; 
 import ProductStatusToggle from "./ProductStatusToggle";
+import OrderListClient from "./OrderListClient"; // 🟢 IMPORTING OUR NEW SEARCHABLE TABLE
 
 // Secure Database Connection
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
@@ -44,6 +44,12 @@ export default async function AdminDashboard() {
       }
     }
   });
+
+  // 🟢 FORMAT DATE SAFETY FIX: Next.js prefers strings instead of raw Dates when passing data to Client Components
+  const safeOrders = orders.map(order => ({
+    ...order,
+    createdAt: order.createdAt.toISOString(),
+  }));
 
   // 3. CALCULATE LIVE BUSINESS METRICS
   const totalRevenue = orders
@@ -77,7 +83,7 @@ export default async function AdminDashboard() {
         </div>
       </nav>
 
-      {/* --- 🟢 NEW: QUICK ACCESS BAR --- */}
+      {/* QUICK ACCESS BAR */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         <div className="bg-gradient-to-r from-[#131921] to-[#232f3e] rounded-xl p-4 flex flex-col md:flex-row items-center justify-between shadow-lg border border-white/10 gap-4">
           <div className="flex items-center gap-4">
@@ -136,94 +142,8 @@ export default async function AdminDashboard() {
           </div>
         </div>
 
-        {/* Recent Orders Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
-          <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5 text-gray-500" /> Recent Orders
-            </h2>
-            <span className="text-sm font-medium text-gray-500 bg-white px-3 py-1 rounded-full border border-gray-200">
-              {orders.length} Orders
-            </span>
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[600px]">
-              <thead>
-                <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500 bg-white">
-                  <th className="px-6 py-4 font-semibold">Order ID & Date</th>
-                  <th className="px-6 py-4 font-semibold">Customer</th>
-                  <th className="px-6 py-4 font-semibold">Items</th>
-                  <th className="px-6 py-4 font-semibold">Total</th>
-                  <th className="px-6 py-4 font-semibold text-right">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {orders.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-16 text-center">
-                      <div className="flex flex-col items-center justify-center text-gray-400">
-                        <ShoppingBag className="w-12 h-12 mb-3 text-gray-300" />
-                        <p className="text-gray-500 font-medium">No orders have been placed yet!</p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  orders.map((order) => {
-                    const itemCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
-                    
-                    return (
-                      <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4">
-                          <div className="font-mono text-xs text-gray-500 mb-1">
-                            #{order.id.slice(-6).toUpperCase()} 
-                          </div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {order.createdAt.toLocaleDateString("en-GB", { 
-                              day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' 
-                            })}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="font-medium text-gray-900">
-                            {order.user?.name || "Guest Checkout"}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {order.user?.email || "No email provided"}
-                          </div>
-                        </td>
-                        {/* 🟢 THE FIX: Showing Product Names and Sizes instead of just "2 items" */}
-                        <td className="px-6 py-4">
-                          <div className="text-sm font-bold text-gray-900 mb-1.5">
-                            {itemCount} item{itemCount !== 1 && 's'}
-                          </div>
-                          <div className="flex flex-col gap-1">
-                            {order.items.map((orderItem: any) => (
-                              <div key={orderItem.id} className="text-xs text-gray-600 flex items-start gap-1.5">
-                                <span className="font-black text-gray-400">{orderItem.quantity}x</span>
-                                <span className="line-clamp-2 leading-tight">
-                                  {orderItem.product?.name || "Unknown Product"} 
-                                  {/* If you save sizes to your order items, this will show it! */}
-                                  {orderItem.size && <span className="font-bold text-black ml-1">({orderItem.size})</span>}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-gray-900 font-bold">
-                          Tsh {order.totalAmount.toLocaleString()}
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                           <OrderStatusSelect orderId={order.id} currentStatus={order.status} />
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        {/* 🟢 THE REPLACED ORDERS TABLE */}
+        <OrderListClient initialOrders={safeOrders} />
 
         {/* Inventory Management Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
