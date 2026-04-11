@@ -77,7 +77,7 @@ export default async function AdminDashboard() {
         </div>
       </nav>
 
-            {/* --- 🟢 NEW: QUICK ACCESS BAR --- */}
+      {/* --- 🟢 NEW: QUICK ACCESS BAR --- */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         <div className="bg-gradient-to-r from-[#131921] to-[#232f3e] rounded-xl p-4 flex flex-col md:flex-row items-center justify-between shadow-lg border border-white/10 gap-4">
           <div className="flex items-center gap-4">
@@ -256,7 +256,6 @@ export default async function AdminDashboard() {
                             )}
                           </div>
                           <div className="flex flex-col">
-                            {/* 🟢 THE VERCEL FIX: Wrapped Sparkles in a span with the title attribute! */}
                             <div className="flex items-center gap-1.5">
                               <span className="font-semibold text-gray-800 line-clamp-1">{product.name}</span>
                               {product.hoverImageUrl && (
@@ -265,7 +264,8 @@ export default async function AdminDashboard() {
                                 </span>
                               )}
                             </div>
-                            <span className="text-xs text-gray-400 font-mono mt-0.5">#{product.id.slice(0, 8)}</span>
+                            {/* 🟢 THE FIX: Slicing from the END of the ID to get the unique part! */}
+                            <span className="text-xs text-gray-400 font-mono mt-0.5">#{product.id.slice(-6).toUpperCase()}</span>
                           </div>
                         </div>
                       </td>
