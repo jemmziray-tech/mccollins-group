@@ -1,4 +1,8 @@
 // app/api/products/bulk/route.ts
+
+// Force Node.js runtime for Prisma stability
+export const runtime = "nodejs";
+
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 
@@ -14,9 +18,26 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid product data" }, { status: 400 });
     }
 
-    // Prisma's createMany securely injects an entire array into the database instantly
+    // 🟢 SERVER-SIDE SANITIZATION: We strictly map out only the fields we want, 
+    // ensuring types are correct and malicious data is ignored.
+    const safeProducts = productsArray.map((p: any) => ({
+      name: p.name || "McCollins Exclusive",
+      price: Number(p.price) || 0,
+      brand: p.brand || "McCollins",
+      imageUrl: p.imageUrl,
+      description: p.description || null,
+      category: p.category || "Uncategorized",
+      department: p.department || "Unisex",
+      sizeType: p.sizeType || "clothing",
+      sizes: Array.isArray(p.sizes) ? p.sizes : [], 
+      isAvailable: true,
+      // 🟢 NEW: Safely capture stock, fallback to 10 if missing
+      stock: p.stock !== undefined ? Number(p.stock) : 10,
+    }));
+
+    // Prisma's createMany securely injects the cleaned array into the database instantly
     const createdProducts = await prisma.product.createMany({
-      data: productsArray,
+      data: safeProducts,
       skipDuplicates: true, // Prevents crashing if you accidentally double-click
     });
 

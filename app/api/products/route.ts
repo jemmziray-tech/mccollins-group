@@ -24,9 +24,9 @@ export async function GET(request: Request) {
       return NextResponse.json(product);
     }
 
-    // EXPERT FIX: Now it ONLY returns products where isAvailable is true!
+    // Now it ONLY returns products where isAvailable is true!
     const products = await prisma.product.findMany({
-      where: { isAvailable: true }, // <--- THIS IS THE MAGIC LINE
+      where: { isAvailable: true }, 
       orderBy: { createdAt: "desc" }
     });
     return NextResponse.json(products);
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, price, brand, imageUrl, hoverImageUrl, description, category, sizeType } = body;
+    const { name, price, brand, imageUrl, hoverImageUrl, description, category, sizeType, stock, department } = body;
 
     // Validate required fields
     if (!name || !price || !brand || !imageUrl) {
@@ -57,8 +57,11 @@ export async function POST(request: Request) {
         hoverImageUrl: hoverImageUrl || null,
         description: description || null,
         category: category || "Uncategorized",
+        department: department || "Unisex",
         sizeType: sizeType || "none",
         isAvailable: true,
+        // 🟢 NEW: Ensure stock is saved! Default to 10 if not provided.
+        stock: stock !== undefined ? Number(stock) : 10,
       },
     });
 
@@ -73,7 +76,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { id, name, price, brand, imageUrl, hoverImageUrl, description, category, sizeType } = body;
+    const { id, name, price, brand, imageUrl, hoverImageUrl, description, category, sizeType, stock, department } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Product ID is required for updating" }, { status: 400 });
@@ -90,7 +93,10 @@ export async function PUT(request: Request) {
         hoverImageUrl: hoverImageUrl !== undefined ? hoverImageUrl : undefined,
         description: description || null,
         category: category || "Uncategorized",
+        department: department || "Unisex",
         sizeType: sizeType || "none",
+        // 🟢 NEW: Update stock value if provided
+        ...(stock !== undefined && { stock: Number(stock) }),
       },
     });
 

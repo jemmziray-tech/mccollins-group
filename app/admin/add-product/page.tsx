@@ -21,7 +21,7 @@ const MEGA_MENU_DATA = {
 
 type DraftProduct = {
   id: string; 
-  file: File | null; // 🟢 Allow null for URL-only products!
+  file: File | null;
   previewUrl: string;
   name: string;
   price: string;
@@ -30,6 +30,7 @@ type DraftProduct = {
   department: string; 
   description: string;
   sizes: string; 
+  stock: string; // 🟢 NEW: Added stock to the draft type
 };
 
 export default function AddProductPage() {
@@ -37,7 +38,7 @@ export default function AddProductPage() {
   const [drafts, setDrafts] = useState<DraftProduct[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [linkInput, setLinkInput] = useState(""); // 🟢 State for image URLs
+  const [linkInput, setLinkInput] = useState("");
 
   // 1. Add via File Upload
   const handleFilesSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,20 +56,21 @@ export default function AddProductPage() {
       department: "Men", 
       description: "", 
       sizes: "S, M, L, XL", 
+      stock: "10", // 🟢 NEW: Default to 10 stock when adding via file
     }));
 
     setDrafts((prev) => [...prev, ...newDrafts]);
     e.target.value = '';
   };
 
-  // 2. 🟢 NEW: Add via Image Link (No downloading needed!)
+  // 2. Add via Image Link
   const handleAddFromLink = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!linkInput.trim()) return;
 
     const newDraft: DraftProduct = {
       id: Math.random().toString(36).substring(7),
-      file: null, // No file! We use the URL directly
+      file: null, 
       previewUrl: linkInput.trim(),
       name: "", 
       price: "",
@@ -77,10 +79,11 @@ export default function AddProductPage() {
       department: "Men",
       description: "",
       sizes: "S, M, L, XL",
+      stock: "10", // 🟢 NEW: Default to 10 stock when adding via link
     };
 
     setDrafts((prev) => [...prev, newDraft]);
-    setLinkInput(""); // Clear the input box
+    setLinkInput(""); 
   };
 
   const updateDraft = (id: string, field: keyof DraftProduct, value: string) => {
@@ -94,7 +97,6 @@ export default function AddProductPage() {
   };
 
   const handlePublishAll = async () => {
-    // 🟢 Name is no longer required in this check!
     const hasEmptyFields = drafts.some(d => !d.price || !d.brand);
     if (hasEmptyFields) {
       alert("Please fill out the Price and Brand for all selected items!");
@@ -107,9 +109,9 @@ export default function AddProductPage() {
 
     try {
       const uploadPromises = drafts.map(async (draft) => {
-        let finalImageUrl = draft.previewUrl; // Default to the URL if it's a link
+        let finalImageUrl = draft.previewUrl;
 
-        // If it's an actual file, upload it to Supabase first
+        // Upload to Supabase if it's a file
         if (draft.file) {
           const fileExt = draft.file.name.split('.').pop();
           const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
@@ -136,7 +138,7 @@ export default function AddProductPage() {
           .filter(s => s.length > 0);
 
         return {
-          name: draft.name.trim() || "McCollins Exclusive", // 🟢 Auto-names if left blank!
+          name: draft.name.trim() || "McCollins Exclusive",
           price: Number(draft.price),
           brand: draft.brand,
           imageUrl: finalImageUrl,
@@ -144,7 +146,8 @@ export default function AddProductPage() {
           category: draft.category,
           department: draft.department, 
           sizeType: "clothing",
-          sizes: sizeArray, 
+          sizes: sizeArray,
+          stock: Number(draft.stock || 0), // 🟢 NEW: Ensure stock is passed as a number to the database
           isAvailable: true,
         };
       });
@@ -217,7 +220,6 @@ export default function AddProductPage() {
         ) : (
           <div className="space-y-6">
             
-            {/* 🟢 DUAL UPLOAD AREA */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
               <label htmlFor="multi-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-[#f2f8f9] hover:border-[#007185] rounded-lg cursor-pointer transition-colors group">
                 <div className="flex flex-col items-center justify-center pt-5 pb-6 text-gray-500 group-hover:text-[#007185]">
@@ -264,15 +266,14 @@ export default function AddProductPage() {
                       <img src={draft.previewUrl} alt="Preview" className="w-full h-full object-cover" />
                     </div>
 
-                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-3 items-start">
+                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-4 gap-x-4 gap-y-3 items-start">
                       
-                      <div className="sm:col-span-2">
-                         {/* 🟢 Changed Label to Optional */}
+                      <div className="sm:col-span-3">
                          <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Name (Optional)</label>
                          <input type="text" value={draft.name} onChange={(e) => updateDraft(draft.id, 'name', e.target.value)} placeholder="e.g. Minimalist Hoodie" className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none font-medium text-gray-900 text-sm" />
                       </div>
                       
-                      <div>
+                      <div className="sm:col-span-1">
                          <label className="block text-[11px] font-bold text-[#E3000F] uppercase tracking-wider mb-1">Price (Tsh) *</label>
                          <div className="relative">
                            <span className="absolute left-2 top-1.5 text-gray-400 text-sm font-bold">Tsh</span>
@@ -280,7 +281,7 @@ export default function AddProductPage() {
                          </div>
                       </div>
 
-                      <div>
+                      <div className="sm:col-span-2">
                         <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Department *</label>
                         <div className="relative">
                           <select 
@@ -320,17 +321,23 @@ export default function AddProductPage() {
                         </div>
                       </div>
 
-                      <div>
+                      <div className="sm:col-span-2">
                          <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Sizes</label>
                          <input type="text" value={draft.sizes} onChange={(e) => updateDraft(draft.id, 'sizes', e.target.value)} placeholder="S, M, L..." className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none font-medium text-gray-900 text-sm" />
                       </div>
 
+                      {/* 🟢 NEW: Stock Field added to grid */}
                       <div className="sm:col-span-2">
+                         <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Stock Qty *</label>
+                         <input type="number" min="0" value={draft.stock} onChange={(e) => updateDraft(draft.id, 'stock', e.target.value)} className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none font-medium text-gray-900 text-sm" />
+                      </div>
+
+                      <div className="sm:col-span-4">
                          <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Description</label>
                          <input type="text" value={draft.description} onChange={(e) => updateDraft(draft.id, 'description', e.target.value)} placeholder="Add a short description..." className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none text-gray-600 text-sm" />
                       </div>
 
-                      <button onClick={() => removeDraft(draft.id)} className="md:hidden w-full flex items-center justify-center gap-2 text-red-500 text-sm font-bold py-2 bg-red-50 rounded-lg mt-2 sm:col-span-3">
+                      <button onClick={() => removeDraft(draft.id)} className="md:hidden w-full flex items-center justify-center gap-2 text-red-500 text-sm font-bold py-2 bg-red-50 rounded-lg mt-2 sm:col-span-4">
                         <Trash2 className="w-4 h-4" /> Remove Item
                       </button>
                     </div>
