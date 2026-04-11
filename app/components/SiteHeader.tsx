@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { User, Heart, ShoppingBag, Menu, X, ChevronRight, Search } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from "next-auth/react";
-import { useRouter } from 'next/navigation'; 
+import { useRouter, usePathname } from 'next/navigation'; // 🟢 Added usePathname
 import { useWishlist } from '@/app/context/WishlistContext'; 
 
 const MEGA_MENU_DATA = {
@@ -32,6 +32,7 @@ export default function SiteHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
   
   const router = useRouter();
+  const pathname = usePathname(); // 🟢 NEW: Get the current URL path
   const { wishlistCount } = useWishlist();
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { data: session } = useSession();
@@ -77,6 +78,11 @@ export default function SiteHeader() {
       if (isMobileSearchOpen) setIsMobileSearchOpen(false);
     }
   };
+
+  // 🟢 NEW: DO NOT render this header if we are in the Admin Dashboard!
+  if (pathname && pathname.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <header className={`fixed top-0 left-0 w-full z-[200] font-sans transition-all duration-500 border-b ${
