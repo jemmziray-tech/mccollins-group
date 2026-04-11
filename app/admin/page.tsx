@@ -192,8 +192,23 @@ export default async function AdminDashboard() {
                             {order.user?.email || "No email provided"}
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {itemCount} item{itemCount !== 1 && 's'}
+                        {/* 🟢 THE FIX: Showing Product Names and Sizes instead of just "2 items" */}
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-bold text-gray-900 mb-1.5">
+                            {itemCount} item{itemCount !== 1 && 's'}
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            {order.items.map((orderItem: any) => (
+                              <div key={orderItem.id} className="text-xs text-gray-600 flex items-start gap-1.5">
+                                <span className="font-black text-gray-400">{orderItem.quantity}x</span>
+                                <span className="line-clamp-2 leading-tight">
+                                  {orderItem.product?.name || "Unknown Product"} 
+                                  {/* If you save sizes to your order items, this will show it! */}
+                                  {orderItem.size && <span className="font-bold text-black ml-1">({orderItem.size})</span>}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
                         </td>
                         <td className="px-6 py-4 text-gray-900 font-bold">
                           Tsh {order.totalAmount.toLocaleString()}
@@ -264,7 +279,6 @@ export default async function AdminDashboard() {
                                 </span>
                               )}
                             </div>
-                            {/* 🟢 THE FIX: Slicing from the END of the ID to get the unique part! */}
                             <span className="text-xs text-gray-400 font-mono mt-0.5">#{product.id.slice(-6).toUpperCase()}</span>
                           </div>
                         </div>
