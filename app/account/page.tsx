@@ -60,7 +60,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans pt-32">
+    <div className="min-h-screen bg-[#F7F8FA] text-black font-sans pt-32">
       
       {/* Page Header */}
       <div className="bg-black text-white py-10 px-4 md:px-8 mt-[-1px]">
