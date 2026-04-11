@@ -233,11 +233,13 @@ export default async function AdminDashboard() {
                             )}
                           </div>
                           <div className="flex flex-col">
-                            {/* 🟢 NEW: Luxury Hover Indicator! */}
+                            {/* 🟢 THE VERCEL FIX: Wrapped Sparkles in a span with the title attribute! */}
                             <div className="flex items-center gap-1.5">
                               <span className="font-semibold text-gray-800 line-clamp-1">{product.name}</span>
                               {product.hoverImageUrl && (
-                                <Sparkles className="w-3 h-3 text-[#febd69]" title="Luxury Hover Enabled" />
+                                <span title="Luxury Hover Enabled" className="flex items-center">
+                                  <Sparkles className="w-3 h-3 text-[#febd69]" />
+                                </span>
                               )}
                             </div>
                             <span className="text-xs text-gray-400 font-mono mt-0.5">#{product.id.slice(0, 8)}</span>
