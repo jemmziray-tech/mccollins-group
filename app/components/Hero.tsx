@@ -30,14 +30,29 @@ export default function Hero() {
       .catch(err => console.error("Failed to load campaign", err));
   }, []);
 
+  // 🟢 NEW: Check if the uploaded background is a video file
+  const isVideo = campaign.backgroundImage?.match(/\.(mp4|webm)$/i);
+
   return (
     <section className="relative h-[85vh] lg:h-screen w-full flex items-center justify-center overflow-hidden bg-black animate-in fade-in duration-700">
       
-      {/* Background Image */}
-      <div 
-        className="absolute inset-0 w-full h-full bg-cover bg-center opacity-40 transition-all duration-1000 ease-in-out"
-        style={{ backgroundImage: `url(${campaign.backgroundImage})` }}
-      />
+      {/* 🟢 NEW: Smart Background Render (Video vs Image) */}
+      {isVideo ? (
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover opacity-40 transition-all duration-1000 ease-in-out"
+        >
+          <source src={campaign.backgroundImage} type={`video/${campaign.backgroundImage.split('.').pop()}`} />
+        </video>
+      ) : (
+        <div 
+          className="absolute inset-0 w-full h-full bg-cover bg-center opacity-40 transition-all duration-1000 ease-in-out"
+          style={{ backgroundImage: `url(${campaign.backgroundImage})` }}
+        />
+      )}
       
       {/* Gradient Overlay for Text Readability */}
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
@@ -46,7 +61,7 @@ export default function Hero() {
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center mt-12 md:mt-0">
         
         <span className="text-gray-300 tracking-[0.3em] text-[10px] md:text-xs font-bold uppercase mb-4 md:mb-6 animate-in slide-in-from-bottom-4 duration-500">
-          Colman Looks Exclusive
+          McCollins Exclusive
         </span>
         
         <h1 className="text-4xl md:text-6xl lg:text-8xl font-black text-white tracking-tighter mb-4 md:mb-6 leading-[1.1] animate-in slide-in-from-bottom-6 duration-700">

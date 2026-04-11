@@ -149,7 +149,7 @@ export default function MarketingDashboard() {
                     <ImagePlus className="w-6 h-6 text-gray-500 mb-2" />
                     <p className="text-sm text-gray-500 font-bold">{image ? image.name : "Upload new image (Optional)"}</p>
                   </div>
-                  <input type="file" className="hidden" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] || null)} />
+                  <input type="file" className="hidden" accept="image/*,video/mp4,video/webm" onChange={(e) => setImage(e.target.files?.[0] || null)} />
                 </label>
               </div>
             </div>
