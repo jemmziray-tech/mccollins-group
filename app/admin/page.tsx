@@ -13,13 +13,14 @@ import {
   Package,
   Image as ImageIcon,
   Sparkles,
-  Megaphone
+  Megaphone,
+  AlertTriangle // 🟢 NEW ICON
 } from "lucide-react";
 
 // Import our interactive components
 import DeleteButton from "./DeleteButton";
 import ProductStatusToggle from "./ProductStatusToggle";
-import OrderListClient from "./OrderListClient"; // 🟢 IMPORTING OUR NEW SEARCHABLE TABLE
+import OrderListClient from "./OrderListClient"; 
 
 // Secure Database Connection
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
@@ -45,7 +46,7 @@ export default async function AdminDashboard() {
     }
   });
 
-  // 🟢 FORMAT DATE SAFETY FIX: Next.js prefers strings instead of raw Dates when passing data to Client Components
+  // FORMAT DATE SAFETY FIX
   const safeOrders = orders.map(order => ({
     ...order,
     createdAt: order.createdAt.toISOString(),
@@ -58,6 +59,9 @@ export default async function AdminDashboard() {
     
   const totalOrdersCount = orders.length;
   const pendingOrdersCount = orders.filter(order => order.status === "PENDING").length;
+
+  // 🟢 NEW: Calculate Low Stock Items (Stock is 3 or less)
+  const lowStockItems = products.filter(product => (product.stock || 0) <= 3).length;
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] font-sans text-gray-900 pb-12">
@@ -108,7 +112,7 @@ export default async function AdminDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         
         {/* KPI Cards Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
             <div className="bg-green-100 p-4 rounded-full text-green-600">
               <DollarSign className="w-6 h-6" />
@@ -140,9 +144,23 @@ export default async function AdminDashboard() {
               </h3>
             </div>
           </div>
+
+          {/* 🟢 NEW: Low Stock KPI Card */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-center gap-4 relative overflow-hidden">
+            {lowStockItems > 0 && <div className="absolute top-0 left-0 w-full h-1 bg-red-500 animate-pulse" />}
+            <div className={`p-4 rounded-full ${lowStockItems > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'}`}>
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Low Stock Alerts</p>
+              <h3 className={`text-2xl font-bold ${lowStockItems > 0 ? 'text-red-600' : 'text-gray-900'}`}>
+                {lowStockItems} Items
+              </h3>
+            </div>
+          </div>
         </div>
 
-        {/* 🟢 THE REPLACED ORDERS TABLE */}
+        {/* The Orders Table */}
         <OrderListClient initialOrders={safeOrders} />
 
         {/* Inventory Management Section */}
@@ -163,6 +181,8 @@ export default async function AdminDashboard() {
                   <th className="px-6 py-4 font-semibold">Product</th>
                   <th className="px-6 py-4 font-semibold">Dept / Category</th>
                   <th className="px-6 py-4 font-semibold">Price</th>
+                  {/* 🟢 NEW: Stock Header */}
+                  <th className="px-6 py-4 font-semibold">Stock</th>
                   <th className="px-6 py-4 font-semibold text-center">Visibility</th>
                   <th className="px-6 py-4 font-semibold text-right">Actions</th>
                 </tr>
@@ -170,73 +190,100 @@ export default async function AdminDashboard() {
               <tbody className="divide-y divide-gray-100">
                 {products.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-16 text-center">
+                    <td colSpan={6} className="px-6 py-16 text-center">
                       <div className="flex flex-col items-center justify-center text-gray-400">
                         <Package className="w-12 h-12 mb-3 text-gray-300" />
                         <p className="text-gray-500 font-medium">No products found in the database.</p>
-                        <p className="text-sm mt-1">Click "Add Product" to create your first listing!</p>
                       </div>
                     </td>
                   </tr>
                 ) : (
-                  products.map((product: any) => (
-                    <tr key={product.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden border border-gray-200 shrink-0 flex items-center justify-center relative">
-                            {product.imageUrl ? (
-                              <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
-                            ) : (
-                              <ImageIcon className="w-5 h-5 text-gray-400" />
-                            )}
+                  products.map((product: any) => {
+                    // Safety check in case the database defaults haven't fully synced yet
+                    const currentStock = product.stock ?? 10;
+                    const isLowStock = currentStock <= 3;
+
+                    return (
+                      <tr key={product.id} className={`hover:bg-gray-50 transition-colors ${isLowStock ? 'bg-red-50/30' : ''}`}>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden border border-gray-200 shrink-0 flex items-center justify-center relative">
+                              {product.imageUrl ? (
+                                <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <ImageIcon className="w-5 h-5 text-gray-400" />
+                              )}
+                            </div>
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-semibold text-gray-800 line-clamp-1">{product.name}</span>
+                                {product.hoverImageUrl && (
+                                  <span title="Luxury Hover Enabled" className="flex items-center">
+                                    <Sparkles className="w-3 h-3 text-[#febd69]" />
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-xs text-gray-400 font-mono mt-0.5">#{product.id.slice(-6).toUpperCase()}</span>
+                            </div>
                           </div>
-                          <div className="flex flex-col">
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-semibold text-gray-800 line-clamp-1">{product.name}</span>
-                              {product.hoverImageUrl && (
-                                <span title="Luxury Hover Enabled" className="flex items-center">
-                                  <Sparkles className="w-3 h-3 text-[#febd69]" />
+                        </td>
+                        
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col items-start gap-1">
+                            <span className="bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                              {product.department || "Unisex"}
+                            </span>
+                            <span className="text-gray-600 text-xs font-medium">
+                              {product.category || "Uncategorized"}
+                            </span>
+                          </div>
+                        </td>
+                        
+                        <td className="px-6 py-4 text-gray-900 font-bold text-sm">
+                          Tsh {product.price.toLocaleString()}
+                        </td>
+
+                        {/* 🟢 NEW: Stock Display Cell with Warning Light */}
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col gap-1 items-start">
+                            <div className="flex items-center gap-2">
+                              <span className={`font-bold text-sm ${isLowStock ? 'text-red-600' : 'text-gray-900'}`}>
+                                {currentStock} in stock
+                              </span>
+                              {isLowStock && currentStock > 0 && (
+                                <span className="flex h-2 w-2 relative" title="Low Stock Warning">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                                 </span>
                               )}
                             </div>
-                            <span className="text-xs text-gray-400 font-mono mt-0.5">#{product.id.slice(-6).toUpperCase()}</span>
+                            {currentStock === 0 && (
+                              <span className="text-[10px] text-red-600 bg-red-100 border border-red-200 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                                Sold Out
+                              </span>
+                            )}
                           </div>
-                        </div>
-                      </td>
-                      
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col items-start gap-1">
-                          <span className="bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
-                            {product.department || "Unisex"}
-                          </span>
-                          <span className="text-gray-600 text-xs font-medium">
-                            {product.category || "Uncategorized"}
-                          </span>
-                        </div>
-                      </td>
-                      
-                      <td className="px-6 py-4 text-gray-900 font-bold text-sm">
-                        Tsh {product.price.toLocaleString()}
-                      </td>
-                      
-                      <td className="px-6 py-4 text-center">
-                        <ProductStatusToggle productId={product.id} initialStatus={product.isAvailable} />
-                      </td>
-                      
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2 transition-opacity">
-                          <Link 
-                            href={`/admin/edit-product/${product.id}`}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" 
-                            title="Edit Product"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Link>
-                          <DeleteButton productId={product.id} />
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                        
+                        <td className="px-6 py-4 text-center">
+                          <ProductStatusToggle productId={product.id} initialStatus={product.isAvailable} />
+                        </td>
+                        
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2 transition-opacity">
+                            <Link 
+                              href={`/admin/edit-product/${product.id}`}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" 
+                              title="Edit Product"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Link>
+                            <DeleteButton productId={product.id} />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
