@@ -12,7 +12,8 @@ import {
   AlertCircle,
   Package,
   Image as ImageIcon,
-  Sparkles
+  Sparkles,
+  Megaphone
 } from "lucide-react";
 
 // Import our interactive components
@@ -75,6 +76,28 @@ export default async function AdminDashboard() {
           </Link>
         </div>
       </nav>
+
+            {/* --- 🟢 NEW: QUICK ACCESS BAR --- */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+        <div className="bg-gradient-to-r from-[#131921] to-[#232f3e] rounded-xl p-4 flex flex-col md:flex-row items-center justify-between shadow-lg border border-white/10 gap-4">
+          <div className="flex items-center gap-4">
+            <div className="bg-[#febd69] p-3 rounded-full shadow-inner">
+              <Megaphone className="w-6 h-6 text-[#131921]" />
+            </div>
+            <div>
+              <h2 className="text-white font-bold text-lg leading-none">Storefront Marketing</h2>
+              <p className="text-gray-400 text-xs mt-1">Update your homepage banner, ads, and trending slogans.</p>
+            </div>
+          </div>
+          
+          <Link 
+            href="/admin/marketing" 
+            className="bg-white hover:bg-gray-100 text-black px-6 py-2.5 rounded-lg font-bold text-sm transition-all active:scale-95 flex items-center gap-2"
+          >
+            Open Marketing Portal
+          </Link>
+        </div>
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         
