@@ -11,7 +11,8 @@ import {
   ShoppingBag, 
   AlertCircle,
   Package,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Sparkles
 } from "lucide-react";
 
 // Import our interactive components
@@ -232,13 +233,18 @@ export default async function AdminDashboard() {
                             )}
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-semibold text-gray-800 line-clamp-1">{product.name}</span>
+                            {/* 🟢 NEW: Luxury Hover Indicator! */}
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-semibold text-gray-800 line-clamp-1">{product.name}</span>
+                              {product.hoverImageUrl && (
+                                <Sparkles className="w-3 h-3 text-[#febd69]" title="Luxury Hover Enabled" />
+                              )}
+                            </div>
                             <span className="text-xs text-gray-400 font-mono mt-0.5">#{product.id.slice(0, 8)}</span>
                           </div>
                         </div>
                       </td>
                       
-                      {/* 🟢 NEW: Department & Category Column */}
                       <td className="px-6 py-4">
                         <div className="flex flex-col items-start gap-1">
                           <span className="bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">

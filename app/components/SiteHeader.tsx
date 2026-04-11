@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { User, Heart, ShoppingBag, Menu, X, ChevronRight, Search } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from "next-auth/react";
@@ -25,14 +25,26 @@ export default function SiteHeader() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedMobileMenu, setExpandedMobileMenu] = useState<string | null>(null);
-  
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
-  const router = useRouter();
   
+  // State to track if the user has scrolled down
+  const [isScrolled, setIsScrolled] = useState(false);
+  
+  const router = useRouter();
   const { wishlistCount } = useWishlist();
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { data: session } = useSession();
   const isLoggedIn = !!session;
+
+  // The magic scroll listener
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleMouseEnter = (category: string) => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -47,6 +59,7 @@ export default function SiteHeader() {
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+    if (isMobileSearchOpen) setIsMobileSearchOpen(false);
     document.body.style.overflow = !isMobileMenuOpen ? 'hidden' : 'unset';
   };
 
@@ -61,14 +74,19 @@ export default function SiteHeader() {
       router.push(`/?q=${encodeURIComponent(searchInput.trim())}`);
       setSearchInput(""); 
       if (isMobileMenuOpen) toggleMobileMenu(); 
+      if (isMobileSearchOpen) setIsMobileSearchOpen(false);
     }
   };
 
   return (
-    <header className="w-full relative z-50 font-sans">
+    <header className={`fixed top-0 left-0 w-full z-[200] font-sans transition-all duration-500 border-b ${
+      isScrolled 
+        ? 'bg-black/85 backdrop-blur-md border-white/10 shadow-2xl py-1' 
+        : 'bg-gradient-to-b from-black/80 to-transparent border-transparent py-4'
+    }`}>
       
-      {/* MAIN HEADER */}
-      <div className="bg-black text-white px-4 md:px-6 py-5 flex items-center justify-between relative z-50">
+      {/* INNER HEADER CONTENT */}
+      <div className="text-white px-4 md:px-6 flex items-center justify-between relative z-50">
         
         <div className="flex items-center gap-12">
           <button aria-label="Menu" className="lg:hidden hover:text-gray-300" onClick={toggleMobileMenu}>
@@ -79,7 +97,7 @@ export default function SiteHeader() {
             McCollins
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-8 text-[12px] font-bold tracking-widest uppercase mt-1 h-full">
+          <nav className="hidden lg:flex items-center gap-6 text-[12px] font-bold tracking-widest uppercase mt-1 h-full">
             {Object.keys(MEGA_MENU_DATA).map((category) => (
               <div 
                 key={category}
@@ -90,20 +108,26 @@ export default function SiteHeader() {
                 {category}
               </div>
             ))}
-            {/* BRANDS LINK REMOVED FROM HERE */}
           </nav>
         </div>
 
-        {/* Right Side: Search & Icons */}
-        <div className="flex items-center gap-4 md:gap-5 text-[12px] font-bold tracking-wider">
+        <div className="flex items-center gap-5 text-[12px] font-bold tracking-wider">
           
+          <button 
+            aria-label="Toggle Search" 
+            className="lg:hidden hover:text-gray-300 transition-colors mt-0.5"
+            onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
+          >
+            {isMobileSearchOpen ? <X className="w-5 h-5" strokeWidth={1.5} /> : <Search className="w-5 h-5" strokeWidth={1.5} />}
+          </button>
+
           <form onSubmit={handleSearchSubmit} className="hidden lg:flex items-center relative mr-2">
             <input 
               type="text" 
               placeholder="Search products..." 
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="bg-zinc-900 border border-zinc-700 text-white px-4 py-2 pr-10 rounded-full outline-none focus:border-white transition-colors w-[200px] xl:w-[250px] text-xs placeholder:text-gray-500 font-medium"
+              className="bg-zinc-900 border border-zinc-700 text-white px-4 py-2 pr-10 rounded-full outline-none focus:border-white focus:w-[300px] transition-all duration-300 w-[150px] xl:w-[220px] text-xs placeholder:text-gray-500 font-medium"
             />
             <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
               <Search className="w-4 h-4" />
@@ -141,7 +165,26 @@ export default function SiteHeader() {
         </div>
       </div>
 
-      {/* DESKTOP MEGA MENU DROPDOWN */}
+      {/* MOBILE SEARCH DROPDOWN */}
+      <div 
+        className={`lg:hidden absolute top-full left-0 w-full bg-black/95 backdrop-blur-md text-white overflow-hidden transition-all duration-300 ease-in-out z-40 border-t border-zinc-800 ${
+          isMobileSearchOpen ? 'max-h-24 opacity-100 py-4 px-4 shadow-xl' : 'max-h-0 opacity-0 py-0 px-4 pointer-events-none'
+        }`}
+      >
+        <form onSubmit={handleSearchSubmit} className="relative flex items-center">
+          <Search className="absolute left-4 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search for items..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="w-full bg-zinc-900 border border-zinc-700 text-white pl-12 pr-4 py-3 rounded-lg outline-none focus:border-white transition-colors text-sm placeholder:text-gray-500 font-medium"
+            autoFocus={isMobileSearchOpen}
+          />
+        </form>
+      </div>
+
+      {/* DESKTOP MEGA MENU */}
       {activeMenu && MEGA_MENU_DATA[activeMenu as keyof typeof MEGA_MENU_DATA] && (
         <div 
           className="hidden lg:block absolute top-full left-0 w-full bg-white text-black shadow-2xl border-t border-gray-200 py-10 px-12 transition-all duration-300 origin-top animate-in slide-in-from-top-2 z-40"
@@ -187,6 +230,7 @@ export default function SiteHeader() {
 
         <div className="flex-1 overflow-y-auto">
           
+          {/* RESTORED MOBILE SEARCH INPUT */}
           <div className="p-4 border-b border-gray-100 bg-gray-50">
             <form onSubmit={handleSearchSubmit} className="relative">
               <input 
@@ -202,6 +246,7 @@ export default function SiteHeader() {
             </form>
           </div>
 
+          {/* RESTORED ACCOUNT LOGIN LINK */}
           <div className="border-b-4 border-gray-100">
              <Link href={isLoggedIn ? "/account" : "/login"} onClick={toggleMobileMenu} className="w-full flex items-center gap-3 p-5 font-bold text-[13px] tracking-wider uppercase hover:bg-gray-50 text-[#E3000F]">
                 <User className="w-5 h-5" />
@@ -243,11 +288,9 @@ export default function SiteHeader() {
               )}
             </div>
           ))}
-          {/* BRANDS LINK REMOVED FROM HERE */}
         </div>
 
         <div className="p-5 bg-gray-50 border-t border-gray-200 grid grid-cols-2 gap-4 mt-auto">
-          
           <Link href="/wishlist" onClick={toggleMobileMenu} className="flex items-center justify-center gap-2 text-[13px] font-medium text-gray-700 hover:text-black bg-white py-2 rounded border border-gray-200 relative">
             <Heart className="w-4 h-4" /> 
             Wishlist

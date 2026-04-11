@@ -74,23 +74,27 @@ model User {
 
 // --- PRODUCTS (The Inventory) ---
 model Product {
-  id          String      @id @default(cuid())
-  name        String
-  description String?
-  price       Float
-  brand       String   
-  imageUrl    String
-  category    String      @default("Uncategorized")
+  id            String      @id @default(cuid())
+  name          String
+  description   String?
+  price         Float
+  brand         String   
+  imageUrl      String
   
-  // 🟢 NEW: Added Department and Sizes!
-  department  String      @default("Unisex") 
-  sizes       String[]    @default([])
+  // 🟢 NEW: The lifestyle swap image for our luxury hover effect!
+  hoverImageUrl String?     
   
-  sizeType    String      @default("none") 
-  isAvailable Boolean     @default(true)
-  orderItems  OrderItem[] 
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  category      String      @default("Uncategorized")
+  
+  // Existing fields
+  department    String      @default("Unisex") 
+  sizes         String[]    @default([])
+  sizeType      String      @default("none") 
+  isAvailable   Boolean     @default(true)
+  
+  orderItems    OrderItem[] 
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 }
 
 // --- ORDERS (Customer Purchases) ---
@@ -117,4 +121,15 @@ model OrderItem {
   quantity        Int
   size            String?  
   priceAtPurchase Float    
+}
+
+// --- MARKETING & CAMPAIGNS ---
+model HeroCampaign {
+  id              String   @id @default("main_campaign") // We only need one active record!
+  title           String   @default("Elevate Your Everyday.")
+  subtitle        String?  @default("Premium fashion curated for Tanzania.")
+  buttonText      String   @default("DISCOVER THE COLLECTION")
+  buttonLink      String   @default("/products")
+  backgroundImage String   @default("https://images.unsplash.com/photo-1593030761757-71fae4630b05?q=80&w=2000&auto=format&fit=crop")
+  updatedAt       DateTime @updatedAt
 }

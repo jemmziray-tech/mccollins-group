@@ -5,6 +5,12 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase (Needed to delete the images!)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // --- GET: Fetch all products OR a single product ---
 export async function GET(request: Request) {
@@ -34,7 +40,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, price, brand, imageUrl, description, category, sizeType } = body;
+    const { name, price, brand, imageUrl, hoverImageUrl, description, category, sizeType } = body;
 
     // Validate required fields
     if (!name || !price || !brand || !imageUrl) {
@@ -48,6 +54,7 @@ export async function POST(request: Request) {
         price: Number(price),
         brand,
         imageUrl,
+        hoverImageUrl: hoverImageUrl || null,
         description: description || null,
         category: category || "Uncategorized",
         sizeType: sizeType || "none",
@@ -66,7 +73,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { id, name, price, brand, imageUrl, description, category, sizeType } = body;
+    const { id, name, price, brand, imageUrl, hoverImageUrl, description, category, sizeType } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Product ID is required for updating" }, { status: 400 });
@@ -80,6 +87,7 @@ export async function PUT(request: Request) {
         price: Number(price),
         brand,
         imageUrl,
+        hoverImageUrl: hoverImageUrl !== undefined ? hoverImageUrl : undefined,
         description: description || null,
         category: category || "Uncategorized",
         sizeType: sizeType || "none",
@@ -104,12 +112,48 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
     }
 
-    // Delete from database
+    // 1. Find the product FIRST so we can get the image URLs
+    const product = await prisma.product.findUnique({
+      where: { id }
+    });
+
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+
+    // 2. Delete the images from Supabase Storage
+    const filesToDelete = [];
+    
+    // Extract the exact filename from the primary image URL
+    if (product.imageUrl) {
+      const mainFileName = product.imageUrl.split('/').pop();
+      if (mainFileName) filesToDelete.push(mainFileName);
+    }
+
+    // Extract the exact filename from the hover image URL (if it exists)
+    if (product.hoverImageUrl) {
+      const hoverFileName = product.hoverImageUrl.split('/').pop();
+      if (hoverFileName) filesToDelete.push(hoverFileName);
+    }
+
+    // Tell Supabase to permanently delete these files
+    if (filesToDelete.length > 0) {
+      const { error: storageError } = await supabase.storage
+        .from('products')
+        .remove(filesToDelete);
+
+      if (storageError) {
+        console.error("Failed to delete images from Supabase:", storageError);
+        // We log the error, but we don't stop the database deletion
+      }
+    }
+
+    // 3. Delete from database
     await prisma.product.delete({
       where: { id },
     });
 
-    return NextResponse.json({ message: "Product deleted successfully" }, { status: 200 });
+    return NextResponse.json({ message: "Product and images deleted successfully" }, { status: 200 });
   } catch (error) {
     console.error("Database DELETE Error:", error);
     return NextResponse.json({ error: "Failed to delete product" }, { status: 500 });

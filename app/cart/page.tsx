@@ -7,7 +7,7 @@ import { useCart } from '../context/CartContext';
 export default function CartPage() {
   const { cart, removeFromCart, cartTotal } = useCart();
 
-  // 🟢 NEW: WhatsApp Checkout Logic
+  // WhatsApp Checkout Logic
   const handleWhatsAppCheckout = () => {
     // 1. YOUR PHONE NUMBER
     // Replace with your actual WhatsApp business number (Country code + number, no '+')
@@ -32,13 +32,14 @@ export default function CartPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA] text-black font-sans py-12 px-4 md:px-8">
+    // 🟢 THE FIX: Added pt-32 md:pt-40 to completely clear the fixed header!
+    <div className="min-h-screen bg-[#F7F8FA] text-black font-sans pt-32 pb-12 px-4 md:px-8">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-black tracking-tight mb-8 uppercase">Your Cart</h1>
 
         {cart.length === 0 ? (
           /* EMPTY STATE */
-          <div className="bg-white p-16 rounded-2xl flex flex-col items-center max-w-2xl mx-auto text-center border border-gray-100 shadow-sm">
+          <div className="bg-white p-16 rounded-2xl flex flex-col items-center max-w-2xl mx-auto text-center border border-gray-100 shadow-sm animate-in fade-in zoom-in-95 duration-500">
             <div className="w-24 h-24 bg-[#F7F8FA] rounded-full flex items-center justify-center mb-6">
               <ShoppingBag className="w-10 h-10 text-gray-300" strokeWidth={1.5} />
             </div>
@@ -46,7 +47,7 @@ export default function CartPage() {
             <p className="text-gray-500 text-sm mb-8">
               Looks like you haven&apos;t added anything to your bag yet. Let&apos;s change that!
             </p>
-            <Link href="/" className="bg-black text-white text-[13px] font-bold uppercase tracking-widest py-4 px-10 hover:bg-[#E3000F] transition-colors">
+            <Link href="/" className="bg-black text-white text-[13px] font-bold uppercase tracking-widest py-4 px-10 hover:bg-[#E3000F] transition-colors rounded-full">
               Continue Shopping
             </Link>
           </div>
@@ -56,24 +57,28 @@ export default function CartPage() {
             
             {/* Cart Items List */}
             <div className="lg:col-span-2 space-y-4">
-              {cart.map((item) => (
-                <div key={`${item.id}-${item.size || 'nosize'}`} className="bg-white p-6 rounded-xl border border-gray-100 flex items-center gap-6 shadow-sm">
-                  <div className="w-24 h-24 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
-                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+              {cart.map((item, index) => (
+                <div 
+                  key={`${item.id}-${item.size || 'nosize'}`} 
+                  className="bg-white p-6 rounded-xl border border-gray-100 flex items-center gap-6 shadow-sm animate-in fade-in slide-in-from-bottom-4"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <div className="w-24 h-24 bg-[#F8F8F8] rounded-md overflow-hidden flex-shrink-0 p-2 border border-gray-50">
+                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain mix-blend-multiply" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-sm uppercase tracking-wider mb-1">{item.name}</h3>
+                    <h3 className="font-bold text-sm uppercase tracking-wider mb-1 line-clamp-1">{item.name}</h3>
                     <p className="text-[#E3000F] font-bold text-sm">Tsh {item.price.toLocaleString()}</p>
                     
                     <div className="mt-2 flex gap-4 text-xs text-gray-500 font-medium">
-                      <span>Qty: {item.quantity}</span>
-                      {item.size && <span>Size: {item.size}</span>}
+                      <span className="bg-gray-50 px-2 py-1 rounded">Qty: {item.quantity}</span>
+                      {item.size && <span className="bg-gray-50 px-2 py-1 rounded">Size: {item.size}</span>}
                     </div>
                   </div>
                   
                   <button 
                     onClick={() => removeFromCart(item.id, item.size)}
-                    className="text-gray-400 hover:text-red-500 transition-colors p-2"
+                    className="text-gray-400 hover:text-red-500 transition-colors p-2 bg-gray-50 hover:bg-red-50 rounded-full"
                     aria-label="Remove item"
                   >
                     <Trash2 className="w-5 h-5" />
@@ -83,7 +88,7 @@ export default function CartPage() {
             </div>
 
             {/* Order Summary Sidebar */}
-            <div className="bg-white p-8 rounded-xl border border-gray-100 shadow-sm h-fit">
+            <div className="bg-white p-8 rounded-xl border border-gray-100 shadow-sm h-fit animate-in fade-in slide-in-from-right-4">
               <h3 className="font-black text-lg uppercase tracking-wider mb-6 pb-4 border-b border-gray-100">Order Summary</h3>
               <div className="flex justify-between items-center mb-4 text-sm">
                 <span className="text-gray-600">Subtotal</span>
@@ -98,10 +103,9 @@ export default function CartPage() {
                 <span className="font-black text-[#E3000F]">Tsh {cartTotal.toLocaleString()}</span>
               </div>
               
-              {/* 🟢 NEW: Wired up the onClick event here! */}
               <button 
                 onClick={handleWhatsAppCheckout}
-                className="w-full bg-[#FFD100] text-black font-black uppercase tracking-widest py-4 hover:bg-yellow-400 transition-colors rounded-md shadow-sm"
+                className="w-full bg-[#FFD100] text-black font-black uppercase tracking-widest py-4 hover:bg-yellow-400 transition-transform active:scale-95 rounded-lg shadow-sm"
               >
                 Checkout via WhatsApp
               </button>

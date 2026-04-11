@@ -10,7 +10,7 @@ export default function DeleteButton({ productId }: { productId: string }) {
 
   const handleDelete = async () => {
     // 1. Safety Check
-    const confirmDelete = window.confirm("Are you sure you want to permanently delete this product? This cannot be undone.");
+    const confirmDelete = window.confirm("Are you sure you want to permanently delete this product? This will also delete the images from your storage.");
     if (!confirmDelete) return;
 
     // 2. Trigger Loading State
@@ -28,11 +28,11 @@ export default function DeleteButton({ productId }: { productId: string }) {
       } else {
         const data = await response.json();
         alert(`Failed to delete: ${data.error}`);
-        setIsDeleting(false); // Only turn off loading if it failed (if it succeeded, the page refreshes anyway)
+        setIsDeleting(false); // Turn off loading so they can try again
       }
     } catch (error) {
-      console.error(error);
-      alert("Network error occurred while trying to delete.");
+      console.error("Delete Error:", error);
+      alert("A network error occurred while trying to delete the product.");
       setIsDeleting(false);
     }
   };
@@ -41,7 +41,7 @@ export default function DeleteButton({ productId }: { productId: string }) {
     <button 
       onClick={handleDelete}
       disabled={isDeleting}
-      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+      className="p-2 text-red-500 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       title="Delete Product"
     >
       {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}

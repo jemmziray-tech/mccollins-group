@@ -13,7 +13,7 @@ const CATEGORIES = [
 
 export default function CategoryBubbles() {
   return (
-    <section className="w-full bg-white py-6 md:py-8 border-b border-gray-100">
+      <section className="w-full bg-white pt-32 pb-8 md:pt-36 border-b border-gray-100">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8">
         
         {/* The Scrolling Container */}

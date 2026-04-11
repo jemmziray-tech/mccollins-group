@@ -23,7 +23,9 @@ import { useWishlist } from "./context/WishlistContext";
 import FashionAssistant from "./components/FashionAssistant";
 import Footer from "./components/SiteFooter"; 
 import CategoryBubbles from "./components/CategoryBubbles";
+import Hero from "./components/Hero"; 
 
+// 🟢 THE UPGRADE: Added 'hoverImageUrl' for the lifestyle crossfade effect!
 const displayInventory = [
   { 
     id: "prod_1", 
@@ -32,6 +34,7 @@ const displayInventory = [
     price: 15000, 
     category: "Shirts",
     imageUrl: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=800",
+    hoverImageUrl: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=800",
     description: "The perfect everyday white tee. Tailored fit, 100% breathable cotton, and designed to never lose its shape."
   },
   { 
@@ -41,11 +44,11 @@ const displayInventory = [
     price: 45000, 
     category: "Outerwear",
     imageUrl: "https://images.unsplash.com/photo-1555583743-991174c11425?q=80&w=800",
+    hoverImageUrl: "https://images.unsplash.com/photo-1516257984-b1b4d707412e?q=80&w=800",
     description: "A rugged, timeless denim jacket with a vintage wash. Perfect for layering over tees or hoodies."
   }
 ];
 
-// 🟢 THE FIX STEP 1: Rename the main function to a local component
 function StoreContent() {
   const { data: session } = useSession();
   const [products, setProducts] = useState<any[]>([]);
@@ -83,7 +86,10 @@ function StoreContent() {
     
     if (queryFromMenu) {
       setSearchQuery(queryFromMenu);
-      setTimeout(() => window.scrollTo({ top: 600, behavior: 'smooth' }), 100);
+      // 🟢 Smart scrolling directly to the products section!
+      setTimeout(() => {
+        document.getElementById('inventory-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     } else {
       setSearchQuery("");
     }
@@ -104,7 +110,6 @@ function StoreContent() {
       (product.name && product.name.toLowerCase().includes(term)) || 
       (product.brand && product.brand.toLowerCase().includes(term)) ||
       (product.category && product.category.toLowerCase().includes(term)) ||
-      // 🟢 NEW: The search engine now checks your new Department tag!
       (product.department && product.department.toLowerCase().includes(term))
     );
 
@@ -162,8 +167,6 @@ function StoreContent() {
   return (
       <div className="min-h-screen bg-[#F7F8FA] font-sans text-[#0F1111] relative overflow-x-hidden animate-in fade-in duration-500 ease-in-out">
       
-      <CategoryBubbles />
-
       {/* --- THE SLIDE-OUT CART DRAWER --- */}
       <div 
         className={`fixed inset-0 z-[200] bg-black/50 transition-opacity duration-300 ${isCartOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} 
@@ -278,24 +281,16 @@ function StoreContent() {
         </div>
       )}
 
-      {/* HERO BANNER */}
-      <div className="relative w-full h-[300px] md:h-[450px] bg-gray-900 overflow-hidden">
-        <Image 
-          src="https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?q=80&w=2071" 
-          alt="Fashion Banner" 
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover opacity-60 mix-blend-overlay animate-in zoom-in-105 duration-1000 ease-out"
-        />
-        <div className="absolute top-1/3 left-5 md:left-20 text-white z-20 animate-in slide-in-from-left-4 md:slide-in-from-left-8 duration-700 delay-150 fill-mode-both pr-4">
-          <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-2 leading-tight uppercase">Elevate Your<br/>Everyday Look.</h2>
-          <p className="text-base md:text-lg text-gray-200">Premium fashion curated for Tanzania.</p>
-        </div>
+      {/* THE FULL BLEED HERO */}
+      <Hero />
+
+      {/* 🟢 NEW: Categories now sit cleanly below the Hero, acting as a sleek separator */}
+      <div className="relative z-30 bg-white shadow-sm border-b border-gray-100">
+        <CategoryBubbles />
       </div>
 
-      {/* OVERLAPPING GRID */}
-      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 relative z-20 -mt-16 md:-mt-32 mb-10">
+      {/* OVERLAPPING GRID -> Now standard flow grid! */}
+      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 relative z-20 mt-10 mb-10">
         
         {searchQuery === "" && selectedCategory === "All" && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
@@ -338,7 +333,7 @@ function StoreContent() {
         )}
 
         {/* DYNAMIC PRODUCT INVENTORY */}
-        <div className="bg-white p-5 md:p-8 shadow-sm min-h-[400px] rounded-sm">
+        <div id="inventory-section" className="bg-white p-5 md:p-8 shadow-sm min-h-[400px] rounded-sm scroll-mt-24">
           <div className="flex items-end gap-4 mb-8 pb-4 border-b border-gray-200">
             <h2 className="text-2xl font-black uppercase tracking-tight text-[#0F1111]">
               {searchQuery !== "" ? `Results for "${searchQuery}"` : selectedCategory !== "All" ? `${selectedCategory} Collection` : "Discover our inventory"}
@@ -359,37 +354,56 @@ function StoreContent() {
               <button onClick={clearAllFilters} className="mt-4 bg-black text-white px-6 py-2 rounded font-bold uppercase tracking-wider text-xs">View All Products</button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-4 gap-y-10">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-6 gap-y-12">
               {displayedProducts.map((p: any, idx: number) => (
                 
                 <div key={p.id} className="group flex flex-col relative animate-in fade-in slide-in-from-bottom-4 fill-mode-both" style={{ animationDelay: `${idx * 50}ms` }}>
                   
                   <button 
                     onClick={(e) => toggleWishlist(e, p)}
-                    className="absolute top-2 right-2 z-20 p-2 bg-white/80 hover:bg-white backdrop-blur-sm rounded-full shadow-sm transition-all hover:scale-110 active:scale-95"
+                    className="absolute top-3 right-3 z-20 p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-full shadow-sm transition-all hover:scale-110 active:scale-95"
                     aria-label="Save to Wishlist"
                   >
                     <Heart className={`w-4 h-4 transition-colors ${isInWishlist(p.id) ? 'fill-[#E3000F] text-[#E3000F]' : 'text-gray-600 hover:text-black'}`} />
                   </button>
 
                   <Link href={`/product/${p.id}`} className="cursor-pointer block w-full">
-                    <div className="bg-[#F8F8F8] h-56 w-full flex items-center justify-center mb-3 overflow-hidden rounded relative border border-gray-100">
+                    
+                    {/* The Editorial Image Container with Hover Swap */}
+                    <div className="group relative bg-[#F8F8F8] h-80 w-full overflow-hidden rounded-sm transition-all duration-500 mb-4">
+                      
+                      {/* Primary Product Image */}
                       <Image 
                         src={p.imageUrl} 
                         alt={p.name} 
                         fill
                         sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 16vw"
-                        className="object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110 p-2" 
+                        className={`object-cover transition-all duration-700 ease-in-out ${p.hoverImageUrl ? 'group-hover:opacity-0' : 'group-hover:scale-105'}`} 
                       />
-                      <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300 pointer-events-none">
-                        <span className="bg-white text-black text-[11px] px-4 py-2 rounded-full shadow-lg uppercase font-bold tracking-widest transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+
+                      {/* Secondary Lifestyle Image (The Swap) */}
+                      {p.hoverImageUrl && (
+                        <Image 
+                          src={p.hoverImageUrl} 
+                          alt={`${p.name} lifestyle`} 
+                          fill
+                          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 16vw"
+                          className="object-cover absolute inset-0 opacity-0 transition-opacity duration-700 ease-in-out group-hover:opacity-100" 
+                        />
+                      )}
+
+                      {/* Subtle Quick Add Overlay */}
+                      <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 flex items-end justify-center transition-opacity duration-300 pointer-events-none">
+                        <span className="bg-white/95 text-black text-[10px] px-6 py-2.5 rounded-full shadow-lg uppercase font-bold tracking-[0.2em] transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
                           View Details
                         </span>
                       </div>
                     </div>
+
                     <h4 className="text-[13px] font-bold text-gray-900 group-hover:text-[#E3000F] line-clamp-2 leading-tight transition-colors uppercase tracking-wide">{p.name}</h4>
-                    <div className="text-lg font-bold text-[#0F1111] mt-2">
-                      <span className="text-[10px] align-top relative top-1 text-gray-500">TSH</span> {Number(p.price || 0).toLocaleString()}
+                    <div className="text-base font-bold text-[#0F1111] mt-2">
+                      <span className="text-[10px] align-top relative top-1 text-gray-500 mr-1">TSH</span> 
+                      {Number(p.price || 0).toLocaleString()}
                     </div>
                   </Link>
                   
@@ -415,7 +429,6 @@ function StoreContent() {
   );
 }
 
-// 🟢 THE FIX STEP 2: Create a new default export wrapped in Suspense!
 export default function McCollinsGroupAmazonExport() {
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-gray-400" /></div>}>

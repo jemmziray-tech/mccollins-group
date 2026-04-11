@@ -7,13 +7,13 @@ import { useSession } from "next-auth/react";
 import { Heart, ShoppingCart, Trash2, Loader2, HeartCrack } from "lucide-react";
 
 import { useCart } from "@/app/context/CartContext";
-import { useWishlist } from "@/app/context/WishlistContext"; // 🟢 NEW IMPORT
+import { useWishlist } from "@/app/context/WishlistContext"; 
 import Footer from "@/app/components/SiteFooter";
 
 export default function WishlistPage() {
   const { status } = useSession();
   
-  // 🟢 PULLING LIVE DATA FROM OUR NEW CONTEXT!
+  // PULLING LIVE DATA FROM OUR NEW CONTEXT!
   const { wishlist, removeFromWishlist, wishlistCount } = useWishlist();
   
   // Cart superpowers
@@ -27,14 +27,15 @@ export default function WishlistPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F7F8FA] font-sans">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F7F8FA] font-sans pt-24">
         <Loader2 className="w-10 h-10 animate-spin text-gray-400 mb-4" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA] font-sans text-black flex flex-col">
+    // 🟢 THE FIX: Added pt-24 md:pt-32 right here to clear the fixed header!
+    <div className="min-h-screen bg-[#F7F8FA] font-sans text-black flex flex-col pt-24 md:pt-32">
       
       {/* HEADER BANNER */}
       <div className="bg-black text-white py-10 px-4 md:px-8 mt-[-1px]">
