@@ -14,38 +14,50 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData();
     
-    // Grab text fields
-    const name = formData.get('name') as string;
+    // --- 1. GRAB TEXT FIELDS ---
+    const rawName = formData.get('name') as string;
+    const name = rawName?.trim() ? rawName.trim() : "McCollins Exclusive"; // 🟢 Make Name Optional!
+    
     const price = parseFloat(formData.get('price') as string);
     const brand = (formData.get('brand') as string) || "Colman Looks";
-    const category = formData.get('category') as string;
+    const department = (formData.get('department') as string) || "Unisex"; // 🟢 Added Department
+    const category = (formData.get('category') as string) || "Uncategorized";
     const description = formData.get('description') as string;
 
-    // Grab files
+    // --- 2. GRAB FILES OR LINKS ---
     const file = formData.get('image') as File | null;
     const hoverFile = formData.get('hoverImage') as File | null;
+    
+    // 🟢 Support pasting direct links instead of files
+    const directImageUrl = formData.get('imageUrl') as string | null;
+    const directHoverUrl = formData.get('hoverImageUrl') as string | null;
 
-    if (!file || file.size === 0) {
-      return NextResponse.json({ error: "Primary image file is required" }, { status: 400 });
+    if ((!file || file.size === 0) && !directImageUrl) {
+      return NextResponse.json({ error: "Primary image file or link is required" }, { status: 400 });
     }
 
-    // --- 1. UPLOAD PRIMARY IMAGE ---
-    const fileExt = file.name.split('.').pop();
-    const fileName = `main-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const buffer = Buffer.from(await file.arrayBuffer());
+    // --- 3. PROCESS PRIMARY IMAGE ---
+    let primaryImageUrl = directImageUrl;
 
-    const { error: uploadError } = await supabase.storage
-      .from('products')
-      .upload(fileName, buffer, { contentType: file.type });
+    // If they uploaded a file, send it to Supabase
+    if (file && file.size > 0) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `main-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const buffer = Buffer.from(await file.arrayBuffer());
 
-    if (uploadError) throw new Error("Primary image upload failed");
+      const { error: uploadError } = await supabase.storage
+        .from('products')
+        .upload(fileName, buffer, { contentType: file.type });
 
-    const { data: { publicUrl: primaryImageUrl } } = supabase.storage
-      .from('products')
-      .getPublicUrl(fileName);
+      if (uploadError) throw new Error("Primary image upload failed");
 
-    // --- 2. UPLOAD HOVER IMAGE (IF PROVIDED) ---
-    let hoverImageUrl = null;
+      const { data } = supabase.storage.from('products').getPublicUrl(fileName);
+      primaryImageUrl = data.publicUrl;
+    }
+
+    // --- 4. PROCESS HOVER IMAGE ---
+    let hoverImageUrl = directHoverUrl || null;
+
     if (hoverFile && hoverFile.size > 0) {
       const hExt = hoverFile.name.split('.').pop();
       const hName = `hover-${Date.now()}-${Math.random().toString(36).substring(2)}.${hExt}`;
@@ -57,23 +69,21 @@ export async function POST(req: Request) {
 
       if (hUploadError) throw new Error("Hover image upload failed");
 
-      const { data: hData } = supabase.storage
-        .from('products')
-        .getPublicUrl(hName);
-        
+      const { data: hData } = supabase.storage.from('products').getPublicUrl(hName);
       hoverImageUrl = hData.publicUrl;
     }
 
-    // --- 3. SAVE TO DATABASE ---
+    // --- 5. SAVE TO DATABASE ---
     const newProduct = await prisma.product.create({
       data: {
         name,
         price,
         brand,
+        department,
         category,
-        description,
-        imageUrl: primaryImageUrl, 
-        hoverImageUrl: hoverImageUrl, // 🟢 The new lifestyle swap image!
+        description: description || null,
+        imageUrl: primaryImageUrl as string, 
+        hoverImageUrl: hoverImageUrl, 
         isAvailable: true
       }
     });

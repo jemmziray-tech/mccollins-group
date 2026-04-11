@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, UploadCloud, Loader2, CheckCircle, Trash2, LayoutGrid } from "lucide-react";
+import { ArrowLeft, UploadCloud, Loader2, CheckCircle, Trash2, LayoutGrid, Link as LinkIcon } from "lucide-react";
 
 const MEGA_MENU_DATA = {
   FASHION: {
@@ -21,13 +21,13 @@ const MEGA_MENU_DATA = {
 
 type DraftProduct = {
   id: string; 
-  file: File;
+  file: File | null; // 🟢 Allow null for URL-only products!
   previewUrl: string;
   name: string;
   price: string;
   brand: string;
   category: string;
-  department: string; // 🟢 NEW: Department Field!
+  department: string; 
   description: string;
   sizes: string; 
 };
@@ -37,7 +37,9 @@ export default function AddProductPage() {
   const [drafts, setDrafts] = useState<DraftProduct[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [linkInput, setLinkInput] = useState(""); // 🟢 State for image URLs
 
+  // 1. Add via File Upload
   const handleFilesSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
@@ -50,13 +52,35 @@ export default function AddProductPage() {
       price: "",
       brand: "Colman Looks", 
       category: "Tops & T-Shirts",
-      department: "Men", // 🟢 Default to Men
+      department: "Men", 
       description: "", 
       sizes: "S, M, L, XL", 
     }));
 
     setDrafts((prev) => [...prev, ...newDrafts]);
     e.target.value = '';
+  };
+
+  // 2. 🟢 NEW: Add via Image Link (No downloading needed!)
+  const handleAddFromLink = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!linkInput.trim()) return;
+
+    const newDraft: DraftProduct = {
+      id: Math.random().toString(36).substring(7),
+      file: null, // No file! We use the URL directly
+      previewUrl: linkInput.trim(),
+      name: "", 
+      price: "",
+      brand: "Colman Looks",
+      category: "Tops & T-Shirts",
+      department: "Men",
+      description: "",
+      sizes: "S, M, L, XL",
+    };
+
+    setDrafts((prev) => [...prev, newDraft]);
+    setLinkInput(""); // Clear the input box
   };
 
   const updateDraft = (id: string, field: keyof DraftProduct, value: string) => {
@@ -70,9 +94,10 @@ export default function AddProductPage() {
   };
 
   const handlePublishAll = async () => {
-    const hasEmptyFields = drafts.some(d => !d.name || !d.price || !d.brand);
+    // 🟢 Name is no longer required in this check!
+    const hasEmptyFields = drafts.some(d => !d.price || !d.brand);
     if (hasEmptyFields) {
-      alert("Please fill out the Name, Price, and Brand for all selected images!");
+      alert("Please fill out the Price and Brand for all selected items!");
       return;
     }
 
@@ -82,21 +107,27 @@ export default function AddProductPage() {
 
     try {
       const uploadPromises = drafts.map(async (draft) => {
-        const fileExt = draft.file.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-        
-        const res = await fetch(`${supabaseUrl}/storage/v1/object/products/${fileName}`, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${supabaseKey}`,
-            "Content-Type": draft.file.type,
-          },
-          body: draft.file,
-        });
+        let finalImageUrl = draft.previewUrl; // Default to the URL if it's a link
 
-        if (!res.ok) {
-           const errorText = await res.text();
-           throw new Error(`Supabase Upload Blocked: ${errorText}`);
+        // If it's an actual file, upload it to Supabase first
+        if (draft.file) {
+          const fileExt = draft.file.name.split('.').pop();
+          const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+          
+          const res = await fetch(`${supabaseUrl}/storage/v1/object/products/${fileName}`, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${supabaseKey}`,
+              "Content-Type": draft.file.type,
+            },
+            body: draft.file,
+          });
+
+          if (!res.ok) {
+             const errorText = await res.text();
+             throw new Error(`Supabase Upload Blocked: ${errorText}`);
+          }
+          finalImageUrl = `${supabaseUrl}/storage/v1/object/public/products/${fileName}`;
         }
 
         const sizeArray = draft.sizes
@@ -105,13 +136,13 @@ export default function AddProductPage() {
           .filter(s => s.length > 0);
 
         return {
-          name: draft.name,
+          name: draft.name.trim() || "McCollins Exclusive", // 🟢 Auto-names if left blank!
           price: Number(draft.price),
           brand: draft.brand,
-          imageUrl: `${supabaseUrl}/storage/v1/object/public/products/${fileName}`,
+          imageUrl: finalImageUrl,
           description: draft.description || null,
           category: draft.category,
-          department: draft.department, // 🟢 Sending Department to the DB!
+          department: draft.department, 
           sizeType: "clothing",
           sizes: sizeArray, 
           isAvailable: true,
@@ -158,7 +189,7 @@ export default function AddProductPage() {
             <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
               <LayoutGrid className="w-6 h-6 text-[#007185]" /> Batch Product Uploader
             </h1>
-            <p className="text-gray-500 text-sm mt-1">Select multiple photos to quickly add inventory.</p>
+            <p className="text-gray-500 text-sm mt-1">Select multiple photos or paste image links to quickly add inventory.</p>
           </div>
           
           {drafts.length > 0 && !success && (
@@ -186,7 +217,8 @@ export default function AddProductPage() {
         ) : (
           <div className="space-y-6">
             
-            <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-200">
+            {/* 🟢 DUAL UPLOAD AREA */}
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
               <label htmlFor="multi-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-[#f2f8f9] hover:border-[#007185] rounded-lg cursor-pointer transition-colors group">
                 <div className="flex flex-col items-center justify-center pt-5 pb-6 text-gray-500 group-hover:text-[#007185]">
                   <UploadCloud className="w-8 h-8 mb-2" />
@@ -195,6 +227,28 @@ export default function AddProductPage() {
                 </div>
                 <input id="multi-upload" type="file" multiple accept="image/*" onChange={handleFilesSelected} className="hidden" />
               </label>
+
+              <div className="flex items-center gap-4 my-4">
+                <hr className="flex-1 border-gray-100" />
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">OR PULL FROM WEB</span>
+                <hr className="flex-1 border-gray-100" />
+              </div>
+
+              <form onSubmit={handleAddFromLink} className="flex gap-2">
+                <div className="relative flex-1">
+                  <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="url"
+                    placeholder="Paste an image URL here (e.g., https://example.com/image.jpg)"
+                    className="w-full bg-white border border-gray-300 rounded-lg pl-11 pr-4 py-3 text-sm outline-none focus:border-[#007185] transition-colors"
+                    value={linkInput}
+                    onChange={e => setLinkInput(e.target.value)}
+                  />
+                </div>
+                <button type="submit" disabled={!linkInput} className="bg-[#131921] text-white px-6 py-3 rounded-lg font-bold text-sm hover:bg-black disabled:opacity-50 transition-colors">
+                  Add Link
+                </button>
+              </form>
             </div>
 
             {drafts.length > 0 && (
@@ -213,19 +267,19 @@ export default function AddProductPage() {
                     <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-3 items-start">
                       
                       <div className="sm:col-span-2">
-                         <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Name *</label>
+                         {/* 🟢 Changed Label to Optional */}
+                         <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Name (Optional)</label>
                          <input type="text" value={draft.name} onChange={(e) => updateDraft(draft.id, 'name', e.target.value)} placeholder="e.g. Minimalist Hoodie" className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none font-medium text-gray-900 text-sm" />
                       </div>
                       
                       <div>
-                         <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Price (Tsh) *</label>
+                         <label className="block text-[11px] font-bold text-[#E3000F] uppercase tracking-wider mb-1">Price (Tsh) *</label>
                          <div className="relative">
                            <span className="absolute left-2 top-1.5 text-gray-400 text-sm font-bold">Tsh</span>
                            <input type="number" value={draft.price} onChange={(e) => updateDraft(draft.id, 'price', e.target.value)} placeholder="35000" className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent pl-10 pr-2 py-1.5 outline-none font-bold text-[#B12704] text-sm" />
                          </div>
                       </div>
 
-                      {/* 🟢 NEW: Department Dropdown */}
                       <div>
                         <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Department *</label>
                         <div className="relative">
