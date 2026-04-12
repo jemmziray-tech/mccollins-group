@@ -120,7 +120,7 @@ function StoreContent() {
 
   // Dynamic Collection Arrays
   const colmanCollection = products.filter(p => p.brand === "Colman Looks");
-  const trendingCollection = products.slice(0, 8); // Grab a mix of products for trending
+  const trendingCollection = [...products].reverse().slice(0, 8); // Grab a mix of products for trending
 
   // --- UPGRADED CHECKOUT HANDLER ---
   const handleMasterCheckout = async (e: React.FormEvent) => {
