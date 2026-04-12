@@ -30,7 +30,7 @@ type DraftProduct = {
   department: string; 
   description: string;
   sizes: string; 
-  stock: string; // 🟢 NEW: Added stock to the draft type
+  stock: string; 
 };
 
 export default function AddProductPage() {
@@ -56,7 +56,7 @@ export default function AddProductPage() {
       department: "Men", 
       description: "", 
       sizes: "S, M, L, XL", 
-      stock: "10", // 🟢 NEW: Default to 10 stock when adding via file
+      stock: "", // 🟢 Default to empty since it is optional!
     }));
 
     setDrafts((prev) => [...prev, ...newDrafts]);
@@ -79,7 +79,7 @@ export default function AddProductPage() {
       department: "Men",
       description: "",
       sizes: "S, M, L, XL",
-      stock: "10", // 🟢 NEW: Default to 10 stock when adding via link
+      stock: "", // 🟢 Default to empty since it is optional!
     };
 
     setDrafts((prev) => [...prev, newDraft]);
@@ -147,7 +147,8 @@ export default function AddProductPage() {
           department: draft.department, 
           sizeType: "clothing",
           sizes: sizeArray,
-          stock: Number(draft.stock || 0), // 🟢 NEW: Ensure stock is passed as a number to the database
+          // 🟢 If they leave it blank, default to 10 in the background to keep Prisma happy
+          stock: draft.stock ? Number(draft.stock) : 10, 
           isAvailable: true,
         };
       });
@@ -326,10 +327,10 @@ export default function AddProductPage() {
                          <input type="text" value={draft.sizes} onChange={(e) => updateDraft(draft.id, 'sizes', e.target.value)} placeholder="S, M, L..." className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none font-medium text-gray-900 text-sm" />
                       </div>
 
-                      {/* 🟢 NEW: Stock Field added to grid */}
                       <div className="sm:col-span-2">
-                         <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Stock Qty *</label>
-                         <input type="number" min="0" value={draft.stock} onChange={(e) => updateDraft(draft.id, 'stock', e.target.value)} className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none font-medium text-gray-900 text-sm" />
+                         {/* 🟢 Removed the red text and the asterisk! */}
+                         <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Stock Qty (Optional)</label>
+                         <input type="number" min="0" placeholder="e.g. 10" value={draft.stock} onChange={(e) => updateDraft(draft.id, 'stock', e.target.value)} className="w-full border-b-2 border-gray-200 focus:border-[#007185] bg-transparent px-2 py-1.5 outline-none font-medium text-gray-900 text-sm" />
                       </div>
 
                       <div className="sm:col-span-4">
