@@ -1,6 +1,6 @@
 // app/layout.tsx
 import type { Metadata } from "next";
-import { Inter, Geist, Geist_Mono } from "next/font/google";
+import { Inter, Geist, Geist_Mono, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
 // Components & Context Providers
@@ -9,18 +9,28 @@ import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext"; 
 import SiteHeader from "./components/SiteHeader";
 
-// Font Configurations
-const inter = Inter({ subsets: ["latin"] });
+// 🟢 THE UPGRADE: Luxury Font Configurations
+const inter = Inter({ 
+  subsets: ["latin"],
+  variable: "--font-inter", // Set as a variable for Tailwind
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-playfair", // Set as a variable for Tailwind
+});
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
+
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
-// 🟢 THE UPGRADE: Heavy-hitting SEO & Social Media Metadata
+// Heavy-hitting SEO & Social Media Metadata
 export const metadata: Metadata = {
   title: "McCollins Group | Timeless Luxury Fashion",
   description: "Welcome to the official McCollins Group store. Shop premium menswear, dresses, tailored suits, bags, and the exclusive Colman Looks collection. Fast delivery across Tanzania.",
@@ -32,7 +42,7 @@ export const metadata: Metadata = {
     siteName: "McCollins Group",
     images: [
       {
-        url: "/apple-touch-icon.png", // This will now pull your new gold 'M' logo for link previews!
+        url: "/apple-touch-icon.png", 
         width: 800,
         height: 600,
         alt: "McCollins Group Official Logo",
@@ -48,9 +58,10 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // 🟢 Moved the comment out here where it is safe!
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className={inter.className}>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${playfair.variable} h-full antialiased`}>
+      <body className="font-sans antialiased">
         {/* NextAuth Session Provider */}
         <Provider>
           

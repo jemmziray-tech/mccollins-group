@@ -1,26 +1,48 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* LIGHT MODE: A warm, elegant off-white with deep charcoal text */
+  --background: #FDFBF7;
+  --foreground: #1A1A1A;
+  
+  /* 🟢 NEW: The McCollins Signature Gold Palette */
+  --gold: #D4AF37;       /* Primary luxury metallic gold */
+  --gold-light: #F3E5AB; /* Soft gold for subtle highlights */
+  --gold-dark: #997A00;  /* Deep gold for hover states or borders */
 }
 
+/* 🟢 Injecting our new colors into Tailwind */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-gold-dark: var(--gold-dark);
+  
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-playfair);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* DARK MODE: A very deep, rich dim background to make the gold glow */
+    --background: #0F1115;
+    --foreground: #F5F5F0;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  /* Smooth transitions when switching themes */
+  transition: background-color 0.3s ease, color 0.3s ease; 
+}
+
+/* Automatically apply the elegant Serif font to all headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
