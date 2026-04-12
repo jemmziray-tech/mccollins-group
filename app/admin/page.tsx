@@ -13,14 +13,15 @@ import {
   Image as ImageIcon,
   Sparkles,
   Megaphone,
-  TrendingUp
+  TrendingUp,
+  Users // 🟢 NEW ICON FOR CLIENTS
 } from "lucide-react";
 
 // Import our interactive components
 import DeleteButton from "./DeleteButton";
 import ProductStatusToggle from "./ProductStatusToggle";
 import OrderListClient from "./OrderListClient"; 
-import RevenueChart from "./RevenueChart"; // 🟢 ADDED REVENUE CHART IMPORT
+import RevenueChart from "./RevenueChart"; 
 
 // Secure Database Connection
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
@@ -46,13 +47,16 @@ export default async function AdminDashboard() {
     }
   });
 
+  // 🟢 3. FETCH TOTAL REGISTERED CLIENTS
+  const totalClients = await prisma.user.count();
+
   // FORMAT DATE SAFETY FIX
   const safeOrders = orders.map(order => ({
     ...order,
     createdAt: order.createdAt.toISOString(),
   }));
 
-  // 3. CALCULATE LIVE BUSINESS METRICS
+  // CALCULATE LIVE BUSINESS METRICS
   const totalRevenue = orders
     .filter(order => order.status === "COMPLETED")
     .reduce((sum, order) => sum + order.totalAmount, 0);
@@ -63,7 +67,7 @@ export default async function AdminDashboard() {
   return (
     <div className="min-h-screen bg-[#FDFBF7] font-sans text-[#1A1A1A] pb-20">
       
-      {/* 🟢 THE VIP COMMAND CENTER NAV */}
+      {/* THE VIP COMMAND CENTER NAV */}
       <nav className="bg-[#0F1115] text-white px-6 md:px-10 py-5 flex justify-between items-center border-b border-[#D4AF37]/20 sticky top-0 z-50 shadow-xl">
         <div className="flex items-center gap-4">
           <div className="bg-[#D4AF37] p-2 rounded-sm shadow-[0_0_15px_rgba(212,175,55,0.3)]">
@@ -108,8 +112,8 @@ export default async function AdminDashboard() {
           </Link>
         </div>
         
-        {/* EDITORIAL KPI CARDS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
+        {/* 🟢 EDITORIAL KPI CARDS (Now a 5-column grid on extra-large screens) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
           
           <div className="bg-white rounded-sm p-6 shadow-sm border border-gray-200 flex items-center gap-5 group hover:border-[#D4AF37] transition-colors">
             <div className="bg-[#FDFBF7] border border-gray-100 p-4 rounded-sm text-[#D4AF37] group-hover:scale-110 transition-transform">
@@ -143,7 +147,6 @@ export default async function AdminDashboard() {
             </div>
           </div>
 
-          {/* Catalog Size KPI Card */}
           <div className="bg-white rounded-sm p-6 shadow-sm border border-gray-200 flex items-center gap-5 group hover:border-[#D4AF37] transition-colors">
             <div className="bg-[#FDFBF7] border border-gray-100 p-4 rounded-sm text-gray-800 group-hover:scale-110 transition-transform group-hover:text-[#D4AF37]">
               <Package className="w-6 h-6" />
@@ -153,9 +156,21 @@ export default async function AdminDashboard() {
               <h3 className="text-2xl font-serif text-gray-900 leading-none">{products.length} Pieces</h3>
             </div>
           </div>
+
+          {/* 🟢 NEW: REGISTERED CLIENTS CARD */}
+          <div className="bg-white rounded-sm p-6 shadow-sm border border-gray-200 flex items-center gap-5 group hover:border-[#D4AF37] transition-colors xl:col-span-1 sm:col-span-2 lg:col-span-1">
+            <div className="bg-[#FDFBF7] border border-gray-100 p-4 rounded-sm text-gray-800 group-hover:scale-110 transition-transform group-hover:text-[#D4AF37]">
+              <Users className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Registered VIPs</p>
+              <h3 className="text-2xl font-serif text-gray-900 leading-none">{totalClients} Clients</h3>
+            </div>
+          </div>
+
         </div>
 
-        {/* 🟢 INJECT INTERACTIVE REVENUE GRAPH HERE */}
+        {/* INJECT INTERACTIVE REVENUE GRAPH HERE */}
         <RevenueChart orders={safeOrders} />
 
         {/* THE ORDERS TABLE (Client Component) */}
@@ -211,7 +226,6 @@ export default async function AdminDashboard() {
                               )}
                             </div>
                             <div className="flex flex-col">
-                              {/* 🟢 FIXED: Wrapped Sparkles in a span with the title attribute */}
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="font-bold text-sm text-[#1A1A1A] group-hover:text-[#D4AF37] transition-colors line-clamp-1">{product.name}</span>
                                 {product.hoverImageUrl && (
