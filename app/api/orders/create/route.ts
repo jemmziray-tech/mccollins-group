@@ -10,7 +10,8 @@ if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { cart, totalAmount, userEmail } = body;
+    // 🟢 THE UPGRADE: We are now catching the guest details from the frontend!
+    const { cart, totalAmount, userEmail, customerName, customerPhone } = body;
 
     // 1. Try to find the user if they are logged in
     let userId = null;
@@ -23,7 +24,9 @@ export async function POST(req: Request) {
     const order = await prisma.order.create({
       data: {
         totalAmount: totalAmount,
-        userId: userId, // Will be null if they are a guest checkout
+        userId: userId, // Will be null if they are a guest
+        customerName: customerName || "Guest User", // 🟢 Saved!
+        customerPhone: customerPhone || "No Phone Provided", // 🟢 Saved!
         status: "PENDING",
         items: {
           create: cart.map((item: any) => ({

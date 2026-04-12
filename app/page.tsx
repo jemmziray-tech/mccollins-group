@@ -15,7 +15,8 @@ import {
   Trash2,
   ShieldCheck,
   Loader2,
-  Heart
+  Heart,
+  ArrowRight
 } from "lucide-react";
 
 import { useCart } from "./context/CartContext";
@@ -25,7 +26,6 @@ import Footer from "./components/SiteFooter";
 import CategoryBubbles from "./components/CategoryBubbles";
 import Hero from "./components/Hero"; 
 
-// 🟢 THE UPGRADE: Added 'hoverImageUrl' for the lifestyle crossfade effect!
 const displayInventory = [
   { 
     id: "prod_1", 
@@ -56,12 +56,15 @@ function StoreContent() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [quickViewProduct, setQuickViewProduct] = useState<any>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  
+  // 🟢 NEW: Manage the Guest Checkout UI
+  const [checkoutStep, setCheckoutStep] = useState<"cart" | "details">("cart");
+  const [guestDetails, setGuestDetails] = useState({ name: "", phone: "", area: "" });
 
   const { cart, addToCart, removeFromCart, cartTotal, cartCount, isCartOpen, setIsCartOpen } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
   const WHATSAPP_NUMBER = "255678405111"; 
-
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -86,7 +89,6 @@ function StoreContent() {
     
     if (queryFromMenu) {
       setSearchQuery(queryFromMenu);
-      // 🟢 Smart scrolling directly to the products section!
       setTimeout(() => {
         document.getElementById('inventory-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
@@ -101,6 +103,7 @@ function StoreContent() {
     }
   }, [searchParams]);
 
+  // --- FILTERS FOR COLLECTIONS & INVENTORY ---
   const displayedProducts = products.filter((product) => {
     const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
     if (searchQuery === "") return matchesCategory;
@@ -112,11 +115,16 @@ function StoreContent() {
       (product.category && product.category.toLowerCase().includes(term)) ||
       (product.department && product.department.toLowerCase().includes(term))
     );
-
     return matchesSearch && matchesCategory;
   });
 
-  const handleMasterCheckout = async () => {
+  // Dynamic Collection Arrays
+  const colmanCollection = products.filter(p => p.brand === "Colman Looks");
+  const trendingCollection = products.slice(0, 8); // Grab a mix of products for trending
+
+  // --- UPGRADED CHECKOUT HANDLER ---
+  const handleMasterCheckout = async (e: React.FormEvent) => {
+    e.preventDefault(); // Prevent page reload
     if (cart.length === 0) return;
     setIsCheckingOut(true); 
 
@@ -124,27 +132,35 @@ function StoreContent() {
       const res = await fetch("/api/orders/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          cart: cart,
-          totalAmount: cartTotal,
-          userEmail: session?.user?.email 
+        body: JSON.stringify({ 
+          cart, 
+          totalAmount: cartTotal, 
+          userEmail: session?.user?.email,
+          customerName: guestDetails.name,
+          customerPhone: `${guestDetails.phone} (${guestDetails.area})` 
         }),
       });
-
-      if (!res.ok) alert(`🚨 Backend Error: Status ${res.status}`);
-      else alert("✅ Order saved to database perfectly!");
+      if (!res.ok) console.error("Backend Error");
     } catch (error) {
-      alert("🚨 Network Error.");
+      console.error("Network Error.");
     }
 
-    let orderDetails = "Hujambo McCollins! Ninaomba ku-place order hii:\n\n";
+    // Format the perfect WhatsApp Message including their details!
+    let orderDetails = `Hujambo McCollins! Ninaomba ku-place order hii:\n\n`;
+    orderDetails += `*Jina:* ${guestDetails.name}\n*Simu:* ${guestDetails.phone}\n*Eneo:* ${guestDetails.area}\n\n`;
+    orderDetails += `*Mzigo Wangu:*\n`;
+    
     cart.forEach(item => {
       orderDetails += `▪️ ${item.quantity}x ${item.name} - Tsh ${(item.price * item.quantity).toLocaleString()}\n`;
     });
     orderDetails += `\n*TOTAL: Tsh ${cartTotal.toLocaleString()}*\n\nJe, hivi vitu vyote vipo store?`;
 
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(orderDetails)}`, "_blank");
+    
+    // Reset the cart UI after sending them to WhatsApp
     setIsCheckingOut(false);
+    setCheckoutStep("cart");
+    setIsCartOpen(false);
   };
 
   const clearAllFilters = () => {
@@ -156,273 +172,239 @@ function StoreContent() {
   const toggleWishlist = (e: React.MouseEvent, product: any) => {
     e.preventDefault(); 
     e.stopPropagation(); 
-    
-    if (isInWishlist(product.id)) {
-      removeFromWishlist(product.id);
-    } else {
-      addToWishlist(product);
-    }
+    if (isInWishlist(product.id)) removeFromWishlist(product.id);
+    else addToWishlist(product);
   };
 
+  // 🟢 REUSABLE PRODUCT CARD COMPONENT
+  const ProductCard = ({ p, idx = 0 }: { p: any, idx?: number }) => (
+    <div className="group flex flex-col relative animate-in fade-in fill-mode-both" style={{ animationDelay: `${idx * 50}ms` }}>
+      <button 
+        onClick={(e) => toggleWishlist(e, p)}
+        className="absolute top-3 right-3 z-20 p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-full shadow-sm transition-all hover:scale-110 active:scale-95"
+        aria-label="Save to Wishlist"
+      >
+        <Heart className={`w-4 h-4 transition-colors ${isInWishlist(p.id) ? 'fill-[#D4AF37] text-[#D4AF37]' : 'text-gray-600 hover:text-black'}`} />
+      </button>
+
+      <Link href={`/product/${p.id}`} className="cursor-pointer block w-full">
+        <div className="group relative bg-[#F8F8F8] aspect-[3/4] w-full overflow-hidden rounded-sm transition-all duration-500 mb-4">
+          <Image 
+            src={p.imageUrl} 
+            alt={p.name} 
+            fill
+            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 16vw"
+            className={`object-cover transition-all duration-700 ease-in-out ${p.hoverImageUrl ? 'group-hover:opacity-0' : 'group-hover:scale-105'}`} 
+          />
+          {p.hoverImageUrl && (
+            <Image 
+              src={p.hoverImageUrl} 
+              alt={`${p.name} lifestyle`} 
+              fill
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 16vw"
+              className="object-cover absolute inset-0 opacity-0 transition-opacity duration-700 ease-in-out group-hover:opacity-100" 
+            />
+          )}
+          <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 flex items-end justify-center transition-opacity duration-300 pointer-events-none">
+            <span className="bg-white/95 text-black text-[10px] px-6 py-2.5 rounded-full shadow-lg uppercase font-bold tracking-[0.2em] transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+              View Details
+            </span>
+          </div>
+        </div>
+        <span className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-widest mb-1 block">{p.brand}</span>
+        <h4 className="text-[13px] font-bold text-gray-900 line-clamp-2 leading-tight transition-colors uppercase tracking-wide">{p.name}</h4>
+        <div className="text-sm font-bold text-[#0F1111] mt-2">
+          <span className="text-[10px] align-top relative top-[2px] text-gray-500 mr-1">TSH</span> 
+          {Number(p.price || 0).toLocaleString()}
+        </div>
+      </Link>
+    </div>
+  );
+
   return (
-      <div className="min-h-screen bg-[#F7F8FA] font-sans text-[#0F1111] relative overflow-x-hidden animate-in fade-in duration-500 ease-in-out">
+    <div className="min-h-screen bg-[#FDFBF7] font-sans text-[#1A1A1A] relative overflow-x-hidden animate-in fade-in duration-500 ease-in-out">
       
-      {/* --- THE SLIDE-OUT CART DRAWER --- */}
-      <div 
-        className={`fixed inset-0 z-[200] bg-black/50 transition-opacity duration-300 ${isCartOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} 
-        onClick={() => setIsCartOpen(false)}
-      ></div>
-      
+      {/* --- CART DRAWER --- */}
+      <div className={`fixed inset-0 z-[200] bg-black/50 transition-opacity duration-300 ${isCartOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} onClick={() => setIsCartOpen(false)}></div>
       <div className={`fixed top-0 right-0 h-full w-full md:w-[400px] bg-white shadow-2xl z-[250] transform transition-transform duration-300 ease-in-out flex flex-col ${isCartOpen ? "translate-x-0" : "translate-x-full"}`}>
+        
         <div className="p-5 flex justify-between items-center border-b border-gray-200">
-          <h2 className="text-xl font-bold flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5"/> Your Cart ({cartCount})
-          </h2>
-          <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <X className="w-5 h-5 text-gray-600"/>
-          </button>
+          <h2 className="text-xl font-bold flex items-center gap-2"><ShoppingCart className="w-5 h-5"/> Your Cart ({cartCount})</h2>
+          <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><X className="w-5 h-5 text-gray-600"/></button>
         </div>
 
+        {/* 🟢 NEW: DYNAMIC CART UI */}
         <div className="flex-1 overflow-y-auto p-5">
-          {cart.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-gray-400">
-              <ShoppingCart className="w-16 h-16 mb-4 opacity-50"/>
-              <p>Your cart is empty.</p>
-              <button onClick={() => setIsCartOpen(false)} className="mt-4 text-[#007185] hover:underline font-medium">Continue shopping</button>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {cart.map((item, index) => (
-                <div key={index} className="flex gap-4 animate-in slide-in-from-right-4 duration-300">
-                  <div className="w-20 h-20 bg-gray-100 rounded overflow-hidden flex-shrink-0 relative">
-                    <Image 
-                      src={item.imageUrl} 
-                      alt={item.name} 
-                      fill 
-                      sizes="80px"
-                      className="object-cover mix-blend-multiply" 
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-bold text-gray-900 leading-tight mb-1">{item.name}</h4>
-                    <div className="flex justify-between items-center mt-2">
-                      <span className="font-bold text-[#C7511F]">Tsh {item.price.toLocaleString()}</span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded">Qty: {item.quantity}</span>
-                        <button onClick={() => removeFromCart(item.id, item.size)} className="text-red-500 hover:text-red-700 transition-colors">
-                          <Trash2 className="w-4 h-4"/>
-                        </button>
+          {checkoutStep === "cart" ? (
+            cart.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-gray-400">
+                <ShoppingCart className="w-16 h-16 mb-4 opacity-50"/>
+                <p>Your cart is empty.</p>
+                <button onClick={() => setIsCartOpen(false)} className="mt-4 text-[#D4AF37] hover:underline font-bold uppercase text-sm">Continue shopping</button>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {cart.map((item, index) => (
+                  <div key={index} className="flex gap-4 animate-in slide-in-from-right-4 duration-300">
+                    <div className="w-20 h-20 bg-gray-100 rounded overflow-hidden flex-shrink-0 relative">
+                      <Image src={item.imageUrl} alt={item.name} fill sizes="80px" className="object-cover mix-blend-multiply" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-bold text-gray-900 leading-tight mb-1">{item.name}</h4>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="font-bold text-[#D4AF37]">Tsh {item.price.toLocaleString()}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded">Qty: {item.quantity}</span>
+                          <button onClick={() => removeFromCart(item.id, item.size)} className="text-red-500 hover:text-red-700 transition-colors"><Trash2 className="w-4 h-4"/></button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )
+          ) : (
+            <form id="checkout-form" onSubmit={handleMasterCheckout} className="space-y-4 animate-in slide-in-from-right-4 duration-300">
+              <div className="mb-6">
+                <button type="button" onClick={() => setCheckoutStep("cart")} className="text-sm font-bold text-[#D4AF37] mb-2 flex items-center gap-1 hover:text-black transition-colors">
+                   ← Back to Cart
+                </button>
+                <h3 className="text-2xl font-serif text-gray-900">Delivery Details</h3>
+                <p className="text-xs text-gray-500 mt-1">Please provide your details so we can process your order.</p>
+              </div>
+              
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Full Name</label>
+                <input required type="text" value={guestDetails.name} onChange={e => setGuestDetails({...guestDetails, name: e.target.value})} className="w-full border border-gray-300 px-4 py-3 rounded-sm focus:ring-2 focus:ring-black outline-none bg-gray-50" placeholder="e.g. John Doe" />
+              </div>
+              
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">WhatsApp Number</label>
+                <input required type="tel" value={guestDetails.phone} onChange={e => setGuestDetails({...guestDetails, phone: e.target.value})} className="w-full border border-gray-300 px-4 py-3 rounded-sm focus:ring-2 focus:ring-black outline-none bg-gray-50" placeholder="e.g. 07XX XXX XXX" />
+              </div>
+              
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Delivery Area</label>
+                <input required type="text" value={guestDetails.area} onChange={e => setGuestDetails({...guestDetails, area: e.target.value})} className="w-full border border-gray-300 px-4 py-3 rounded-sm focus:ring-2 focus:ring-black outline-none bg-gray-50" placeholder="e.g. Masaki, Dar es Salaam" />
+              </div>
+            </form>
           )}
         </div>
 
         {cart.length > 0 && (
-          <div className="p-5 border-t border-gray-200 bg-gray-50 animate-in slide-in-from-bottom-4 duration-300">
+          <div className="p-5 border-t border-gray-200 bg-gray-50">
             <div className="flex justify-between items-center mb-4">
               <span className="font-medium text-gray-600">Subtotal</span>
               <span className="text-xl font-bold text-gray-900">Tsh {cartTotal.toLocaleString()}</span>
             </div>
-            <button 
-              onClick={handleMasterCheckout} 
-              disabled={isCheckingOut}
-              className={`w-full hover:bg-black border border-black text-white py-3.5 rounded-xl font-bold shadow-sm flex justify-center items-center gap-2 transition-transform active:scale-95 ${isCheckingOut ? 'bg-gray-800 opacity-80' : 'bg-black'}`}
-            >
-              {isCheckingOut ? (
-                <><Loader2 className="w-5 h-5 animate-spin" /> Processing Order...</>
-              ) : (
-                <><MessageCircle className="w-5 h-5" /> Checkout via WhatsApp</>
-              )}
-            </button>
-            <p className="text-center text-xs text-gray-500 mt-3 flex items-center justify-center gap-1">
-              <ShieldCheck className="w-3 h-3"/> Safe and secure order processing
-            </p>
+            
+            {checkoutStep === "cart" ? (
+              <button onClick={() => setCheckoutStep("details")} className="w-full hover:bg-gray-800 text-white py-4 rounded-sm font-bold shadow-sm flex justify-center items-center gap-2 transition-transform active:scale-95 uppercase tracking-widest text-sm bg-[#1A1A1A]">
+                Proceed to Checkout
+              </button>
+            ) : (
+              <button form="checkout-form" type="submit" disabled={isCheckingOut} className={`w-full hover:bg-gray-800 text-white py-4 rounded-sm font-bold shadow-sm flex justify-center items-center gap-2 transition-transform active:scale-95 uppercase tracking-widest text-sm ${isCheckingOut ? 'bg-gray-800 opacity-80' : 'bg-[#D4AF37] text-black'}`}>
+                {isCheckingOut ? <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</> : <><MessageCircle className="w-5 h-5" /> Confirm via WhatsApp</>}
+              </button>
+            )}
           </div>
         )}
       </div>
 
-      {/* QUICK VIEW MODAL */}
-      {quickViewProduct && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl flex flex-col md:flex-row overflow-hidden relative animate-in fade-in zoom-in duration-200">
-            <button onClick={() => setQuickViewProduct(null)} className="absolute top-4 right-4 z-20 bg-white/80 p-1 rounded-full hover:bg-gray-200 transition-colors shadow-sm">
-              <X className="w-6 h-6 text-gray-800" />
-            </button>
-
-            <div className="md:w-1/2 bg-gray-50 h-64 md:h-auto relative">
-              <Image 
-                src={quickViewProduct.imageUrl} 
-                alt={quickViewProduct.name} 
-                fill
-                priority
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover"
-              />
-            </div>
-
-            <div className="md:w-1/2 p-8 flex flex-col bg-white">
-              <span className="text-[#E3000F] font-bold text-sm uppercase tracking-wider mb-2">{quickViewProduct.brand}</span>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2 leading-tight">{quickViewProduct.name}</h2>
-              <div className="text-2xl font-normal text-[#0F1111] mb-4">
-                <span className="text-sm align-top relative top-1">Tsh</span> {Number(quickViewProduct.price || 0).toLocaleString()}
-              </div>
-              <p className="text-gray-600 text-sm mb-6 leading-relaxed">{quickViewProduct.description}</p>
-              <div className="mt-auto space-y-3">
-                <button onClick={() => { addToCart(quickViewProduct); setQuickViewProduct(null); setIsCartOpen(true); }} className="w-full bg-black hover:bg-zinc-800 text-white py-3 rounded-full font-bold shadow-sm flex justify-center items-center gap-2 transition-transform active:scale-95">
-                  <ShoppingCart className="w-5 h-5" /> Add to Cart
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* THE FULL BLEED HERO */}
       <Hero />
-
-      {/* 🟢 NEW: Categories now sit cleanly below the Hero, acting as a sleek separator */}
       <div className="relative z-30 bg-white shadow-sm border-b border-gray-100">
         <CategoryBubbles />
       </div>
 
-      {/* OVERLAPPING GRID -> Now standard flow grid! */}
-      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 relative z-20 mt-10 mb-10">
-        
-        {searchQuery === "" && selectedCategory === "All" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
-            <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm hover:shadow-md transition-shadow duration-300">
-              <h2 className="text-xl font-bold mb-4 uppercase">Latest Arrivals</h2>
-              <div className="flex-grow relative mb-4 cursor-pointer overflow-hidden rounded group" onClick={() => setSelectedCategory("Outerwear")}>
-                <Image src="https://images.unsplash.com/photo-1617137968427-85924c800a22?q=80&w=1000" alt="Latest Men's Fashion" fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover object-top transition-transform duration-500 group-hover:scale-105" />
-              </div>
-              <button onClick={() => setSelectedCategory("Outerwear")} className="text-left text-black hover:text-[#E3000F] hover:underline text-[13px] font-bold uppercase tracking-wider transition-colors">Shop the new collection</button>
-            </div>
-
-            <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm hover:shadow-md transition-shadow duration-300">
-              <h2 className="text-xl font-bold mb-4 uppercase">Wardrobe Essentials</h2>
-              <div className="flex-grow grid grid-cols-2 gap-4 mb-4">
-                 <div className="flex flex-col cursor-pointer group" onClick={() => setSelectedCategory("Shirts")}><div className="relative overflow-hidden rounded mb-1 h-28"><Image src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=500" alt="Shirts" fill sizes="(max-width: 768px) 50vw, 15vw" className="object-cover transition-transform duration-300 group-hover:scale-110" /></div><span className="text-xs font-bold uppercase group-hover:text-[#E3000F] transition-colors">Shirts & Tees</span></div>
-                 <div className="flex flex-col cursor-pointer group" onClick={() => setSelectedCategory("Denim")}><div className="relative overflow-hidden rounded mb-1 h-28"><Image src="https://images.unsplash.com/photo-1542272604-787c3835535d?q=80&w=500" alt="Denim" fill sizes="(max-width: 768px) 50vw, 15vw" className="object-cover transition-transform duration-300 group-hover:scale-110" /></div><span className="text-xs font-bold uppercase group-hover:text-[#E3000F] transition-colors">Denim</span></div>
-                 <div className="flex flex-col cursor-pointer group" onClick={() => setSelectedCategory("Outerwear")}><div className="relative overflow-hidden rounded mb-1 h-28"><Image src="https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=500" alt="Outerwear" fill sizes="(max-width: 768px) 50vw, 15vw" className="object-cover transition-transform duration-300 group-hover:scale-110" /></div><span className="text-xs font-bold uppercase group-hover:text-[#E3000F] transition-colors">Jackets</span></div>
-                 <div className="flex flex-col cursor-pointer group" onClick={() => setSelectedCategory("Footwear")}><div className="relative overflow-hidden rounded mb-1 h-28"><Image src="https://images.unsplash.com/photo-1499013819532-e4ff41b00669?q=80&w=500" alt="Footwear" fill sizes="(max-width: 768px) 50vw, 15vw" className="object-cover transition-transform duration-300 group-hover:scale-110" /></div><span className="text-xs font-bold uppercase group-hover:text-[#E3000F] transition-colors">Shoes</span></div>
-              </div>
-              <button onClick={() => setSelectedCategory("All")} className="text-left text-black hover:text-[#E3000F] hover:underline text-[13px] font-bold uppercase tracking-wider transition-colors">Shop all categories</button>
-            </div>
-
-            <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm hover:shadow-md transition-shadow duration-300">
-              <h2 className="text-xl font-bold mb-4 uppercase">Accessories & Gear</h2>
-              <div className="flex-grow relative mb-4 cursor-pointer overflow-hidden rounded group" onClick={() => setSelectedCategory("Accessories")}>
-                <Image src="https://images.unsplash.com/photo-1622434641406-a158123450f9?q=80&w=1000" alt="Accessories" fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
-              </div>
-              <button onClick={() => setSelectedCategory("Accessories")} className="text-left text-black hover:text-[#E3000F] hover:underline text-[13px] font-bold uppercase tracking-wider transition-colors">Shop watches & more</button>
-            </div>
-
-            <div className="bg-white p-5 flex flex-col h-[420px] shadow-sm hover:shadow-md transition-shadow duration-300">
-              <h2 className="text-xl font-bold mb-4 uppercase">Trending Footwear</h2>
-              <div className="flex-grow relative mb-4 cursor-pointer overflow-hidden rounded group" onClick={() => setSelectedCategory("Footwear")}>
-                <Image src="https://images.unsplash.com/photo-1638247025967-b4e38f787b76?q=80&w=800&auto=format&fit=crop" alt="Chelsea Boots" fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
-                <div className="absolute top-2 right-2 bg-black px-2 py-1 rounded text-xs font-bold text-white shadow-sm uppercase tracking-wider">Hot</div>
-              </div>
-              <button onClick={() => setSelectedCategory("Footwear")} className="text-left text-black hover:text-[#E3000F] hover:underline text-[13px] font-bold uppercase tracking-wider transition-colors">Shop footwear collection</button>
-            </div>
-          </div>
-        )}
-
-        {/* DYNAMIC PRODUCT INVENTORY */}
-        <div id="inventory-section" className="bg-white p-5 md:p-8 shadow-sm min-h-[400px] rounded-sm scroll-mt-24">
-          <div className="flex items-end gap-4 mb-8 pb-4 border-b border-gray-200">
-            <h2 className="text-2xl font-black uppercase tracking-tight text-[#0F1111]">
-              {searchQuery !== "" ? `Results for "${searchQuery}"` : selectedCategory !== "All" ? `${selectedCategory} Collection` : "Discover our inventory"}
-            </h2>
-            <span className="text-gray-500 text-sm mb-1 font-bold">{displayedProducts.length} items</span>
-            
-            {(searchQuery !== "" || selectedCategory !== "All") && (
-              <button onClick={clearAllFilters} className="ml-auto text-black hover:text-[#E3000F] hover:underline text-sm font-bold uppercase transition-colors cursor-pointer">
-                Clear Filters
-              </button>
-            )}
-          </div>
+      {/* LUXURY CURATED CAROUSELS */}
+      {searchQuery === "" && selectedCategory === "All" && (
+        <div className="max-w-[1500px] mx-auto px-4 sm:px-6 relative z-20 mt-16 mb-16 space-y-20">
           
-          {displayedProducts.length === 0 ? (
-            <div className="text-center py-20 animate-in fade-in duration-500">
-              <h3 className="text-xl font-bold text-gray-700">No products found.</h3>
-              <p className="text-gray-500 mt-2">Try clearing your filters or selecting a different category.</p>
-              <button onClick={clearAllFilters} className="mt-4 bg-black text-white px-6 py-2 rounded font-bold uppercase tracking-wider text-xs">View All Products</button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-6 gap-y-12">
-              {displayedProducts.map((p: any, idx: number) => (
-                
-                <div key={p.id} className="group flex flex-col relative animate-in fade-in slide-in-from-bottom-4 fill-mode-both" style={{ animationDelay: `${idx * 50}ms` }}>
-                  
-                  <button 
-                    onClick={(e) => toggleWishlist(e, p)}
-                    className="absolute top-3 right-3 z-20 p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-full shadow-sm transition-all hover:scale-110 active:scale-95"
-                    aria-label="Save to Wishlist"
-                  >
-                    <Heart className={`w-4 h-4 transition-colors ${isInWishlist(p.id) ? 'fill-[#E3000F] text-[#E3000F]' : 'text-gray-600 hover:text-black'}`} />
-                  </button>
-
-                  <Link href={`/product/${p.id}`} className="cursor-pointer block w-full">
-                    
-                    {/* The Editorial Image Container with Hover Swap */}
-                    <div className="group relative bg-[#F8F8F8] h-80 w-full overflow-hidden rounded-sm transition-all duration-500 mb-4">
-                      
-                      {/* Primary Product Image */}
-                      <Image 
-                        src={p.imageUrl} 
-                        alt={p.name} 
-                        fill
-                        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 16vw"
-                        className={`object-cover transition-all duration-700 ease-in-out ${p.hoverImageUrl ? 'group-hover:opacity-0' : 'group-hover:scale-105'}`} 
-                      />
-
-                      {/* Secondary Lifestyle Image (The Swap) */}
-                      {p.hoverImageUrl && (
-                        <Image 
-                          src={p.hoverImageUrl} 
-                          alt={`${p.name} lifestyle`} 
-                          fill
-                          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 16vw"
-                          className="object-cover absolute inset-0 opacity-0 transition-opacity duration-700 ease-in-out group-hover:opacity-100" 
-                        />
-                      )}
-
-                      {/* Subtle Quick Add Overlay */}
-                      <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 flex items-end justify-center transition-opacity duration-300 pointer-events-none">
-                        <span className="bg-white/95 text-black text-[10px] px-6 py-2.5 rounded-full shadow-lg uppercase font-bold tracking-[0.2em] transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-                          View Details
-                        </span>
-                      </div>
-                    </div>
-
-                    <h4 className="text-[13px] font-bold text-gray-900 group-hover:text-[#E3000F] line-clamp-2 leading-tight transition-colors uppercase tracking-wide">{p.name}</h4>
-                    <div className="text-base font-bold text-[#0F1111] mt-2">
-                      <span className="text-[10px] align-top relative top-1 text-gray-500 mr-1">TSH</span> 
-                      {Number(p.price || 0).toLocaleString()}
-                    </div>
-                  </Link>
-                  
+          {/* Collection 1: The Colman Looks */}
+          {colmanCollection.length > 0 && (
+            <section>
+              <div className="flex justify-between items-end mb-6">
+                <div>
+                  <h2 className="text-3xl font-serif text-[#1A1A1A]">The Colman Collection</h2>
+                  <p className="text-gray-500 text-sm mt-1">Exclusive pieces defining timeless elegance.</p>
                 </div>
-              ))}
-            </div>
+                <button onClick={() => setSelectedCategory("All")} className="hidden md:flex items-center gap-1 text-sm font-bold uppercase tracking-widest text-[#D4AF37] hover:text-black transition-colors">
+                  Shop All <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+              
+              <div className="flex overflow-x-auto gap-6 pb-8 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                {colmanCollection.map((p) => (
+                  <div key={p.id} className="min-w-[260px] md:min-w-[300px] snap-start">
+                    <ProductCard p={p} />
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Collection 2: Trending Now */}
+          {trendingCollection.length > 0 && (
+            <section>
+              <div className="flex justify-between items-end mb-6">
+                <div>
+                  <h2 className="text-3xl font-serif text-[#1A1A1A]">Trending Now</h2>
+                  <p className="text-gray-500 text-sm mt-1">Our most coveted pieces this season.</p>
+                </div>
+              </div>
+              
+              <div className="flex overflow-x-auto gap-6 pb-8 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                {trendingCollection.map((p) => (
+                  <div key={p.id} className="min-w-[260px] md:min-w-[300px] snap-start">
+                    <ProductCard p={p} />
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+      )}
+
+      {/* STANDARD INVENTORY GRID */}
+      <div id="inventory-section" className="max-w-[1500px] mx-auto px-4 sm:px-6 bg-white py-12 md:py-16 shadow-sm min-h-[400px] scroll-mt-24">
+        <div className="flex items-end gap-4 mb-8 pb-4 border-b border-gray-100">
+          <h2 className="text-3xl font-serif text-[#1A1A1A]">
+            {searchQuery !== "" ? `Results for "${searchQuery}"` : selectedCategory !== "All" ? `${selectedCategory}` : "All Products"}
+          </h2>
+          <span className="text-gray-500 text-sm mb-1.5 font-medium">{displayedProducts.length} items</span>
+          
+          {(searchQuery !== "" || selectedCategory !== "All") && (
+            <button onClick={clearAllFilters} className="ml-auto text-[#D4AF37] hover:text-black text-sm font-bold uppercase transition-colors cursor-pointer tracking-widest">
+              Clear Filters
+            </button>
           )}
         </div>
         
-        {!session && (
-          <div className="w-full bg-white border border-gray-200 mt-10 mb-8 py-10 flex flex-col items-center justify-center text-center px-4 shadow-sm rounded-sm">
-            <p className="text-sm font-bold uppercase tracking-widest text-gray-900 mb-4">See personalized recommendations</p>
-            <Link href="/login" className="w-full max-w-[240px]">
-              <button className="w-full bg-black hover:bg-zinc-800 text-white py-3 rounded-full font-bold shadow-sm transition-transform active:scale-95 uppercase tracking-widest text-[13px]">Sign in securely</button>
-            </Link>
+        {displayedProducts.length === 0 ? (
+          <div className="text-center py-20 animate-in fade-in duration-500">
+            <h3 className="text-xl font-serif text-gray-700">No products found.</h3>
+            <p className="text-gray-500 mt-2">Try clearing your filters or selecting a different category.</p>
+            <button onClick={clearAllFilters} className="mt-6 border border-black text-black hover:bg-black hover:text-white px-8 py-3 font-bold uppercase tracking-widest text-xs transition-colors">View All Products</button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-12">
+            {displayedProducts.map((p: any, idx: number) => (
+              <ProductCard key={p.id} p={p} idx={idx} />
+            ))}
           </div>
         )}
-
       </div>
+        
+      {!session && (
+        <div className="max-w-[1500px] mx-auto w-full bg-[#131921] text-white mt-10 mb-8 py-16 flex flex-col items-center justify-center text-center px-4 shadow-sm rounded-sm">
+          <h3 className="text-2xl font-serif mb-2">Join the McCollins Group</h3>
+          <p className="text-sm text-gray-400 mb-8 max-w-md">Create an account to save your wishlist, track orders, and receive exclusive access to new arrivals.</p>
+          <Link href="/login" className="w-full max-w-[240px]">
+            <button className="w-full bg-[#D4AF37] hover:bg-[#b5952f] text-black py-4 rounded-sm font-bold shadow-sm transition-transform active:scale-95 uppercase tracking-widest text-[13px]">Create Account</button>
+          </Link>
+        </div>
+      )}
+
       <Footer />
       <FashionAssistant />
     </div>
@@ -431,7 +413,7 @@ function StoreContent() {
 
 export default function McCollinsGroupAmazonExport() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-gray-400" /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-[#D4AF37]" /></div>}>
       <StoreContent />
     </Suspense>
   );
