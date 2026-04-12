@@ -1,6 +1,7 @@
 // app/layout.tsx
 import type { Metadata } from "next";
 import { Inter, Geist, Geist_Mono, Playfair_Display } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react"; // 🟢 ADDED: Vercel Web Analytics
 import "./globals.css";
 
 // Components & Context Providers
@@ -9,7 +10,7 @@ import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext"; 
 import SiteHeader from "./components/SiteHeader";
 
-// 🟢 THE UPGRADE: Luxury Font Configurations
+// 🟢 Luxury Font Configurations
 const inter = Inter({ 
   subsets: ["latin"],
   variable: "--font-inter", // Set as a variable for Tailwind
@@ -58,7 +59,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // 🟢 Moved the comment out here where it is safe!
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${playfair.variable} h-full antialiased`}>
       <body className="font-sans antialiased">
@@ -82,6 +82,9 @@ export default function RootLayout({
           </CartProvider>
           
         </Provider>
+
+        {/* 🟢 VERCEL ANALYTICS: Tracks live views & visitors */}
+        <Analytics />
       </body>
     </html>
   );
