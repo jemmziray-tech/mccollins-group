@@ -135,3 +135,11 @@ model HeroCampaign {
   backgroundImage String   @default("https://images.unsplash.com/photo-1593030761757-71fae4630b05?q=80&w=2000&auto=format&fit=crop")
   updatedAt       DateTime @updatedAt
 }
+
+model TrustBadge {
+  id        String   @id @default(cuid())
+  imageUrl  String
+  name      String?  // e.g., "DHL Logo"
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}

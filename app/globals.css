@@ -46,3 +46,20 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   letter-spacing: -0.01em;
 }
+
+/* 🟢 NEW: Infinite Scrolling Marquee Animation */
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: scroll 25s linear infinite;
+}
+
+/* Pause the animation when someone hovers over it! */
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
