@@ -211,10 +211,13 @@ export default async function AdminDashboard() {
                               )}
                             </div>
                             <div className="flex flex-col">
+                              {/* 🟢 FIXED: Wrapped Sparkles in a span with the title attribute */}
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="font-bold text-sm text-[#1A1A1A] group-hover:text-[#D4AF37] transition-colors line-clamp-1">{product.name}</span>
                                 {product.hoverImageUrl && (
-                                  <Sparkles className="w-3 h-3 text-[#D4AF37]" title="Secondary Image Active" />
+                                  <span title="Secondary Image Active" className="flex items-center">
+                                    <Sparkles className="w-3 h-3 text-[#D4AF37]" />
+                                  </span>
                                 )}
                               </div>
                               <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">REF: {product.id.slice(-6)}</span>
