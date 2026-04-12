@@ -32,12 +32,43 @@
   }
 }
 
+/* 🟢 GLOBAL POLISH & LUXURY EXPERIENCE */
+html {
+  scroll-behavior: smooth; /* Smooth transitions between sections  */
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
   /* Smooth transitions when switching themes */
   transition: background-color 0.3s ease, color 0.3s ease; 
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 🟢 CUSTOM LUXURY SCROLLBAR  */
+::-webkit-scrollbar {
+  width: 6px; /* Elegant, thin line  */
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #E5E5E5; /* Subtle base color */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold); /* Switches to brand gold on hover  */
+}
+
+/* 🟢 BRANDED TEXT SELECTION  */
+::selection {
+  background-color: var(--gold-light); /* Soft gold highlight  */
+  color: var(--foreground);
 }
 
 /* Automatically apply the elegant Serif font to all headings */
@@ -47,7 +78,7 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.01em;
 }
 
-/* 🟢 NEW: Infinite Scrolling Marquee Animation */
+/* 🟢 INFINITE SCROLLING MARQUEE (TRUST BADGES) */
 @keyframes scroll {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
@@ -59,7 +90,22 @@ h1, h2, h3, h4, h5, h6 {
   animation: scroll 25s linear infinite;
 }
 
-/* Pause the animation when someone hovers over it! */
 .animate-marquee:hover {
   animation-play-state: paused;
+}
+
+/* 🟢 REVEAL ON SCROLL ANIMATION  */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal-on-scroll {
+  animation: reveal 0.8s ease-out forwards;
 }
