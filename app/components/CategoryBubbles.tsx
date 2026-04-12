@@ -3,17 +3,18 @@
 import React from 'react';
 import Link from 'next/link';
 
+// 🟢 THE UPGRADE: All bubbles now use the smart '?q=' search parameter!
 const CATEGORIES = [
   { name: "Women", href: "/?q=women", image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=300&auto=format&fit=crop" },
   { name: "Men", href: "/?q=men", image: "https://images.unsplash.com/photo-1617137968427-85924c800a22?q=80&w=300&auto=format&fit=crop" },
   { name: "Kids", href: "/?q=kids", image: "https://images.unsplash.com/photo-1519241047957-be31d7379a5d?q=80&w=300&auto=format&fit=crop" },
-  { name: "Shoes", href: "/?category=Shoes", image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=300&auto=format&fit=crop" },
-  { name: "Accessories", href: "/?category=Accessories", image: "https://images.unsplash.com/photo-1622434641406-a158123450f9?q=80&w=300&auto=format&fit=crop" },
+  { name: "Shoes", href: "/?q=shoes", image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=300&auto=format&fit=crop" },
+  { name: "Accessories", href: "/?q=accessories", image: "https://images.unsplash.com/photo-1622434641406-a158123450f9?q=80&w=300&auto=format&fit=crop" },
 ];
 
 export default function CategoryBubbles() {
   return (
-      <section className="w-full bg-white pt-32 pb-8 md:pt-36 border-b border-gray-100">
+    <section className="w-full bg-white pt-32 pb-8 md:pt-36 border-b border-gray-100">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8">
         
         {/* The Scrolling Container */}
@@ -26,7 +27,7 @@ export default function CategoryBubbles() {
               className="flex flex-col items-center gap-3 shrink-0 snap-start group"
             >
               {/* The Bubble */}
-              <div className="w-[85px] h-[85px] md:w-[110px] md:h-[110px] rounded-full overflow-hidden border border-gray-200 group-hover:border-black transition-colors duration-300 relative shadow-sm">
+              <div className="w-[85px] h-[85px] md:w-[110px] md:h-[110px] rounded-full overflow-hidden border border-gray-200 group-hover:border-[#D4AF37] transition-colors duration-300 relative shadow-sm">
                 <img 
                   src={category.image} 
                   alt={category.name}
@@ -35,8 +36,8 @@ export default function CategoryBubbles() {
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
               </div>
               
-              {/* The Label */}
-              <span className="text-[11px] md:text-xs font-bold tracking-wider uppercase text-black group-hover:text-[#E3000F] transition-colors duration-300">
+              {/* The Label - 🟢 Upgraded hover color to McCollins Gold */}
+              <span className="text-[11px] md:text-xs font-bold tracking-wider uppercase text-black group-hover:text-[#D4AF37] transition-colors duration-300">
                 {category.name}
               </span>
             </Link>
