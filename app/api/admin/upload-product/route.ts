@@ -16,19 +16,19 @@ export async function POST(req: Request) {
     
     // --- 1. GRAB TEXT FIELDS ---
     const rawName = formData.get('name') as string;
-    const name = rawName?.trim() ? rawName.trim() : "McCollins Exclusive"; // 🟢 Make Name Optional!
+    const name = rawName?.trim() ? rawName.trim() : "McCollins Exclusive Piece"; 
     
     const price = parseFloat(formData.get('price') as string);
-    const brand = (formData.get('brand') as string) || "Colman Looks";
-    const department = (formData.get('department') as string) || "Unisex"; // 🟢 Added Department
-    const category = (formData.get('category') as string) || "Uncategorized";
+    const brand = (formData.get('brand') as string) || "McCollins Exclusive";
+    const department = (formData.get('department') as string) || "Unisex"; 
+    const category = (formData.get('category') as string) || "New Arrivals";
+    const collection = (formData.get('collection') as string) || null; // 🟢 SUPPORT FOR COLLECTIONS
     const description = formData.get('description') as string;
 
     // --- 2. GRAB FILES OR LINKS ---
     const file = formData.get('image') as File | null;
     const hoverFile = formData.get('hoverImage') as File | null;
     
-    // 🟢 Support pasting direct links instead of files
     const directImageUrl = formData.get('imageUrl') as string | null;
     const directHoverUrl = formData.get('hoverImageUrl') as string | null;
 
@@ -39,7 +39,6 @@ export async function POST(req: Request) {
     // --- 3. PROCESS PRIMARY IMAGE ---
     let primaryImageUrl = directImageUrl;
 
-    // If they uploaded a file, send it to Supabase
     if (file && file.size > 0) {
       const fileExt = file.name.split('.').pop();
       const fileName = `main-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
@@ -81,6 +80,9 @@ export async function POST(req: Request) {
         brand,
         department,
         category,
+        // Ensure your Prisma schema supports "collection" if you're passing it here! 
+        // If not, you can map this to description: `${collection} - ${description}`
+        ...(collection && collection !== "None" && { collection }), 
         description: description || null,
         imageUrl: primaryImageUrl as string, 
         hoverImageUrl: hoverImageUrl, 
