@@ -1,7 +1,7 @@
 // components/SiteFooter.tsx
 import React from 'react';
 import { MapPin, Mail, MessageCircle } from 'lucide-react';
-import { prisma } from "@/lib/prisma"; // 🟢 ADDED DATABASE CONNECTION
+import { prisma } from "@/lib/prisma"; // 🟢 DATABASE CONNECTION
 
 export default async function SiteFooter() {
   // 🟢 FETCH THE TRUST BADGES FROM THE DATABASE
@@ -122,7 +122,7 @@ export default async function SiteFooter() {
           </div>
         </div>
 
-        {/* 🟢 NEW DYNAMIC TRUST BADGES SECTION */}
+        {/* 🟢 NEW DYNAMIC TRUST BADGES SECTION (TypeScript fix applied!) */}
         {badges.length > 0 && (
           <div className="mt-12 pt-10 border-t border-gray-800/60 flex flex-col items-center justify-center">
              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-6">Secured & Trusted By</p>
@@ -131,8 +131,8 @@ export default async function SiteFooter() {
                  <img 
                    key={badge.id}
                    src={badge.imageUrl} 
-                   alt={badge.name} 
-                   title={badge.name}
+                   alt={badge.name || "Trust Badge"} 
+                   title={badge.name || "Trust Badge"}
                    className="h-7 md:h-9 object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500 hover:scale-105"
                  />
                ))}
