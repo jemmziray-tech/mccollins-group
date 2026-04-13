@@ -138,8 +138,9 @@ model HeroCampaign {
 
 model TrustBadge {
   id        String   @id @default(cuid())
+  name      String
   imageUrl  String
-  name      String?  // e.g., "DHL Logo"
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
