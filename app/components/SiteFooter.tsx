@@ -1,13 +1,23 @@
 // components/SiteFooter.tsx
-import React from 'react';
-import { MapPin, Mail, MessageCircle } from 'lucide-react';
-import { prisma } from "@/lib/prisma"; // 🟢 DATABASE CONNECTION
+"use client"; // 🟢 Safely run this on the client side
 
-export default async function SiteFooter() {
-  // 🟢 FETCH THE TRUST BADGES FROM THE DATABASE
-  const badges = await prisma.trustBadge.findMany({
-    where: { isActive: true },
-  });
+import React, { useEffect, useState } from 'react';
+import { MapPin, Mail, MessageCircle } from 'lucide-react';
+
+export default function SiteFooter() {
+  const [badges, setBadges] = useState<any[]>([]);
+
+  // 🟢 SECURELY FETCH BADGES VIA API INSTEAD OF DIRECT PRISMA
+  useEffect(() => {
+    fetch('/api/marketing/badges')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setBadges(data);
+        }
+      })
+      .catch(err => console.error("Error loading trust badges:", err));
+  }, []);
 
   // --- UPDATE THESE NUMBERS ---
   const WHATSAPP_SALES = "255678405111";
@@ -122,7 +132,7 @@ export default async function SiteFooter() {
           </div>
         </div>
 
-        {/* 🟢 NEW DYNAMIC TRUST BADGES SECTION (TypeScript fix applied!) */}
+        {/* 🟢 NEW DYNAMIC TRUST BADGES SECTION */}
         {badges.length > 0 && (
           <div className="mt-12 pt-10 border-t border-gray-800/60 flex flex-col items-center justify-center">
              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-6">Secured & Trusted By</p>
