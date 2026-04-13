@@ -14,7 +14,9 @@ import {
   Sparkles,
   Megaphone,
   TrendingUp,
-  Users // 🟢 NEW ICON FOR CLIENTS
+  Users,
+  MessageCircle, 
+  Bookmark 
 } from "lucide-react";
 
 // Import our interactive components
@@ -47,8 +49,13 @@ export default async function AdminDashboard() {
     }
   });
 
-  // 🟢 3. FETCH TOTAL REGISTERED CLIENTS
+  // 3. FETCH TOTAL REGISTERED CLIENTS
   const totalClients = await prisma.user.count();
+
+  // 4. FETCH SAVED GUEST CARTS (LEADS)
+  const savedCarts = await prisma.savedCart.findMany({
+    orderBy: { createdAt: "desc" },
+  });
 
   // FORMAT DATE SAFETY FIX
   const safeOrders = orders.map(order => ({
@@ -112,7 +119,7 @@ export default async function AdminDashboard() {
           </Link>
         </div>
         
-        {/* 🟢 EDITORIAL KPI CARDS (Now a 5-column grid on extra-large screens) */}
+        {/* EDITORIAL KPI CARDS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
           
           <div className="bg-white rounded-sm p-6 shadow-sm border border-gray-200 flex items-center gap-5 group hover:border-[#D4AF37] transition-colors">
@@ -157,7 +164,6 @@ export default async function AdminDashboard() {
             </div>
           </div>
 
-          {/* 🟢 NEW: REGISTERED CLIENTS CARD */}
           <div className="bg-white rounded-sm p-6 shadow-sm border border-gray-200 flex items-center gap-5 group hover:border-[#D4AF37] transition-colors xl:col-span-1 sm:col-span-2 lg:col-span-1">
             <div className="bg-[#FDFBF7] border border-gray-100 p-4 rounded-sm text-gray-800 group-hover:scale-110 transition-transform group-hover:text-[#D4AF37]">
               <Users className="w-6 h-6" />
@@ -172,6 +178,84 @@ export default async function AdminDashboard() {
 
         {/* INJECT INTERACTIVE REVENUE GRAPH HERE */}
         <RevenueChart orders={safeOrders} />
+
+        {/* RECOVERED CARTS (GUEST LEADS) SECTION */}
+        <div className="mb-12">
+          <div className="bg-white rounded-sm shadow-sm border border-[#D4AF37]/30 overflow-hidden animate-in fade-in duration-700 relative">
+            <div className="absolute top-0 left-0 w-1 h-full bg-[#D4AF37]"></div>
+            <div className="px-6 md:px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-[#FDFBF7]">
+              <div className="flex items-center gap-3">
+                <Bookmark className="w-5 h-5 text-[#D4AF37]" />
+                <div>
+                  <h2 className="text-xl font-serif text-[#1A1A1A] mb-1">Recovered Carts</h2>
+                  <p className="text-xs text-gray-500 font-medium">Guest leads who requested a secure link via WhatsApp.</p>
+                </div>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-900 bg-gray-100 px-4 py-1.5 rounded-sm">
+                {savedCarts.length} Leads
+              </span>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[700px]">
+                <thead>
+                  <tr className="border-b border-gray-100 text-[10px] uppercase tracking-widest text-gray-400 bg-white">
+                    <th className="px-6 md:px-8 py-4 font-bold">Client Number</th>
+                    <th className="px-6 py-4 font-bold">Saved Items</th>
+                    <th className="px-6 py-4 font-bold">Date Saved</th>
+                    <th className="px-6 md:px-8 py-4 font-bold text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {savedCarts.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-12 text-center text-sm text-gray-400 font-medium">
+                        No saved carts yet. When a guest saves their cart, they will appear here.
+                      </td>
+                    </tr>
+                  ) : (
+                    savedCarts.map((cart) => {
+                      const items = cart.cartItems as any[];
+                      const itemSummary = items.map(i => `${i.quantity}x ${i.name}`).join(", ");
+                      const cleanPhone = cart.whatsapp.replace(/[^0-9]/g, '');
+                      
+                      // Pre-build the luxury concierge message
+                      const messageText = `Hello! This is the McCollins Group Concierge. We noticed you saved some items for later: \n\n${itemSummary}\n\nHow can we assist you with completing your order today?`;
+                      const whatsappLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(messageText)}`;
+
+                      return (
+                        <tr key={cart.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-6 md:px-8 py-4">
+                            <span className="font-bold text-[#1A1A1A] text-sm tracking-wider">{cart.whatsapp}</span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <p className="text-sm text-gray-600 line-clamp-1 max-w-[300px]">{itemSummary}</p>
+                            <span className="text-[10px] text-gray-400 uppercase tracking-widest mt-1 block">{items.length} Item(s)</span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-xs text-gray-500 font-medium">
+                              {new Date(cart.createdAt).toLocaleDateString()}
+                            </span>
+                          </td>
+                          <td className="px-6 md:px-8 py-4 text-right">
+                            <a 
+                              href={whatsappLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1EBE5D] text-white px-4 py-2 rounded-sm text-[10px] font-bold uppercase tracking-widest transition-colors shadow-sm"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5" /> Message Client
+                            </a>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
 
         {/* THE ORDERS TABLE (Client Component) */}
         <div className="mb-12">
@@ -258,8 +342,9 @@ export default async function AdminDashboard() {
                           <ProductStatusToggle productId={product.id} initialStatus={product.isAvailable} />
                         </td>
                         
+                        {/* 🟢 THE MOBILE FIX: Buttons are always visible on mobile/tablet, hidden until hover on desktop */}
                         <td className="px-6 md:px-8 py-5 text-right">
-                          <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center justify-end gap-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                             <Link 
                               href={`/admin/edit-product/${product.id}`}
                               className="p-2 text-gray-400 hover:text-[#D4AF37] hover:bg-[#FDFBF7] rounded-sm transition-colors border border-transparent hover:border-[#D4AF37]/30" 
