@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { ShoppingBag, Trash2 } from 'lucide-react';
 import { useCart } from '../context/CartContext'; 
+// 🟢 IMPORT THE NEW SAVE CART COMPONENT
+import SaveCartForm from '@/components/SaveCartForm'; // Use '../components/SaveCartForm' if your paths require it!
 
 export default function CartPage() {
   const { cart, removeFromCart, cartTotal } = useCart();
@@ -45,7 +47,7 @@ export default function CartPage() {
             </div>
             <h2 className="text-2xl font-black tracking-tight mb-3 uppercase">Your Cart is Empty</h2>
             <p className="text-gray-500 text-sm mb-8">
-              Looks like you haven&apos;t added anything to your bag yet. Let&apos;s change that!
+              Looks like you haven't added anything to your bag yet. Let's change that!
             </p>
             <Link href="/" className="bg-black text-white text-[13px] font-bold uppercase tracking-widest py-4 px-10 hover:bg-[#E3000F] transition-colors rounded-full">
               Continue Shopping
@@ -109,6 +111,9 @@ export default function CartPage() {
               >
                 Checkout via WhatsApp
               </button>
+
+              {/* 🟢 NEW DYNAMIC GUEST CART CAPTURE COMPONENT */}
+              <SaveCartForm currentCart={cart} />
             </div>
 
           </div>
