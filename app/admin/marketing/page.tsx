@@ -299,6 +299,7 @@ export default function MarketingDashboard() {
                 )}
               </div>
 
+
               <p className="text-xs text-gray-400 mt-6 font-medium">* TIP: Search Google for "Mastercard logo transparent png", right-click the image, select "Copy Image Address", and paste it above!</p>
             </div>
           </div>
