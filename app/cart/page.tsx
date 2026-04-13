@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { ShoppingBag, Trash2 } from 'lucide-react';
 import { useCart } from '../context/CartContext'; 
 // 🟢 IMPORT THE NEW SAVE CART COMPONENT
-import SaveCartForm from '@/components/SaveCartForm'; // Use '../components/SaveCartForm' if your paths require it!
+import SaveCartForm from '../components/SaveCartForm';
 
 export default function CartPage() {
   const { cart, removeFromCart, cartTotal } = useCart();
