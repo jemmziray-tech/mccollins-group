@@ -1,11 +1,17 @@
 // components/SiteFooter.tsx
 import React from 'react';
 import { MapPin, Mail, MessageCircle } from 'lucide-react';
+import { prisma } from "@/lib/prisma"; // 🟢 ADDED DATABASE CONNECTION
 
-export default function SiteFooter() {
+export default async function SiteFooter() {
+  // 🟢 FETCH THE TRUST BADGES FROM THE DATABASE
+  const badges = await prisma.trustBadge.findMany({
+    where: { isActive: true },
+  });
+
   // --- UPDATE THESE NUMBERS ---
   const WHATSAPP_SALES = "255678405111";
-  const WHATSAPP_SUPPORT = "255693485566"; // Put your second number here!
+  const WHATSAPP_SUPPORT = "255693485566"; 
   
   const INSTAGRAM_LINK = "https://www.instagram.com/_lwah.o?igsh=MTVha3V2a2ExdW40Mg==%22;"; 
   const TIKTOK_LINK = "https://tiktok.com/@mccollinsgroup"; 
@@ -28,7 +34,7 @@ export default function SiteFooter() {
               </p>
             </div>
             
-            {/* Social Media Icons (Instagram & TikTok) */}
+            {/* Social Media Icons */}
             <div className="flex items-center space-x-4 pt-2">
               <a 
                 href={INSTAGRAM_LINK} 
@@ -84,11 +90,9 @@ export default function SiteFooter() {
                 <span>Tanzania</span>
               </li>
 
-              {/* DUAL WHATSAPP SECTION */}
               <li className="flex flex-col space-y-4 pt-1">
                 <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">WhatsApp Lines</span>
                 
-                {/* Number 1: Sales & Orders */}
                 <a href={`https://wa.me/${WHATSAPP_SALES}`} target="_blank" rel="noopener noreferrer" className="flex items-center group cursor-pointer">
                   <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center mr-4 group-hover:bg-[#25D366] transition-colors shrink-0 shadow-md">
                      <MessageCircle className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
@@ -99,7 +103,6 @@ export default function SiteFooter() {
                   </div>
                 </a>
 
-                {/* Number 2: Customer Support */}
                 <a href={`https://wa.me/${WHATSAPP_SUPPORT}`} target="_blank" rel="noopener noreferrer" className="flex items-center group cursor-pointer">
                   <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center mr-4 group-hover:bg-[#25D366] transition-colors shrink-0 shadow-md">
                      <MessageCircle className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
@@ -117,11 +120,28 @@ export default function SiteFooter() {
               </li>
             </ul>
           </div>
-
         </div>
 
+        {/* 🟢 NEW DYNAMIC TRUST BADGES SECTION */}
+        {badges.length > 0 && (
+          <div className="mt-12 pt-10 border-t border-gray-800/60 flex flex-col items-center justify-center">
+             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-6">Secured & Trusted By</p>
+             <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
+               {badges.map((badge) => (
+                 <img 
+                   key={badge.id}
+                   src={badge.imageUrl} 
+                   alt={badge.name} 
+                   title={badge.name}
+                   className="h-7 md:h-9 object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500 hover:scale-105"
+                 />
+               ))}
+             </div>
+          </div>
+        )}
+
         {/* Bottom Bar */}
-        <div className="mt-8 pt-8 border-t border-gray-800/60 flex flex-col md:flex-row items-center justify-between text-gray-500 text-sm">
+        <div className="mt-12 pt-8 border-t border-gray-800/60 flex flex-col md:flex-row items-center justify-between text-gray-500 text-sm">
           <p>&copy; {new Date().getFullYear()} McCollins Group. All rights reserved.</p>
           <div className="mt-4 md:mt-0 flex space-x-4">
              <span className="hover:text-white transition-colors cursor-pointer">Privacy Policy</span>

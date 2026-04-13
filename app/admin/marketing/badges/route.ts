@@ -3,6 +3,18 @@ export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+// 🟢 NEW: Fetch all badges to display in the Admin Dashboard
+export async function GET() {
+  try {
+    const badges = await prisma.trustBadge.findMany({
+      where: { isActive: true },
+    });
+    return NextResponse.json(badges, { status: 200 });
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to fetch badges" }, { status: 500 });
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const { imageUrl, name } = await request.json();
