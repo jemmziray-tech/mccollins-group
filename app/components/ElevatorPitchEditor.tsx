@@ -2,10 +2,11 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Quote, Save, Loader2, CheckCircle2, Edit3 } from 'lucide-react';
+import { Quote, Save, Loader2, CheckCircle2, Edit3, Video } from 'lucide-react';
 
-export default function ElevatorPitchEditor({ initialPitch }: { initialPitch: string | null }) {
-  const [pitch, setPitch] = useState(initialPitch || "McCollins Group: Curated luxury fashion and bespoke tailoring, delivered with uncompromising personal service.");
+export default function ElevatorPitchEditor({ initialSettings }: { initialSettings: any }) {
+  const [pitch, setPitch] = useState(initialSettings?.elevatorPitch || "McCollins Group: Curated luxury fashion and bespoke tailoring, delivered with uncompromising personal service.");
+  const [videoUrl, setVideoUrl] = useState(initialSettings?.brandVideoUrl || "");
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -16,16 +17,16 @@ export default function ElevatorPitchEditor({ initialPitch }: { initialPitch: st
       const res = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ elevatorPitch: pitch }),
+        body: JSON.stringify({ elevatorPitch: pitch, brandVideoUrl: videoUrl }),
       });
 
       if (res.ok) {
         setIsSaved(true);
         setIsEditing(false);
-        setTimeout(() => setIsSaved(false), 3000); // Hide success message after 3 seconds
+        setTimeout(() => setIsSaved(false), 3000);
       }
     } catch (error) {
-      alert("Failed to save pitch.");
+      alert("Failed to save settings.");
     } finally {
       setIsLoading(false);
     }
@@ -33,7 +34,6 @@ export default function ElevatorPitchEditor({ initialPitch }: { initialPitch: st
 
   return (
     <div className="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden relative group">
-      {/* Decorative Gold Line */}
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#D4AF37] to-yellow-200"></div>
       
       <div className="p-6 md:p-8">
@@ -44,56 +44,55 @@ export default function ElevatorPitchEditor({ initialPitch }: { initialPitch: st
             </div>
             <div>
               <h3 className="text-xl font-serif text-[#1A1A1A] leading-tight">Brand Identity</h3>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Official Elevator Pitch</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Official Elevator Pitch & Brand Film</p>
             </div>
           </div>
 
           {!isEditing && (
-            <button 
-              onClick={() => setIsEditing(true)}
-              className="text-gray-400 hover:text-[#D4AF37] transition-colors p-2"
-              title="Edit Pitch"
-            >
+            <button onClick={() => setIsEditing(true)} className="text-gray-400 hover:text-[#D4AF37] transition-colors p-2">
               <Edit3 className="w-5 h-5" />
             </button>
           )}
         </div>
 
         {isEditing ? (
-          <div className="animate-in fade-in duration-300">
-            <textarea
-              value={pitch}
-              onChange={(e) => setPitch(e.target.value)}
-              rows={4}
-              className="w-full border border-[#D4AF37]/50 rounded-sm p-4 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#D4AF37] resize-none leading-relaxed italic bg-[#FDFBF7]"
-              placeholder="Enter your brand's elevator pitch here..."
-            />
+          <div className="animate-in fade-in duration-300 space-y-4">
+            <div>
+              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 block">Elevator Pitch (Text)</label>
+              <textarea
+                value={pitch}
+                onChange={(e) => setPitch(e.target.value)}
+                rows={3}
+                className="w-full border border-[#D4AF37]/50 rounded-sm p-4 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#D4AF37] resize-none leading-relaxed italic bg-[#FDFBF7]"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-1"><Video className="w-3 h-3"/> Brand Film Link (.mp4 or YouTube)</label>
+              <input
+                type="text"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="e.g. https://www.youtube.com/embed/..."
+                className="w-full border border-gray-200 rounded-sm p-3 text-sm text-gray-700 focus:outline-none focus:border-[#D4AF37]"
+              />
+            </div>
+            
             <div className="flex justify-end gap-3 mt-4">
-              <button 
-                onClick={() => setIsEditing(false)}
-                className="text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-black px-4 py-2 transition-colors"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleSave}
-                disabled={isLoading}
-                className="bg-[#1A1A1A] hover:bg-[#D4AF37] hover:text-[#0F1115] text-white px-6 py-2.5 rounded-sm text-[10px] font-bold uppercase tracking-widest transition-colors flex items-center gap-2 shadow-sm"
-              >
-                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-3.5 h-3.5" /> Save Pitch</>}
+              <button onClick={() => setIsEditing(false)} className="text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-black px-4 py-2 transition-colors">Cancel</button>
+              <button onClick={handleSave} disabled={isLoading} className="bg-[#1A1A1A] hover:bg-[#D4AF37] hover:text-[#0F1115] text-white px-6 py-2.5 rounded-sm text-[10px] font-bold uppercase tracking-widest transition-colors flex items-center gap-2">
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Save className="w-3.5 h-3.5" /> Save Identity</>}
               </button>
             </div>
           </div>
         ) : (
           <div className="relative">
-            <p className="text-lg md:text-xl font-serif text-gray-800 leading-relaxed italic text-center px-4 md:px-10">
-              "{pitch}"
-            </p>
-            
-            {/* Success Notification Bubble */}
+            <p className="text-lg md:text-xl font-serif text-gray-800 leading-relaxed italic text-center px-4 md:px-10">"{pitch}"</p>
+            {videoUrl && (
+              <p className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-4">✓ Video Link Active</p>
+            )}
             {isSaved && (
-              <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-green-50 text-green-600 border border-green-200 text-xs px-4 py-1.5 rounded-full flex items-center gap-2 animate-in slide-in-from-bottom-2 fade-in shadow-sm">
-                <CheckCircle2 className="w-3 h-3" /> Successfully Saved
+              <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-green-50 text-green-600 border border-green-200 text-xs px-4 py-1.5 rounded-full flex items-center gap-2 animate-in slide-in-from-bottom-2 fade-in">
+                <CheckCircle2 className="w-3 h-3" /> Saved
               </div>
             )}
           </div>

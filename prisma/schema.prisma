@@ -171,5 +171,6 @@ model BespokeRequest {
 model StoreSettings {
   id            String   @id @default("global")
   elevatorPitch String?  @db.Text
+  brandVideoUrl String?
   updatedAt     DateTime @updatedAt
 }

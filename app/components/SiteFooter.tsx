@@ -2,6 +2,7 @@
 "use client"; // 🟢 Safely run this on the client side
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link'; // 🟢 IMPORTED NEXT.JS LINK
 import { MapPin, Mail, MessageCircle } from 'lucide-react';
 
 export default function SiteFooter() {
@@ -76,17 +77,19 @@ export default function SiteFooter() {
           <div className="flex flex-col md:pl-8">
             <h4 className="text-lg font-bold text-white mb-6 uppercase tracking-wider text-sm">Quick Links</h4>
             <ul className="space-y-3">
+              {/* 🟢 UPDATED "OUR BRANDS" TO USE NEXT/LINK */}
               <li>
-                <a href="#categories" className="text-gray-400 hover:text-white transition-colors flex items-center group">
+                <Link href="/#categories" className="text-gray-400 hover:text-white transition-colors flex items-center group">
                   <span className="h-px w-0 bg-white mr-0 transition-all duration-300 group-hover:w-3 group-hover:mr-2"></span>
                   Our Brands
-                </a>
+                </Link>
               </li>
+              {/* 🟢 UPDATED "ABOUT US" TO USE NEXT/LINK */}
               <li>
-                <a href="#about" className="text-gray-400 hover:text-white transition-colors flex items-center group">
+                <Link href="/about" className="text-gray-400 hover:text-white transition-colors flex items-center group">
                   <span className="h-px w-0 bg-white mr-0 transition-all duration-300 group-hover:w-3 group-hover:mr-2"></span>
                   About Us
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -132,7 +135,7 @@ export default function SiteFooter() {
           </div>
         </div>
 
-        {/* 🟢 NEW DYNAMIC TRUST BADGES SECTION */}
+        {/* DYNAMIC TRUST BADGES SECTION */}
         {badges.length > 0 && (
           <div className="mt-12 pt-10 border-t border-gray-800/60 flex flex-col items-center justify-center">
              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-6">Secured & Trusted By</p>

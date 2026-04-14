@@ -5,13 +5,12 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
-    const { elevatorPitch } = await request.json();
+    const { elevatorPitch, brandVideoUrl } = await request.json(); // 🟢 ADDED brandVideoUrl
 
-    // Upsert means: "Update it if it exists, Create it if it doesn't"
     const settings = await prisma.storeSettings.upsert({
       where: { id: "global" },
-      update: { elevatorPitch },
-      create: { id: "global", elevatorPitch },
+      update: { elevatorPitch, brandVideoUrl }, // 🟢 ADDED brandVideoUrl
+      create: { id: "global", elevatorPitch, brandVideoUrl }, // 🟢 ADDED brandVideoUrl
     });
 
     return NextResponse.json({ success: true, settings }, { status: 200 });
