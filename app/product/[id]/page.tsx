@@ -17,6 +17,8 @@ import {
 
 import { useCart } from "@/app/context/CartContext";
 import Footer from "@/app/components/SiteFooter";
+// 🟢 IMPORT THE NEW BESPOKE FORM
+import BespokeForm from "@/app/components/BespokeForm"; 
 
 // Fallback data for testing
 const displayInventory = [
@@ -167,7 +169,7 @@ export default function ProductDisplayPage() {
                 {product.brand || "McCollins Exclusive"}
               </Link>
               
-              {/* 🟢 The Playfair Display Luxury Title */}
+              {/* The Playfair Display Luxury Title */}
               <h1 className="text-4xl md:text-5xl font-serif text-[#1A1A1A] leading-[1.1] mb-6">
                 {product.name}
               </h1>
@@ -243,6 +245,9 @@ export default function ProductDisplayPage() {
                 <ShoppingCart className="w-4 h-4" /> 
                 {selectedSize ? `Add Size ${selectedSize} to Cart` : "Add to Cart"}
               </button>
+
+              {/* 🟢 NEW MADE-TO-MEASURE / BESPOKE FORM */}
+              <BespokeForm productName={product.name} />
             </div>
 
             {/* Luxury Trust Signals */}

@@ -16,7 +16,9 @@ import {
   TrendingUp,
   Users,
   MessageCircle, 
-  Bookmark 
+  Bookmark,
+  Scissors, // 🟢 IMPORTED FOR BESPOKE SECTION
+  Ruler     // 🟢 IMPORTED FOR BESPOKE SECTION
 } from "lucide-react";
 
 // Import our interactive components
@@ -54,6 +56,11 @@ export default async function AdminDashboard() {
 
   // 4. FETCH SAVED GUEST CARTS (LEADS)
   const savedCarts = await prisma.savedCart.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+
+  // 🟢 5. FETCH BESPOKE TAILORING REQUESTS
+  const bespokeRequests = await prisma.bespokeRequest.findMany({
     orderBy: { createdAt: "desc" },
   });
 
@@ -121,7 +128,6 @@ export default async function AdminDashboard() {
         
         {/* EDITORIAL KPI CARDS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
-          
           <div className="bg-white rounded-sm p-6 shadow-sm border border-gray-200 flex items-center gap-5 group hover:border-[#D4AF37] transition-colors">
             <div className="bg-[#FDFBF7] border border-gray-100 p-4 rounded-sm text-[#D4AF37] group-hover:scale-110 transition-transform">
               <TrendingUp className="w-6 h-6" />
@@ -173,11 +179,108 @@ export default async function AdminDashboard() {
               <h3 className="text-2xl font-serif text-gray-900 leading-none">{totalClients} Clients</h3>
             </div>
           </div>
-
         </div>
 
         {/* INJECT INTERACTIVE REVENUE GRAPH HERE */}
         <RevenueChart orders={safeOrders} />
+
+        {/* 🟢 THE NEW MASTER TAILOR VIP SECTION */}
+        <div className="mb-12">
+          <div className="bg-[#0F1115] rounded-sm shadow-xl border border-[#D4AF37]/20 overflow-hidden animate-in fade-in duration-700 relative text-white">
+            <div className="absolute top-0 left-0 w-1 h-full bg-[#D4AF37]"></div>
+            <div className="px-6 md:px-8 py-6 border-b border-white/10 flex justify-between items-center bg-[#1A1A1A]">
+              <div className="flex items-center gap-4">
+                <div className="bg-[#D4AF37]/10 p-2 rounded-sm border border-[#D4AF37]/30">
+                  <Scissors className="w-5 h-5 text-[#D4AF37]" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-serif text-white mb-1">The Master Tailor Queue</h2>
+                  <p className="text-xs text-gray-400 font-medium">Manage incoming bespoke and made-to-measure requests.</p>
+                </div>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#0F1115] bg-[#D4AF37] px-4 py-1.5 rounded-sm shadow-[0_0_10px_rgba(212,175,55,0.2)]">
+                {bespokeRequests.length} Requests
+              </span>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[900px]">
+                <thead>
+                  <tr className="border-b border-white/10 text-[10px] uppercase tracking-widest text-gray-500 bg-[#0F1115]">
+                    <th className="px-6 md:px-8 py-5 font-bold">Client Profile</th>
+                    <th className="px-6 py-5 font-bold">Garment Details</th>
+                    <th className="px-6 py-5 font-bold">Client Notes</th>
+                    <th className="px-6 py-5 font-bold">Status</th>
+                    <th className="px-6 md:px-8 py-5 font-bold text-right">Consultation</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {bespokeRequests.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-16 text-center">
+                        <Ruler className="w-10 h-10 text-gray-700 mx-auto mb-4" />
+                        <p className="text-sm text-gray-400 font-medium">The tailor's queue is currently empty.</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    bespokeRequests.map((request) => {
+                      // Safely parse the JSON measurements
+                      const measures = typeof request.measurements === 'string' 
+                        ? JSON.parse(request.measurements) 
+                        : request.measurements as any;
+                      
+                      const cleanPhone = request.whatsapp.replace(/[^0-9]/g, '');
+                      
+                      // Pre-build the luxury tailoring consultation message
+                      const messageText = `Dear ${request.clientName},\n\nThis is the Master Tailor team at McCollins Group. We have received your bespoke request for the ${request.productName}.\n\nWhen would you be available for a brief consultation to discuss your measurements and design notes?`;
+                      const whatsappLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(messageText)}`;
+
+                      return (
+                        <tr key={request.id} className="hover:bg-white/[0.02] transition-colors group">
+                          <td className="px-6 md:px-8 py-5">
+                            <span className="font-bold text-white text-sm tracking-wider block mb-1">{request.clientName}</span>
+                            <span className="text-[10px] text-[#D4AF37] font-bold tracking-widest">{request.whatsapp}</span>
+                          </td>
+                          <td className="px-6 py-5">
+                            <span className="text-sm text-gray-200 font-medium block mb-2">{request.productName}</span>
+                            <div className="flex gap-3">
+                              {measures?.chest && <span className="bg-white/10 px-2 py-1 rounded text-[10px] text-gray-300">C: {measures.chest}</span>}
+                              {measures?.waist && <span className="bg-white/10 px-2 py-1 rounded text-[10px] text-gray-300">W: {measures.waist}</span>}
+                              {measures?.length && <span className="bg-white/10 px-2 py-1 rounded text-[10px] text-gray-300">L: {measures.length}</span>}
+                            </div>
+                          </td>
+                          <td className="px-6 py-5">
+                            <p className="text-xs text-gray-400 line-clamp-2 max-w-[250px] italic">
+                              "{request.designNotes || "Standard fit, no additional notes provided."}"
+                            </p>
+                          </td>
+                          <td className="px-6 py-5">
+                             <span className="text-[10px] font-bold uppercase tracking-widest text-[#997A00] bg-[#D4AF37]/10 border border-[#D4AF37]/20 px-3 py-1 rounded-full">
+                               {request.status}
+                             </span>
+                          </td>
+                          <td className="px-6 md:px-8 py-5 text-right">
+                            {/* Mobile-friendly visibility check for the button */}
+                            <div className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                              <a 
+                                href={whatsappLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 bg-white text-[#0F1115] hover:bg-[#D4AF37] px-4 py-2 rounded-sm text-[10px] font-bold uppercase tracking-widest transition-colors shadow-sm"
+                              >
+                                <MessageCircle className="w-3.5 h-3.5" /> Consult
+                              </a>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
 
         {/* RECOVERED CARTS (GUEST LEADS) SECTION */}
         <div className="mb-12">
@@ -219,12 +322,11 @@ export default async function AdminDashboard() {
                       const itemSummary = items.map(i => `${i.quantity}x ${i.name}`).join(", ");
                       const cleanPhone = cart.whatsapp.replace(/[^0-9]/g, '');
                       
-                      // Pre-build the luxury concierge message
                       const messageText = `Hello! This is the McCollins Group Concierge. We noticed you saved some items for later: \n\n${itemSummary}\n\nHow can we assist you with completing your order today?`;
                       const whatsappLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(messageText)}`;
 
                       return (
-                        <tr key={cart.id} className="hover:bg-gray-50 transition-colors">
+                        <tr key={cart.id} className="hover:bg-gray-50 transition-colors group">
                           <td className="px-6 md:px-8 py-4">
                             <span className="font-bold text-[#1A1A1A] text-sm tracking-wider">{cart.whatsapp}</span>
                           </td>
@@ -238,14 +340,16 @@ export default async function AdminDashboard() {
                             </span>
                           </td>
                           <td className="px-6 md:px-8 py-4 text-right">
-                            <a 
-                              href={whatsappLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1EBE5D] text-white px-4 py-2 rounded-sm text-[10px] font-bold uppercase tracking-widest transition-colors shadow-sm"
-                            >
-                              <MessageCircle className="w-3.5 h-3.5" /> Message Client
-                            </a>
+                            <div className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                              <a 
+                                href={whatsappLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1EBE5D] text-white px-4 py-2 rounded-sm text-[10px] font-bold uppercase tracking-widest transition-colors shadow-sm"
+                              >
+                                <MessageCircle className="w-3.5 h-3.5" /> Message Client
+                              </a>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -257,7 +361,7 @@ export default async function AdminDashboard() {
           </div>
         </div>
 
-        {/* THE ORDERS TABLE (Client Component) */}
+        {/* THE ORDERS TABLE */}
         <div className="mb-12">
           <OrderListClient initialOrders={safeOrders} />
         </div>
@@ -342,7 +446,6 @@ export default async function AdminDashboard() {
                           <ProductStatusToggle productId={product.id} initialStatus={product.isAvailable} />
                         </td>
                         
-                        {/* 🟢 THE MOBILE FIX: Buttons are always visible on mobile/tablet, hidden until hover on desktop */}
                         <td className="px-6 md:px-8 py-5 text-right">
                           <div className="flex items-center justify-end gap-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                             <Link 
