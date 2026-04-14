@@ -26,7 +26,7 @@ import DeleteButton from "./DeleteButton";
 import ProductStatusToggle from "./ProductStatusToggle";
 import OrderListClient from "./OrderListClient"; 
 import RevenueChart from "./RevenueChart"; 
-import BespokeStatusSelect from "./BespokeStatusSelect"; // 🟢 IMPORTED NEW STATUS DROPDOWN
+import BespokeStatusSelect from "../components/BespokeStatusSelect"; // 🟢 IMPORTED NEW STATUS DROPDOWN
 
 // Secure Database Connection
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
