@@ -190,7 +190,7 @@ export default async function AdminDashboard() {
 
         {/* 🟢 THE BRAND IDENTITY / ELEVATOR PITCH EDITOR */}
         <div className="mb-12">
-          <ElevatorPitchEditor initialPitch={settings?.elevatorPitch || null} />
+          <ElevatorPitchEditor initialSettings={settings} />
         </div>
 
         {/* INJECT INTERACTIVE REVENUE GRAPH HERE */}
