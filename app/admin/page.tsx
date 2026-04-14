@@ -27,6 +27,7 @@ import ProductStatusToggle from "./ProductStatusToggle";
 import OrderListClient from "./OrderListClient"; 
 import RevenueChart from "./RevenueChart"; 
 import BespokeStatusSelect from "../components/BespokeStatusSelect"; // 🟢 IMPORTED NEW STATUS DROPDOWN
+import ElevatorPitchEditor from "../components/ElevatorPitchEditor"; // 🟢 IMPORTED PITCH EDITOR
 
 // Secure Database Connection
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
@@ -60,9 +61,14 @@ export default async function AdminDashboard() {
     orderBy: { createdAt: "desc" },
   });
 
-  // 🟢 5. FETCH BESPOKE TAILORING REQUESTS
+  // 5. FETCH BESPOKE TAILORING REQUESTS
   const bespokeRequests = await prisma.bespokeRequest.findMany({
     orderBy: { createdAt: "desc" },
+  });
+
+  // 🟢 6. FETCH GLOBAL SETTINGS (Elevator Pitch)
+  const settings = await prisma.storeSettings.findUnique({
+    where: { id: "global" }
   });
 
   // FORMAT DATE SAFETY FIX
@@ -182,10 +188,15 @@ export default async function AdminDashboard() {
           </div>
         </div>
 
+        {/* 🟢 THE BRAND IDENTITY / ELEVATOR PITCH EDITOR */}
+        <div className="mb-12">
+          <ElevatorPitchEditor initialPitch={settings?.elevatorPitch || null} />
+        </div>
+
         {/* INJECT INTERACTIVE REVENUE GRAPH HERE */}
         <RevenueChart orders={safeOrders} />
 
-        {/* 🟢 THE NEW MASTER TAILOR VIP SECTION */}
+        {/* THE NEW MASTER TAILOR VIP SECTION */}
         <div className="mb-12">
           <div className="bg-[#0F1115] rounded-sm shadow-xl border border-[#D4AF37]/20 overflow-hidden animate-in fade-in duration-700 relative text-white">
             <div className="absolute top-0 left-0 w-1 h-full bg-[#D4AF37]"></div>
@@ -255,12 +266,10 @@ export default async function AdminDashboard() {
                               "{request.designNotes || "Standard fit, no additional notes provided."}"
                             </p>
                           </td>
-                          {/* 🟢 HERE IS THE NEW INTERACTIVE STATUS DROPDOWN */}
                           <td className="px-6 py-5">
                              <BespokeStatusSelect requestId={request.id} initialStatus={request.status} />
                           </td>
                           <td className="px-6 md:px-8 py-5 text-right">
-                            {/* Mobile-friendly visibility check for the button */}
                             <div className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                               <a 
                                 href={whatsappLink}

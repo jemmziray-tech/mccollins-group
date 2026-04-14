@@ -166,3 +166,10 @@ model BespokeRequest {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
+
+model StoreSettings {
+  id            String   @id @default("global")
+  elevatorPitch String?  @db.Text
+  updatedAt     DateTime @updatedAt
+}
