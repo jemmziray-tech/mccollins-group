@@ -28,3 +28,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed to submit request" }, { status: 500 });
   }
 }
+
+
+export async function PATCH(request: Request) {
+  try {
+    const { id, status } = await request.json();
+    
+    if (!id || !status) {
+      return NextResponse.json({ error: "Missing ID or Status" }, { status: 400 });
+    }
+
+    // Update the specific request in the database
+    await prisma.bespokeRequest.update({
+      where: { id },
+      data: { status },
+    });
+
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (error) {
+    console.error("Bespoke Update Error:", error);
+    return NextResponse.json({ error: "Failed to update status" }, { status: 500 });
+  }
+}

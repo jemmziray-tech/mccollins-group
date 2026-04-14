@@ -26,6 +26,7 @@ import DeleteButton from "./DeleteButton";
 import ProductStatusToggle from "./ProductStatusToggle";
 import OrderListClient from "./OrderListClient"; 
 import RevenueChart from "./RevenueChart"; 
+import BespokeStatusSelect from "./BespokeStatusSelect"; // 🟢 IMPORTED NEW STATUS DROPDOWN
 
 // Secure Database Connection
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
@@ -254,10 +255,9 @@ export default async function AdminDashboard() {
                               "{request.designNotes || "Standard fit, no additional notes provided."}"
                             </p>
                           </td>
+                          {/* 🟢 HERE IS THE NEW INTERACTIVE STATUS DROPDOWN */}
                           <td className="px-6 py-5">
-                             <span className="text-[10px] font-bold uppercase tracking-widest text-[#997A00] bg-[#D4AF37]/10 border border-[#D4AF37]/20 px-3 py-1 rounded-full">
-                               {request.status}
-                             </span>
+                             <BespokeStatusSelect requestId={request.id} initialStatus={request.status} />
                           </td>
                           <td className="px-6 md:px-8 py-5 text-right">
                             {/* Mobile-friendly visibility check for the button */}
