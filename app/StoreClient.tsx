@@ -131,43 +131,54 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
     else addToWishlist(product);
   };
 
+  // 🟢 UPGRADED: Cinematic Product Card (Editorial Glide)
   const ProductCard = ({ p, idx = 0 }: { p: any, idx?: number }) => (
     <div className="group flex flex-col relative animate-in fade-in fill-mode-both" style={{ animationDelay: `${idx * 50}ms` }}>
       <button 
         onClick={(e) => toggleWishlist(e, p)}
-        className="absolute top-3 right-3 z-20 p-2 bg-white/90 hover:bg-white backdrop-blur-sm rounded-full shadow-sm transition-all hover:scale-110 active:scale-95"
+        className="absolute top-3 right-3 z-20 p-2 bg-white/50 hover:bg-white backdrop-blur-md rounded-full shadow-sm transition-all duration-300 hover:scale-110 active:scale-95 opacity-0 group-hover:opacity-100"
         aria-label="Save to Wishlist"
       >
-        <Heart className={`w-4 h-4 transition-colors ${isInWishlist(p.id) ? 'fill-[#D4AF37] text-[#D4AF37]' : 'text-gray-600 hover:text-black'}`} />
+        <Heart className={`w-4 h-4 transition-colors ${isInWishlist(p.id) ? 'fill-[#D4AF37] text-[#D4AF37]' : 'text-gray-900 hover:text-black'}`} />
       </button>
 
-      <Link href={`/product/${p.id}`} className="cursor-pointer block w-full">
-        <div className="group relative bg-[#F8F8F8] aspect-[3/4] w-full overflow-hidden rounded-sm transition-all duration-500 mb-4">
+      <Link href={`/product/${p.id}`} className="cursor-pointer block w-full overflow-hidden rounded-sm">
+        <div className="group relative bg-[#F8F8F8] aspect-[3/4] w-full overflow-hidden mb-4 bg-gray-100">
+          
+          {/* 🟢 THE CINEMATIC BASE IMAGE: Ultra-slow 5-second glide */}
           <Image 
             src={p.imageUrl} 
             alt={p.name} 
             fill
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 16vw"
-            className={`object-cover transition-all duration-700 ease-in-out ${p.hoverImageUrl ? 'group-hover:opacity-0' : 'group-hover:scale-105'}`} 
+            className={`object-cover transition-transform duration-[5000ms] ease-out group-hover:scale-110 ${p.hoverImageUrl ? 'group-hover:opacity-0' : ''}`} 
           />
+          
+          {/* 🟢 THE CINEMATIC SECONDARY IMAGE: Fades in while gliding */}
           {p.hoverImageUrl && (
             <Image 
               src={p.hoverImageUrl} 
               alt={`${p.name} lifestyle`} 
               fill
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 16vw"
-              className="object-cover absolute inset-0 opacity-0 transition-opacity duration-700 ease-in-out group-hover:opacity-100" 
+              className="object-cover absolute inset-0 opacity-0 transition-all duration-[3000ms] ease-out group-hover:opacity-100 group-hover:scale-105 scale-100 origin-center" 
             />
           )}
-          <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 flex items-end justify-center transition-opacity duration-300 pointer-events-none">
-            <span className="bg-white/95 text-black text-[10px] px-6 py-2.5 rounded-full shadow-lg uppercase font-bold tracking-[0.2em] transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-              View Details
+
+          {/* 🟢 CINEMATIC LIGHTING: A subtle dark gradient that fades in from the bottom to make the text pop */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+
+          <div className="absolute inset-x-0 bottom-0 p-6 flex justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none translate-y-4 group-hover:translate-y-0">
+            <span className="bg-white/95 backdrop-blur-sm text-[#1A1A1A] text-[9px] px-8 py-3.5 rounded-sm shadow-2xl uppercase font-bold tracking-[0.2em] border border-white/20">
+              Discover
             </span>
           </div>
         </div>
-        <span className="text-[10px] font-bold text-[#D4AF37] uppercase tracking-widest mb-1 block">{p.brand || "Exclusive"}</span>
-        <h4 className="text-[13px] font-bold text-gray-900 line-clamp-2 leading-tight transition-colors uppercase tracking-wide">{p.name}</h4>
-        <div className="text-sm font-bold text-[#0F1111] mt-2">
+        
+        {/* Product Details */}
+        <span className="text-[9px] font-bold text-[#D4AF37] uppercase tracking-[0.2em] mb-1.5 block">{p.brand || "Exclusive"}</span>
+        <h4 className="text-sm font-serif text-[#1A1A1A] line-clamp-2 leading-snug group-hover:text-gray-500 transition-colors">{p.name}</h4>
+        <div className="text-sm font-bold text-[#1A1A1A] mt-2">
           <span className="text-[10px] align-top relative top-[2px] text-gray-500 mr-1">TSH</span> 
           {Number(p.price || 0).toLocaleString()}
         </div>
