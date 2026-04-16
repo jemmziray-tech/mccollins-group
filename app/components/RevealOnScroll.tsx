@@ -25,8 +25,11 @@ export default function RevealOnScroll({
         }
       },
       {
-        threshold: 0.1, // Triggers when 10% of the element is visible
-        rootMargin: "0px 0px -50px 0px" // Triggers slightly before it fully hits the bottom
+        // 🟢 FIX 1: Trigger immediately when 1 pixel enters the screen
+        threshold: 0, 
+        // 🟢 FIX 2: Trigger the animation 100px BEFORE it even enters the viewport, 
+        // guaranteeing no one stares at a blank white space.
+        rootMargin: "100px 0px 100px 0px" 
       }
     );
 
