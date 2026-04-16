@@ -26,6 +26,7 @@ import FashionAssistant from "./components/FashionAssistant";
 import Footer from "./components/SiteFooter"; 
 import CategoryBubbles from "./components/CategoryBubbles";
 import Hero from "./components/Hero"; 
+import RevealOnScroll from "./components/RevealOnScroll"; // 🟢 ADDED REVEAL ON SCROLL IMPORT
 
 export default function StoreClient({ initialProducts }: { initialProducts: any[] }) {
   const { data: session } = useSession();
@@ -131,7 +132,6 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
     else addToWishlist(product);
   };
 
-  // 🟢 UPGRADED: Cinematic Product Card (Editorial Glide)
   const ProductCard = ({ p, idx = 0 }: { p: any, idx?: number }) => (
     <div className="group flex flex-col relative animate-in fade-in fill-mode-both" style={{ animationDelay: `${idx * 50}ms` }}>
       <button 
@@ -145,7 +145,6 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
       <Link href={`/product/${p.id}`} className="cursor-pointer block w-full overflow-hidden rounded-sm">
         <div className="group relative bg-[#F8F8F8] aspect-[3/4] w-full overflow-hidden mb-4 bg-gray-100">
           
-          {/* 🟢 THE CINEMATIC BASE IMAGE: Ultra-slow 5-second glide */}
           <Image 
             src={p.imageUrl} 
             alt={p.name} 
@@ -154,7 +153,6 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
             className={`object-cover transition-transform duration-[5000ms] ease-out group-hover:scale-110 ${p.hoverImageUrl ? 'group-hover:opacity-0' : ''}`} 
           />
           
-          {/* 🟢 THE CINEMATIC SECONDARY IMAGE: Fades in while gliding */}
           {p.hoverImageUrl && (
             <Image 
               src={p.hoverImageUrl} 
@@ -165,7 +163,6 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
             />
           )}
 
-          {/* 🟢 CINEMATIC LIGHTING: A subtle dark gradient that fades in from the bottom to make the text pop */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
 
           <div className="absolute inset-x-0 bottom-0 p-6 flex justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none translate-y-4 group-hover:translate-y-0">
@@ -175,7 +172,6 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
           </div>
         </div>
         
-        {/* Product Details */}
         <span className="text-[9px] font-bold text-[#D4AF37] uppercase tracking-[0.2em] mb-1.5 block">{p.brand || "Exclusive"}</span>
         <h4 className="text-sm font-serif text-[#1A1A1A] line-clamp-2 leading-snug group-hover:text-gray-500 transition-colors">{p.name}</h4>
         <div className="text-sm font-bold text-[#1A1A1A] mt-2">
@@ -283,85 +279,93 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
       {searchQuery === "" && selectedCategory === "All" && (
         <div className="max-w-[1500px] mx-auto px-4 sm:px-6 relative z-20 mt-16 mb-16 space-y-20">
           {colmanCollection.length > 0 && (
-            <section>
-              <div className="flex justify-between items-end mb-6">
-                <div>
-                  <h2 className="text-3xl font-serif text-[#1A1A1A]">The Colman Collection</h2>
-                  <p className="text-gray-500 text-sm mt-1">Exclusive pieces defining timeless elegance.</p>
-                </div>
-                <button onClick={() => setSelectedCategory("All")} className="hidden md:flex items-center gap-1 text-sm font-bold uppercase tracking-widest text-[#D4AF37] hover:text-black transition-colors">
-                  Shop All <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-              
-              <div className="flex overflow-x-auto gap-6 pb-8 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                {colmanCollection.map((p) => (
-                  <div key={p.id} className="min-w-[260px] md:min-w-[300px] snap-start">
-                    <ProductCard p={p} />
+            <RevealOnScroll> {/* 🟢 WRAPPED COLLECTION 1 */}
+              <section>
+                <div className="flex justify-between items-end mb-6">
+                  <div>
+                    <h2 className="text-3xl font-serif text-[#1A1A1A]">The Colman Collection</h2>
+                    <p className="text-gray-500 text-sm mt-1">Exclusive pieces defining timeless elegance.</p>
                   </div>
-                ))}
-              </div>
-            </section>
+                  <button onClick={() => setSelectedCategory("All")} className="hidden md:flex items-center gap-1 text-sm font-bold uppercase tracking-widest text-[#D4AF37] hover:text-black transition-colors">
+                    Shop All <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+                
+                <div className="flex overflow-x-auto gap-6 pb-8 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                  {colmanCollection.map((p) => (
+                    <div key={p.id} className="min-w-[260px] md:min-w-[300px] snap-start">
+                      <ProductCard p={p} />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </RevealOnScroll>
           )}
 
           {trendingCollection.length > 0 && (
-            <section>
-              <div className="flex justify-between items-end mb-6">
-                <div>
-                  <h2 className="text-3xl font-serif text-[#1A1A1A]">Trending Now</h2>
-                  <p className="text-gray-500 text-sm mt-1">Our most coveted pieces this season.</p>
-                </div>
-              </div>
-              
-              <div className="flex overflow-x-auto gap-6 pb-8 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                {trendingCollection.map((p) => (
-                  <div key={p.id} className="min-w-[260px] md:min-w-[300px] snap-start">
-                    <ProductCard p={p} />
+            <RevealOnScroll delay={200}> {/* 🟢 WRAPPED COLLECTION 2 WITH DELAY */}
+              <section>
+                <div className="flex justify-between items-end mb-6">
+                  <div>
+                    <h2 className="text-3xl font-serif text-[#1A1A1A]">Trending Now</h2>
+                    <p className="text-gray-500 text-sm mt-1">Our most coveted pieces this season.</p>
                   </div>
-                ))}
-              </div>
-            </section>
+                </div>
+                
+                <div className="flex overflow-x-auto gap-6 pb-8 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                  {trendingCollection.map((p) => (
+                    <div key={p.id} className="min-w-[260px] md:min-w-[300px] snap-start">
+                      <ProductCard p={p} />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </RevealOnScroll>
           )}
         </div>
       )}
 
       <div id="inventory-section" className="max-w-[1500px] mx-auto px-4 sm:px-6 bg-white py-12 md:py-16 shadow-sm min-h-[400px] scroll-mt-24">
-        <div className="flex items-end gap-4 mb-8 pb-4 border-b border-gray-100">
-          <h2 className="text-3xl font-serif text-[#1A1A1A]">
-            {searchQuery !== "" ? `Results for "${searchQuery}"` : selectedCategory !== "All" ? `${selectedCategory}` : "All Products"}
-          </h2>
-          <span className="text-gray-500 text-sm mb-1.5 font-medium">{displayedProducts.length} items</span>
+        <RevealOnScroll> {/* 🟢 WRAPPED INVENTORY GRID */}
+          <div className="flex items-end gap-4 mb-8 pb-4 border-b border-gray-100">
+            <h2 className="text-3xl font-serif text-[#1A1A1A]">
+              {searchQuery !== "" ? `Results for "${searchQuery}"` : selectedCategory !== "All" ? `${selectedCategory}` : "All Products"}
+            </h2>
+            <span className="text-gray-500 text-sm mb-1.5 font-medium">{displayedProducts.length} items</span>
+            
+            {(searchQuery !== "" || selectedCategory !== "All") && (
+              <button onClick={clearAllFilters} className="ml-auto text-[#D4AF37] hover:text-black text-sm font-bold uppercase transition-colors cursor-pointer tracking-widest">
+                Clear Filters
+              </button>
+            )}
+          </div>
           
-          {(searchQuery !== "" || selectedCategory !== "All") && (
-            <button onClick={clearAllFilters} className="ml-auto text-[#D4AF37] hover:text-black text-sm font-bold uppercase transition-colors cursor-pointer tracking-widest">
-              Clear Filters
-            </button>
+          {displayedProducts.length === 0 ? (
+            <div className="text-center py-20 animate-in fade-in duration-500">
+              <h3 className="text-xl font-serif text-gray-700">No products found.</h3>
+              <p className="text-gray-500 mt-2">Try clearing your filters or selecting a different category.</p>
+              <button onClick={clearAllFilters} className="mt-6 border border-black text-black hover:bg-black hover:text-white px-8 py-3 font-bold uppercase tracking-widest text-xs transition-colors">View All Products</button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-12">
+              {displayedProducts.map((p: any, idx: number) => (
+                <ProductCard key={p.id} p={p} idx={idx} />
+              ))}
+            </div>
           )}
-        </div>
-        
-        {displayedProducts.length === 0 ? (
-          <div className="text-center py-20 animate-in fade-in duration-500">
-            <h3 className="text-xl font-serif text-gray-700">No products found.</h3>
-            <p className="text-gray-500 mt-2">Try clearing your filters or selecting a different category.</p>
-            <button onClick={clearAllFilters} className="mt-6 border border-black text-black hover:bg-black hover:text-white px-8 py-3 font-bold uppercase tracking-widest text-xs transition-colors">View All Products</button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-12">
-            {displayedProducts.map((p: any, idx: number) => (
-              <ProductCard key={p.id} p={p} idx={idx} />
-            ))}
-          </div>
-        )}
+        </RevealOnScroll>
       </div>
         
       {!session && (
-        <div className="max-w-[1500px] mx-auto w-full bg-[#131921] text-white mt-10 mb-8 py-16 flex flex-col items-center justify-center text-center px-4 shadow-sm rounded-sm">
-          <h3 className="text-2xl font-serif mb-2">Join the McCollins Group</h3>
-          <p className="text-sm text-gray-400 mb-8 max-w-md">Create an account to save your wishlist, track orders, and receive exclusive access to new arrivals.</p>
-          <Link href="/login" className="w-full max-w-[240px]">
-            <button className="w-full bg-[#D4AF37] hover:bg-[#b5952f] text-black py-4 rounded-sm font-bold shadow-sm transition-transform active:scale-95 uppercase tracking-widest text-[13px]">Create Account</button>
-          </Link>
-        </div>
+        <RevealOnScroll delay={100}> {/* 🟢 WRAPPED CALL TO ACTION */}
+          <div className="max-w-[1500px] mx-auto w-full bg-[#131921] text-white mt-10 mb-8 py-16 flex flex-col items-center justify-center text-center px-4 shadow-sm rounded-sm">
+            <h3 className="text-2xl font-serif mb-2">Join the McCollins Group</h3>
+            <p className="text-sm text-gray-400 mb-8 max-w-md">Create an account to save your wishlist, track orders, and receive exclusive access to new arrivals.</p>
+            <Link href="/login" className="w-full max-w-[240px]">
+              <button className="w-full bg-[#D4AF37] hover:bg-[#b5952f] text-black py-4 rounded-sm font-bold shadow-sm transition-transform active:scale-95 uppercase tracking-widest text-[13px]">Create Account</button>
+            </Link>
+          </div>
+        </RevealOnScroll>
       )}
 
       <Footer />
