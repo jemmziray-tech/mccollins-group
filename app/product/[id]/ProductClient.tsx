@@ -13,7 +13,7 @@ export default function ProductClient({ product }: { product: any }) {
   const [activeImage, setActiveImage] = useState<string>(product.imageUrl);
   const [isAdded, setIsAdded] = useState(false);
   
-  const { addToCart, setIsCartOpen } = useCart();
+  const { addToCart } = useCart();
 
   const handleAddToCart = () => {
     if (product.sizes && product.sizes.length > 0 && !selectedSize) {
@@ -25,7 +25,7 @@ export default function ProductClient({ product }: { product: any }) {
     
     setIsAdded(true);
     
-    // 🟢 FIX 1: Increased timer
+    // Success state
     setTimeout(() => {
       setIsAdded(false);
     }, 5000000); 
@@ -164,7 +164,6 @@ export default function ProductClient({ product }: { product: any }) {
               )}
             </button>
             
-            {/* 🟢 FIX 2: Modernized Action Buttons (Side-by-Side) */}
             {isAdded && (
                <div className="flex flex-row items-center gap-3 mt-4 animate-in fade-in slide-in-from-top-2 duration-500">
                  <Link 
@@ -173,12 +172,13 @@ export default function ProductClient({ product }: { product: any }) {
                  >
                     Keep Shopping
                  </Link>
-                 <button 
-                   onClick={() => setIsCartOpen(true)}
+                 {/* 🟢 FIXED: Converted to a proper Link routing directly to /cart */}
+                 <Link 
+                   href="/cart"
                    className="w-1/2 py-3.5 bg-[#FDFBF7] border border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#0F1115] rounded-sm text-[10px] font-bold uppercase tracking-[0.15em] text-center transition-colors flex items-center justify-center gap-1 shadow-sm"
                  >
                    View Cart <ChevronRight className="w-3.5 h-3.5" />
-                 </button>
+                 </Link>
                </div>
             )}
 
