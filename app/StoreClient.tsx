@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import Image from "next/image"; // Kept for any generic fallbacks if needed
 import { useSession } from "next-auth/react";
 import { useSearchParams, useRouter } from "next/navigation"; 
 import { 
@@ -26,7 +26,9 @@ import FashionAssistant from "./components/FashionAssistant";
 import Footer from "./components/SiteFooter"; 
 import CategoryBubbles from "./components/CategoryBubbles";
 import Hero from "./components/Hero"; 
-import RevealOnScroll from "./components/RevealOnScroll"; // 🟢 ADDED REVEAL ON SCROLL IMPORT
+import RevealOnScroll from "./components/RevealOnScroll"; 
+import MagneticButton from "./components/MagneticButton";
+import LuxuryImage from "./components/LuxuryImage"; // 🟢 LUXURY IMAGE IMPORTED
 
 export default function StoreClient({ initialProducts }: { initialProducts: any[] }) {
   const { data: session } = useSession();
@@ -145,7 +147,8 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
       <Link href={`/product/${p.id}`} className="cursor-pointer block w-full overflow-hidden rounded-sm">
         <div className="group relative bg-[#F8F8F8] aspect-[3/4] w-full overflow-hidden mb-4 bg-gray-100">
           
-          <Image 
+          {/* 🟢 UPGRADED TO LUXURY IMAGE */}
+          <LuxuryImage 
             src={p.imageUrl} 
             alt={p.name} 
             fill
@@ -153,8 +156,9 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
             className={`object-cover transition-transform duration-[5000ms] ease-out group-hover:scale-110 ${p.hoverImageUrl ? 'group-hover:opacity-0' : ''}`} 
           />
           
+          {/* 🟢 UPGRADED TO LUXURY IMAGE */}
           {p.hoverImageUrl && (
-            <Image 
+            <LuxuryImage 
               src={p.hoverImageUrl} 
               alt={`${p.name} lifestyle`} 
               fill
@@ -207,7 +211,8 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
                 {cart.map((item, index) => (
                   <div key={index} className="flex gap-4 animate-in slide-in-from-right-4 duration-300">
                     <div className="w-20 h-20 bg-gray-100 rounded overflow-hidden flex-shrink-0 relative">
-                      <Image src={item.imageUrl} alt={item.name} fill sizes="80px" className="object-cover mix-blend-multiply" />
+                      {/* 🟢 UPGRADED TO LUXURY IMAGE */}
+                      <LuxuryImage src={item.imageUrl} alt={item.name} fill sizes="80px" className="object-cover mix-blend-multiply" />
                     </div>
                     <div className="flex-1">
                       <h4 className="text-sm font-bold text-gray-900 leading-tight mb-1">{item.name}</h4>
@@ -259,13 +264,21 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
             </div>
             
             {checkoutStep === "cart" ? (
-              <button onClick={() => setCheckoutStep("details")} className="w-full hover:bg-gray-800 text-white py-4 rounded-sm font-bold shadow-sm flex justify-center items-center gap-2 transition-transform active:scale-95 uppercase tracking-widest text-sm bg-[#1A1A1A]">
+              <MagneticButton 
+                onClick={() => setCheckoutStep("details")} 
+                className="w-full hover:bg-gray-800 text-white py-4 rounded-sm font-bold shadow-sm flex justify-center items-center gap-2 active:scale-95 uppercase tracking-widest text-sm bg-[#1A1A1A]"
+              >
                 Proceed to Checkout
-              </button>
+              </MagneticButton>
             ) : (
-              <button form="checkout-form" type="submit" disabled={isCheckingOut} className={`w-full hover:bg-gray-800 text-white py-4 rounded-sm font-bold shadow-sm flex justify-center items-center gap-2 transition-transform active:scale-95 uppercase tracking-widest text-sm ${isCheckingOut ? 'bg-gray-800 opacity-80' : 'bg-[#D4AF37] text-black'}`}>
+              <MagneticButton 
+                form="checkout-form" 
+                type="submit" 
+                disabled={isCheckingOut} 
+                className={`w-full hover:bg-gray-800 text-white py-4 rounded-sm font-bold shadow-sm flex justify-center items-center gap-2 active:scale-95 uppercase tracking-widest text-sm ${isCheckingOut ? 'bg-gray-800 opacity-80' : 'bg-[#D4AF37] text-black'}`}
+              >
                 {isCheckingOut ? <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</> : <><MessageCircle className="w-5 h-5" /> Confirm via WhatsApp</>}
-              </button>
+              </MagneticButton>
             )}
           </div>
         )}
@@ -279,7 +292,7 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
       {searchQuery === "" && selectedCategory === "All" && (
         <div className="max-w-[1500px] mx-auto px-4 sm:px-6 relative z-20 mt-16 mb-16 space-y-20">
           {colmanCollection.length > 0 && (
-            <RevealOnScroll> {/* 🟢 WRAPPED COLLECTION 1 */}
+            <RevealOnScroll>
               <section>
                 <div className="flex justify-between items-end mb-6">
                   <div>
@@ -303,7 +316,7 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
           )}
 
           {trendingCollection.length > 0 && (
-            <RevealOnScroll delay={200}> {/* 🟢 WRAPPED COLLECTION 2 WITH DELAY */}
+            <RevealOnScroll delay={200}>
               <section>
                 <div className="flex justify-between items-end mb-6">
                   <div>
@@ -326,7 +339,7 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
       )}
 
       <div id="inventory-section" className="max-w-[1500px] mx-auto px-4 sm:px-6 bg-white py-12 md:py-16 shadow-sm min-h-[400px] scroll-mt-24">
-        <RevealOnScroll> {/* 🟢 WRAPPED INVENTORY GRID */}
+        <RevealOnScroll>
           <div className="flex items-end gap-4 mb-8 pb-4 border-b border-gray-100">
             <h2 className="text-3xl font-serif text-[#1A1A1A]">
               {searchQuery !== "" ? `Results for "${searchQuery}"` : selectedCategory !== "All" ? `${selectedCategory}` : "All Products"}
@@ -357,7 +370,7 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
       </div>
         
       {!session && (
-        <RevealOnScroll delay={100}> {/* 🟢 WRAPPED CALL TO ACTION */}
+        <RevealOnScroll delay={100}>
           <div className="max-w-[1500px] mx-auto w-full bg-[#131921] text-white mt-10 mb-8 py-16 flex flex-col items-center justify-center text-center px-4 shadow-sm rounded-sm">
             <h3 className="text-2xl font-serif mb-2">Join the McCollins Group</h3>
             <p className="text-sm text-gray-400 mb-8 max-w-md">Create an account to save your wishlist, track orders, and receive exclusive access to new arrivals.</p>
