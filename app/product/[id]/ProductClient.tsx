@@ -1,16 +1,20 @@
-// app/products/[id]/ProductClient.tsx
+// app/product/[id]/ProductClient.tsx
 "use client";
 
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingCart, ShieldCheck, Truck, RefreshCcw, ChevronRight, Ruler, Star } from "lucide-react";
+import { ShoppingCart, ShieldCheck, Truck, RefreshCcw, ChevronRight, Ruler, Star, CheckCircle2 } from "lucide-react";
 import { useCart } from "@/app/context/CartContext";
 import BespokeForm from "@/app/components/BespokeForm";
 
 export default function ProductClient({ product }: { product: any }) {
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [activeImage, setActiveImage] = useState<string>(product.imageUrl);
+  
+  // 🟢 NEW: State to track if the item was just added
+  const [isAdded, setIsAdded] = useState(false);
+  
   const { addToCart, setIsCartOpen } = useCart();
 
   const handleAddToCart = () => {
@@ -20,12 +24,18 @@ export default function ProductClient({ product }: { product: any }) {
     }
     const productToAdd = { ...product, selectedSize };
     addToCart(productToAdd);
-    setIsCartOpen(true);
+    
+    // 🟢 NEW: Trigger the success animation instead of immediately opening the cart
+    setIsAdded(true);
+    
+    // Reset the button back to normal after 2 seconds
+    setTimeout(() => {
+      setIsAdded(false);
+    }, 2000);
   };
 
   return (
     <div className="flex-grow max-w-[1400px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-      {/* Luxury Breadcrumbs */}
       <nav className="flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] uppercase text-gray-400 mb-10">
         <Link href="/" className="hover:text-black transition-colors">Home</Link>
         <ChevronRight className="w-3 h-3" />
@@ -34,12 +44,9 @@ export default function ProductClient({ product }: { product: any }) {
         <span className="text-[#D4AF37] truncate max-w-[200px] sm:max-w-none">{product.name}</span>
       </nav>
 
-      {/* Product Grid */}
       <div className="flex flex-col lg:flex-row gap-12 xl:gap-24 relative">
         
-        {/* LEFT: VIP Image Gallery */}
         <div className="w-full lg:w-[55%] flex flex-col gap-4 animate-in fade-in slide-in-from-left-4 duration-700">
-          {/* Main Stage Image */}
           <div className="relative w-full aspect-[4/5] bg-white rounded-sm overflow-hidden border border-gray-100 shadow-sm group">
             <Image 
               src={activeImage} 
@@ -51,7 +58,6 @@ export default function ProductClient({ product }: { product: any }) {
             />
           </div>
           
-          {/* Thumbnail Strip */}
           {product.hoverImageUrl && (
              <div className="flex gap-4 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden">
                 <div 
@@ -70,10 +76,8 @@ export default function ProductClient({ product }: { product: any }) {
           )}
         </div>
 
-        {/* RIGHT: Editorial Product Details */}
         <div className="w-full lg:w-[45%] flex flex-col pt-2 md:pt-4 animate-in fade-in slide-in-from-right-4 duration-700 lg:sticky lg:top-32 lg:self-start lg:h-fit">
           
-          {/* Title & Price */}
           <div className="mb-8 border-b border-gray-200 pb-8">
             <Link href={`/?q=${product.brand}`} className="text-[#D4AF37] font-bold text-[11px] uppercase tracking-[0.2em] mb-4 hover:text-black transition-colors inline-block">
               {product.brand || "McCollins Exclusive"}
@@ -101,7 +105,6 @@ export default function ProductClient({ product }: { product: any }) {
             <p className="text-xs text-gray-500 font-medium">Taxes & duties included. Delivery calculated at checkout.</p>
           </div>
 
-          {/* Size Selector */}
           {product.sizes && product.sizes.length > 0 && (
             <div className="mb-10">
               <div className="flex justify-between items-center mb-4">
@@ -130,7 +133,6 @@ export default function ProductClient({ product }: { product: any }) {
             </div>
           )}
 
-          {/* Editorial Description */}
           <div className="mb-10">
             <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#1A1A1A] mb-4">The Details</h3>
             <p className="text-gray-600 leading-relaxed text-sm">
@@ -138,24 +140,54 @@ export default function ProductClient({ product }: { product: any }) {
             </p>
           </div>
 
-          {/* Checkout Area */}
           <div className="mt-auto">
             <div className="bg-[#0F1115] text-[#D4AF37] text-[10px] font-bold uppercase tracking-[0.2em] text-center py-2.5 mb-4 rounded-sm flex items-center justify-center gap-2">
               <Truck className="w-3 h-3" /> Free Delivery across all regions in Tanzania
             </div>
 
+            {/* 🟢 THE UPDATED SUCCESS BUTTON */}
             <button 
               onClick={handleAddToCart}
-              className="w-full bg-[#1A1A1A] hover:bg-[#D4AF37] hover:text-[#0F1115] text-white py-4 md:py-5 rounded-sm font-bold uppercase tracking-[0.2em] text-xs shadow-xl flex justify-center items-center gap-3 transition-colors duration-300"
+              disabled={isAdded}
+              className={`w-full py-4 md:py-5 rounded-sm font-bold uppercase tracking-[0.2em] text-xs shadow-xl flex justify-center items-center gap-3 transition-all duration-300 ${
+                isAdded 
+                  ? 'bg-green-600 text-white scale-[0.98]' 
+                  : 'bg-[#1A1A1A] hover:bg-[#D4AF37] hover:text-[#0F1115] text-white'
+              }`}
             >
-              <ShoppingCart className="w-4 h-4" /> 
-              {selectedSize ? `Add Size ${selectedSize} to Cart` : "Add to Cart"}
+              {isAdded ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4 animate-in zoom-in" /> 
+                  Added to Cart
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="w-4 h-4" /> 
+                  {selectedSize ? `Add Size ${selectedSize} to Cart` : "Add to Cart"}
+                </>
+              )}
             </button>
+            
+            {/* 🟢 NEW: Continue Shopping / View Cart links appear after adding */}
+            {isAdded && (
+               <div className="flex justify-between items-center mt-3 animate-in fade-in slide-in-from-top-2">
+                 <Link href="/" className="text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-[#D4AF37] transition-colors border-b border-transparent hover:border-[#D4AF37]">
+                    Continue Shopping
+                 </Link>
+                 <button 
+                   onClick={() => setIsCartOpen(true)}
+                   className="text-[10px] font-bold uppercase tracking-widest text-gray-900 hover:text-[#D4AF37] transition-colors flex items-center gap-1 border-b border-gray-900 pb-0.5"
+                 >
+                   View Cart <ChevronRight className="w-3 h-3" />
+                 </button>
+               </div>
+            )}
 
-            <BespokeForm productName={product.name} />
+            <div className="mt-6">
+              <BespokeForm productName={product.name} />
+            </div>
           </div>
 
-          {/* Luxury Trust Signals */}
           <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t border-gray-200">
             <div className="flex flex-col items-center justify-center text-center gap-2 group">
               <Truck className="w-5 h-5 text-gray-400 group-hover:text-[#D4AF37] transition-colors" />
