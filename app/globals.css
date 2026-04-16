@@ -5,13 +5,13 @@
   --background: #FDFBF7;
   --foreground: #1A1A1A;
   
-  /* 🟢 NEW: The McCollins Signature Gold Palette */
+  /* 🌟 NEW: The McCollins Signature Gold Palette */
   --gold: #D4AF37;       /* Primary luxury metallic gold */
   --gold-light: #F3E5AB; /* Soft gold for subtle highlights */
   --gold-dark: #997A00;  /* Deep gold for hover states or borders */
 }
 
-/* 🟢 Injecting our new colors into Tailwind */
+/* 🌟 Injecting our new colors into Tailwind */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -32,7 +32,7 @@
   }
 }
 
-/* 🟢 GLOBAL POLISH & LUXURY EXPERIENCE */
+/* 🌟 GLOBAL POLISH & LUXURY EXPERIENCE */
 html {
   scroll-behavior: smooth; /* Smooth transitions between sections  */
 }
@@ -47,9 +47,19 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* 🟢 CUSTOM LUXURY SCROLLBAR  */
+/* 🌟 INVISIBLE HORIZONTAL SCROLLBARS (For Mobile Swipe Carousels) */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;             /* Chrome, Safari, and Opera */
+}
+
+/* 🌟 CUSTOM LUXURY SCROLLBAR (For Desktop) */
 ::-webkit-scrollbar {
-  width: 6px; /* Elegant, thin line  */
+  width: 5px; /* Elegant, ultra-thin line  */
 }
 
 ::-webkit-scrollbar-track {
@@ -65,7 +75,7 @@ body {
   background: var(--gold); /* Switches to brand gold on hover  */
 }
 
-/* 🟢 BRANDED TEXT SELECTION  */
+/* 🌟 BRANDED TEXT SELECTION  */
 ::selection {
   background-color: var(--gold-light); /* Soft gold highlight  */
   color: var(--foreground);
@@ -78,7 +88,7 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.01em;
 }
 
-/* 🟢 INFINITE SCROLLING MARQUEE (TRUST BADGES) */
+/* 🌟 INFINITE SCROLLING MARQUEE (TRUST BADGES) */
 @keyframes scroll {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
@@ -94,7 +104,7 @@ h1, h2, h3, h4, h5, h6 {
   animation-play-state: paused;
 }
 
-/* 🟢 REVEAL ON SCROLL ANIMATION  */
+/* 🌟 REVEAL ON SCROLL ANIMATION  */
 @keyframes reveal {
   from {
     opacity: 0;
