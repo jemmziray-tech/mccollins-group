@@ -19,60 +19,54 @@ export default async function ProductRecommendations({
   brand: string 
 }) {
   
-  // 1. FETCH A POOL OF POTENTIAL MATCHES
-  // We pull up to 10 items so we have enough data to find the "best" matches.
+  // 1. FETCH ALL POTENTIAL MATCHES
+  // We remove the limit. For a curated luxury catalog, we want to analyze 
+  // every single related piece to ensure we never miss a Perfect Match.
   const rawMatches = await prisma.product.findMany({
     where: {
       isAvailable: true,
-      id: { not: currentProductId }, // Never recommend the exact item they are viewing
+      id: { not: currentProductId }, 
       OR: [
         { category: category },
         { brand: brand }
       ]
-    },
-    take: 10, 
-  });
-
-  // 2. THE INTELLIGENT SCORING ALGORITHM
-  const scoredMatches = rawMatches.map(product => {
-    let score = 0;
-    
-    // Perfect Match: Same Category AND Same Brand
-    if (product.category === category && product.brand === brand) {
-      score += 3;
-    } 
-    // Strong Match: Same Category (e.g., they are looking at shirts, show more shirts)
-    else if (product.category === category) {
-      score += 2;
-    } 
-    // Vibe Match: Same Designer/Brand
-    else if (product.brand === brand) {
-      score += 1;
     }
-
-    return { ...product, score };
   });
 
-  // 3. SORT BY HIGHEST SCORE AND LIMIT TO EXACTLY 4
-  const recommendations = scoredMatches
-    .sort((a, b) => b.score - a.score) // Sort highest score to the top
-    .slice(0, 4); // Strictly limit to 4 recommendations
+  // 2. THE MATHEMATICAL SCORING ALGORITHM
+  const scoredMatches = rawMatches.map(product => {
+    let baseScore = 0;
+    
+    // Assign Base Weights
+    if (product.category === category && product.brand === brand) baseScore = 3;
+    else if (product.category === category) baseScore = 2;
+    else if (product.brand === brand) baseScore = 1;
 
-  // If we don't have ANY matches, gracefully hide the section
+    // 🟢 The Genius Shuffle: Math.random() returns a decimal between 0 and 0.99.
+    // Adding this decimal acts as an invisible tie-breaker. 
+    // A Score 2 (e.g., 2.85) will NEVER beat a Score 3 (e.g., 3.12).
+    const finalScore = baseScore + Math.random();
+
+    return { ...product, finalScore };
+  });
+
+  // 3. STRICT SORT AND SLICE
+  const recommendations = scoredMatches
+    .sort((a, b) => b.finalScore - a.finalScore) // Highest score wins
+    .slice(0, 4); // Keep only the top 4
+
   if (recommendations.length === 0) return null;
 
   return (
     <div className="w-full border-t border-gray-200 bg-white py-16 md:py-24">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Luxury Section Header */}
         <div className="flex flex-col items-center text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <Sparkles className="w-4 h-4 text-[#D4AF37] mb-3" />
           <h2 className="text-3xl font-serif text-[#1A1A1A] mb-2">Curated Pairings</h2>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Complete the Editorial Look</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">The Editorial Edit</p>
         </div>
 
-        {/* MODERN SCROLLING: Grid on Desktop, Snap-Scroll Carousel on Mobile */}
         <div className="flex overflow-x-auto pb-8 -mx-4 px-4 snap-x snap-mandatory hide-scrollbar md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible md:pb-0 md:px-0 md:mx-0 gap-6">
           
           {recommendations.map((product) => (
@@ -92,7 +86,7 @@ export default async function ProductRecommendations({
                 {product.hoverImageUrl && (
                   <Image 
                     src={product.hoverImageUrl} 
-                    alt={`${product.name} alternate view`}
+                    alt={product.name}
                     fill
                     sizes="(max-width: 768px) 75vw, 25vw"
                     className="object-cover mix-blend-multiply absolute inset-0 opacity-0 transition-opacity duration-700 group-hover:opacity-100"
@@ -109,12 +103,12 @@ export default async function ProductRecommendations({
                 </h3>
                 <span className="text-sm font-bold text-[#1A1A1A]">
                   <span className="text-[10px] text-gray-500 mr-1 align-top relative top-0.5">TSH</span>
-                  {product.price.toLocaleString()}
+                  {/* Safe parsing for Prisma Decimals */}
+                  {Number(product.price).toLocaleString()}
                 </span>
               </div>
             </Link>
           ))}
-
         </div>
       </div>
     </div>
