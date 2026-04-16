@@ -1,4 +1,4 @@
-// app/products/[id]/page.tsx
+// app/product/[id]/page.tsx
 import React from "react";
 import { notFound } from "next/navigation";
 import { PrismaClient } from "@prisma/client";
@@ -10,7 +10,7 @@ const globalForPrisma = global as unknown as { prisma: PrismaClient };
 const prisma = globalForPrisma.prisma || new PrismaClient();
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
-// 🟢 NEW: Generate Dynamic Metadata for SEO!
+// Generate Dynamic Metadata for SEO
 export async function generateMetadata({ params }: { params: { id: string } }) {
   const product = await prisma.product.findUnique({
     where: { id: params.id },
@@ -30,20 +30,22 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
 }
 
 export default async function ProductDisplayPage({ params }: { params: { id: string } }) {
-  // 🟢 INSTANT SERVER FETCH (No API route needed, perfect for SEO)
+  // INSTANT SERVER FETCH
   const product = await prisma.product.findUnique({
     where: { id: params.id },
   });
 
   if (!product || !product.isAvailable) {
-    // If the product doesn't exist, Next.js automatically shows a 404 page
     notFound(); 
   }
 
+  // 🟢 THE FIX: We serialize the Prisma object so the Client Component can safely read it!
+  const safeProduct = JSON.parse(JSON.stringify(product));
+
   return (
     <div className="min-h-screen bg-[#FDFBF7] font-sans text-[#1A1A1A] flex flex-col pt-24">
-      {/* Pass the data to our interactive component */}
-      <ProductClient product={product} />
+      {/* Pass the SAFE data to our interactive component */}
+      <ProductClient product={safeProduct} />
       <Footer />
     </div>
   );
