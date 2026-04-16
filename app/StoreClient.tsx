@@ -8,12 +8,16 @@ import { useSession } from "next-auth/react";
 import { useSearchParams, useRouter } from "next/navigation"; 
 import { 
   ShoppingCart, 
+  Menu, 
+  Search,
+  MapPin,
+  MessageCircle,
   X,
   Trash2,
+  ShieldCheck,
   Loader2,
   Heart,
-  ArrowRight,
-  MessageCircle
+  ArrowRight
 } from "lucide-react";
 
 import { useCart } from "./context/CartContext";
@@ -23,11 +27,8 @@ import Footer from "./components/SiteFooter";
 import CategoryBubbles from "./components/CategoryBubbles";
 import Hero from "./components/Hero"; 
 
-// 🟢 NEW: Accept products directly from the server!
 export default function StoreClient({ initialProducts }: { initialProducts: any[] }) {
   const { data: session } = useSession();
-  
-  // Initialize state with the server-rendered products
   const [products] = useState<any[]>(initialProducts);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -41,9 +42,6 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
   const WHATSAPP_NUMBER = "255678405111"; 
   const searchParams = useSearchParams();
   const router = useRouter();
-
-  // 🟢 REMOVED: The useEffect that fetched from /api/products is gone. 
-  // The products are already here!
 
   useEffect(() => {
     const queryFromMenu = searchParams.get('q');
@@ -65,7 +63,6 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
     }
   }, [searchParams]);
 
-  // --- FILTERS FOR COLLECTIONS & INVENTORY ---
   const displayedProducts = products.filter((product) => {
     const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
     if (searchQuery === "") return matchesCategory;
@@ -83,14 +80,13 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
   const colmanCollection = products.filter(p => p.brand === "Colman Looks");
   const trendingCollection = [...products].reverse().slice(0, 8); 
 
-  // --- CHECKOUT HANDLER ---
   const handleMasterCheckout = async (e: React.FormEvent) => {
     e.preventDefault(); 
     if (cart.length === 0) return;
     setIsCheckingOut(true); 
 
     try {
-      await fetch("/api/orders/create", {
+      const res = await fetch("/api/orders/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -101,6 +97,7 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
           customerPhone: `${guestDetails.phone} (${guestDetails.area})` 
         }),
       });
+      if (!res.ok) console.error("Backend Error");
     } catch (error) {
       console.error("Network Error.");
     }
@@ -181,7 +178,7 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
   return (
     <div className="min-h-screen bg-[#FDFBF7] font-sans text-[#1A1A1A] relative overflow-x-hidden animate-in fade-in duration-500 ease-in-out">
       
-      {/* --- CART DRAWER --- */}
+      {/* CART DRAWER */}
       <div className={`fixed inset-0 z-[200] bg-black/50 transition-opacity duration-300 ${isCartOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`} onClick={() => setIsCartOpen(false)}></div>
       <div className={`fixed top-0 right-0 h-full w-full md:w-[400px] bg-white shadow-2xl z-[250] transform transition-transform duration-300 ease-in-out flex flex-col ${isCartOpen ? "translate-x-0" : "translate-x-full"}`}>
         
@@ -272,10 +269,8 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
         <CategoryBubbles />
       </div>
 
-      {/* LUXURY CURATED CAROUSELS */}
       {searchQuery === "" && selectedCategory === "All" && (
         <div className="max-w-[1500px] mx-auto px-4 sm:px-6 relative z-20 mt-16 mb-16 space-y-20">
-          
           {colmanCollection.length > 0 && (
             <section>
               <div className="flex justify-between items-end mb-6">
@@ -288,7 +283,7 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
                 </button>
               </div>
               
-              <div className="flex overflow-x-auto gap-6 pb-8 snap-x snap-mandatory hide-scrollbar">
+              <div className="flex overflow-x-auto gap-6 pb-8 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 {colmanCollection.map((p) => (
                   <div key={p.id} className="min-w-[260px] md:min-w-[300px] snap-start">
                     <ProductCard p={p} />
@@ -307,7 +302,7 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
                 </div>
               </div>
               
-              <div className="flex overflow-x-auto gap-6 pb-8 snap-x snap-mandatory hide-scrollbar">
+              <div className="flex overflow-x-auto gap-6 pb-8 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 {trendingCollection.map((p) => (
                   <div key={p.id} className="min-w-[260px] md:min-w-[300px] snap-start">
                     <ProductCard p={p} />
@@ -319,7 +314,6 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
         </div>
       )}
 
-      {/* STANDARD INVENTORY GRID */}
       <div id="inventory-section" className="max-w-[1500px] mx-auto px-4 sm:px-6 bg-white py-12 md:py-16 shadow-sm min-h-[400px] scroll-mt-24">
         <div className="flex items-end gap-4 mb-8 pb-4 border-b border-gray-100">
           <h2 className="text-3xl font-serif text-[#1A1A1A]">
