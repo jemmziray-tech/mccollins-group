@@ -11,8 +11,6 @@ import BespokeForm from "@/app/components/BespokeForm";
 export default function ProductClient({ product }: { product: any }) {
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [activeImage, setActiveImage] = useState<string>(product.imageUrl);
-  
-  // 🟢 NEW: State to track if the item was just added
   const [isAdded, setIsAdded] = useState(false);
   
   const { addToCart, setIsCartOpen } = useCart();
@@ -25,13 +23,12 @@ export default function ProductClient({ product }: { product: any }) {
     const productToAdd = { ...product, selectedSize };
     addToCart(productToAdd);
     
-    // 🟢 NEW: Trigger the success animation instead of immediately opening the cart
     setIsAdded(true);
     
-    // Reset the button back to normal after 2 seconds
+    // 🟢 FIX 1: Increased timer
     setTimeout(() => {
       setIsAdded(false);
-    }, 2000);
+    }, 5000000); 
   };
 
   return (
@@ -145,19 +142,18 @@ export default function ProductClient({ product }: { product: any }) {
               <Truck className="w-3 h-3" /> Free Delivery across all regions in Tanzania
             </div>
 
-            {/* 🟢 THE UPDATED SUCCESS BUTTON */}
             <button 
               onClick={handleAddToCart}
               disabled={isAdded}
               className={`w-full py-4 md:py-5 rounded-sm font-bold uppercase tracking-[0.2em] text-xs shadow-xl flex justify-center items-center gap-3 transition-all duration-300 ${
                 isAdded 
-                  ? 'bg-green-600 text-white scale-[0.98]' 
+                  ? 'bg-[#1EBE5D] text-white scale-[0.99]' 
                   : 'bg-[#1A1A1A] hover:bg-[#D4AF37] hover:text-[#0F1115] text-white'
               }`}
             >
               {isAdded ? (
                 <>
-                  <CheckCircle2 className="w-4 h-4 animate-in zoom-in" /> 
+                  <CheckCircle2 className="w-5 h-5 animate-in zoom-in" /> 
                   Added to Cart
                 </>
               ) : (
@@ -168,22 +164,25 @@ export default function ProductClient({ product }: { product: any }) {
               )}
             </button>
             
-            {/* 🟢 NEW: Continue Shopping / View Cart links appear after adding */}
+            {/* 🟢 FIX 2: Modernized Action Buttons (Side-by-Side) */}
             {isAdded && (
-               <div className="flex justify-between items-center mt-3 animate-in fade-in slide-in-from-top-2">
-                 <Link href="/" className="text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-[#D4AF37] transition-colors border-b border-transparent hover:border-[#D4AF37]">
-                    Continue Shopping
+               <div className="flex flex-row items-center gap-3 mt-4 animate-in fade-in slide-in-from-top-2 duration-500">
+                 <Link 
+                   href="/" 
+                   className="w-1/2 py-3.5 border border-gray-300 hover:border-[#1A1A1A] text-gray-600 hover:text-[#1A1A1A] rounded-sm text-[10px] font-bold uppercase tracking-[0.15em] text-center transition-colors bg-white"
+                 >
+                    Keep Shopping
                  </Link>
                  <button 
                    onClick={() => setIsCartOpen(true)}
-                   className="text-[10px] font-bold uppercase tracking-widest text-gray-900 hover:text-[#D4AF37] transition-colors flex items-center gap-1 border-b border-gray-900 pb-0.5"
+                   className="w-1/2 py-3.5 bg-[#FDFBF7] border border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#0F1115] rounded-sm text-[10px] font-bold uppercase tracking-[0.15em] text-center transition-colors flex items-center justify-center gap-1 shadow-sm"
                  >
-                   View Cart <ChevronRight className="w-3 h-3" />
+                   View Cart <ChevronRight className="w-3.5 h-3.5" />
                  </button>
                </div>
             )}
 
-            <div className="mt-6">
+            <div className="mt-8">
               <BespokeForm productName={product.name} />
             </div>
           </div>
