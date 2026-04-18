@@ -382,7 +382,7 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
       )}
 
       <Footer />
-      <FashionAssistant />
+      <FashionAssistant initialProducts={products} />
     </div>
   );
 }
