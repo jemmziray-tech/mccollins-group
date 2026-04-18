@@ -26,9 +26,9 @@ export default function FashionAssistant({ initialProducts }: { initialProducts:
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
     
-    // 🟢 FIXED: Explicitly defined as type 'Message'
-    const userMessage: Message = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMessage]);
+    // 🟢 BULLETPROOF FIX: Constructing the object safely for TypeScript
+    const userContent = input;
+    setMessages(prev => [...prev, { role: 'user' as const, content: userContent }]);
     
     setInput('');
     setIsLoading(true);
@@ -40,29 +40,27 @@ export default function FashionAssistant({ initialProducts }: { initialProducts:
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          message: input, 
+          message: userContent, 
           history: recentHistory,
           context: initialProducts.map(p => `${p.name} (ID: ${p.id}, Brand: ${p.brand}, Price: TSH ${p.price})`) 
         }),
       });
       const data = await res.json();
       
-      // 🟢 FIXED: Explicitly defined as type 'Message'
-      const assistantMessage: Message = { role: 'assistant', content: data.reply };
-      setMessages(prev => [...prev, assistantMessage]);
+      // 🟢 BULLETPROOF FIX
+      setMessages(prev => [...prev, { role: 'assistant' as const, content: data.reply }]);
     } catch (error) {
       console.error("AI Assistant error:", error);
       
-      // 🟢 FIXED: Explicitly defined as type 'Message'
-      const errorMessage: Message = { role: 'assistant', content: 'My apologies. My connection seems unstable. Please try asking again shortly.' };
-      setMessages(prev => [...prev, errorMessage]);
+      // 🟢 BULLETPROOF FIX
+      setMessages(prev => [...prev, { role: 'assistant' as const, content: 'My apologies. My connection seems unstable. Please try asking again shortly.' }]);
     } finally {
       setIsLoading(false);
     }
   };
 
   const clearChat = () => {
-    setMessages([{ role: 'assistant', content: 'Hujambo McCollins. Ready for your next style query.' }]);
+    setMessages([{ role: 'assistant' as const, content: 'Hujambo McCollins. Ready for your next style query.' }]);
     if (messagesEndRef.current) setIsOpen(false);
   };
 
