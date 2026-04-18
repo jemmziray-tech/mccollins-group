@@ -2,7 +2,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-// We leverage the new luxury UI components we built for the storefront
 import LuxuryImage from './LuxuryImage'; 
 import { Sparkles, X, Loader2, SendHorizontal, UserCog } from 'lucide-react';
 
@@ -11,7 +10,6 @@ interface Message {
   content: string;
 }
 
-// Accept the initial products list as a prop
 export default function FashionAssistant({ initialProducts }: { initialProducts: any[] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -21,35 +19,42 @@ export default function FashionAssistant({ initialProducts }: { initialProducts:
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Automatically scroll to the newest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
-    const userMessage = { role: 'user', content: input };
+    
+    // 🟢 FIXED: Explicitly defined as type 'Message'
+    const userMessage: Message = { role: 'user', content: input };
     setMessages(prev => [...prev, userMessage]);
+    
     setInput('');
     setIsLoading(true);
 
     try {
-      // 🟢 ARCHITECTURAL UPGRADE: Pass live context to the API
-      const res = await fetch("/api/ai/chat", {
+      const recentHistory = messages.slice(-4); 
+
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           message: input, 
-          // We securely pass a sanitized list of available products
+          history: recentHistory,
           context: initialProducts.map(p => `${p.name} (ID: ${p.id}, Brand: ${p.brand}, Price: TSH ${p.price})`) 
         }),
       });
       const data = await res.json();
-      const assistantMessage = { role: 'assistant', content: data.reply };
+      
+      // 🟢 FIXED: Explicitly defined as type 'Message'
+      const assistantMessage: Message = { role: 'assistant', content: data.reply };
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error("AI Assistant error:", error);
-      const errorMessage = { role: 'assistant', content: 'My apologies. My connection seems unstable. Please try asking again shortly.' };
+      
+      // 🟢 FIXED: Explicitly defined as type 'Message'
+      const errorMessage: Message = { role: 'assistant', content: 'My apologies. My connection seems unstable. Please try asking again shortly.' };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
@@ -58,23 +63,19 @@ export default function FashionAssistant({ initialProducts }: { initialProducts:
 
   const clearChat = () => {
     setMessages([{ role: 'assistant', content: 'Hujambo McCollins. Ready for your next style query.' }]);
-    if (messagesEndRef.current) setIsOpen(false); // Optionally close after clear
+    if (messagesEndRef.current) setIsOpen(false);
   };
 
-  // 🟢 MODERN INTERACTION: Detection logic for Product concierging
   const renderMessageContent = (content: string) => {
-    // Regex matches [PROD:productId] pattern
     const productRegex = /\[PROD:(\w+)\]/g; 
     let parts = content.split(productRegex);
 
     return parts.map((part, index) => {
-      // Check if this part of the split array corresponds to a captured Product ID
       if (index % 2 === 1) { 
         const productId = part;
-        // Search the live initialProducts prop for the full product data
         const product = initialProducts.find(p => p.id === productId);
+        
         if (product) {
-          // Render a modern, minimalist Concierge Card within the chat flow
           return (
             <div key={index} className="my-5 flex flex-col items-center bg-white border border-gray-100 p-4 rounded-sm shadow-inner gap-3 animate-in fade-in slide-in-from-bottom-2 duration-700">
                <LuxuryImage src={product.imageUrl} alt={product.name} width={100} height={133} className="object-cover rounded-sm aspect-[3/4]" />
@@ -91,7 +92,7 @@ export default function FashionAssistant({ initialProducts }: { initialProducts:
             </div>
           );
         }
-        return `[PROD:${productId}]`; // Fallback if product not found (should not happen with live context)
+        return `[PROD:${productId}]`; 
       }
       return <span key={index}>{part}</span>;
     });
@@ -99,7 +100,6 @@ export default function FashionAssistant({ initialProducts }: { initialProducts:
 
   return (
     <>
-      {/* --- 🟢 UPGRADED UI: Minimalist Concierge Bubble --- */}
       <button 
         onClick={() => setIsOpen(!isOpen)} 
         className="fixed bottom-6 right-6 z-[100] p-5 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95 border border-[#D4AF37]/50 flex items-center justify-center bg-[#0F1111]"
@@ -107,11 +107,9 @@ export default function FashionAssistant({ initialProducts }: { initialProducts:
         <Sparkles className={`w-5 h-5 text-[#D4AF37] transition-transform ${isOpen ? 'rotate-90' : ''}`} />
       </button>
 
-      {/* --- 🟢 UPGRADED UI: Elegant Concierge Window --- */}
       {isOpen && (
         <div className="fixed bottom-28 right-6 w-[380px] max-w-[calc(100vw-2rem)] h-[580px] max-h-[80vh] bg-[#FDFBF7] shadow-3xl z-[110] rounded-sm overflow-hidden flex flex-col border border-gray-100 animate-in fade-in slide-in-from-bottom-5 duration-500">
           
-          {/* Header */}
           <div className="p-5 flex justify-between items-center bg-white border-b border-gray-100">
             <div className="flex items-center gap-3">
               <span className="p-3 bg-[#0F1111] rounded-full border border-white/10">
@@ -125,18 +123,16 @@ export default function FashionAssistant({ initialProducts }: { initialProducts:
             <button onClick={() => setIsOpen(false)} className="p-2.5 hover:bg-gray-100 rounded-full text-gray-500 transition-colors"><X className="w-5 h-5"/></button>
           </div>
 
-          {/* Messages Flow */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#FDFBF7] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {messages.map((m, index) => (
               <div key={index} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`
-                    p-4 max-w-[85%] text-sm font-light leading-relaxed 
+                    p-4 max-w-[85%] text-sm font-light leading-relaxed whitespace-pre-wrap
                     ${m.role === 'user' 
                       ? 'bg-[#1A1A1A] text-white rounded-t-sm rounded-l-sm' 
                       : 'bg-white text-gray-900 border border-gray-100 shadow-inner rounded-t-sm rounded-r-sm'
                     }
                 `}>
-                  {/* Process message content for dynamic Product Concierging */}
                   {renderMessageContent(m.content)}
                 </div>
               </div>
@@ -151,15 +147,14 @@ export default function FashionAssistant({ initialProducts }: { initialProducts:
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Area (VIP Styling matching Footer/Checkout) */}
           <div className="p-5 bg-white border-t border-gray-100">
             <div className="flex gap-2.5 border-b border-gray-200 focus-within:border-[#1A1A1A] pb-2 transition-colors">
               <input 
                 type="text" 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Describe your desired look or ask for pairings..." 
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                placeholder="Describe your desired look..." 
                 className="flex-1 bg-transparent text-sm outline-none placeholder:text-gray-400 font-light"
               />
               <button onClick={handleSend} disabled={isLoading} className="text-[#D4AF37] hover:text-black transition-colors disabled:opacity-50">
