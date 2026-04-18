@@ -26,7 +26,6 @@ export default function FashionAssistant({ initialProducts }: { initialProducts:
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
     
-    // 🟢 BULLETPROOF FIX: Constructing the object safely for TypeScript
     const userContent = input;
     setMessages(prev => [...prev, { role: 'user' as const, content: userContent }]);
     
@@ -42,17 +41,15 @@ export default function FashionAssistant({ initialProducts }: { initialProducts:
         body: JSON.stringify({ 
           message: userContent, 
           history: recentHistory,
-          context: initialProducts.map(p => `${p.name} (ID: ${p.id}, Brand: ${p.brand}, Price: TSH ${p.price})`) 
+          // We pass names and prices to help the AI format its reply
+          context: initialProducts.map(p => `${p.name} (Price: TSH ${p.price})`) 
         }),
       });
       const data = await res.json();
       
-      // 🟢 BULLETPROOF FIX
       setMessages(prev => [...prev, { role: 'assistant' as const, content: data.reply }]);
     } catch (error) {
       console.error("AI Assistant error:", error);
-      
-      // 🟢 BULLETPROOF FIX
       setMessages(prev => [...prev, { role: 'assistant' as const, content: 'My apologies. My connection seems unstable. Please try asking again shortly.' }]);
     } finally {
       setIsLoading(false);
@@ -64,14 +61,23 @@ export default function FashionAssistant({ initialProducts }: { initialProducts:
     if (messagesEndRef.current) setIsOpen(false);
   };
 
+  // 🟢 UPGRADED: Smarter parsing engine that uses Product Names
   const renderMessageContent = (content: string) => {
-    const productRegex = /\[PROD:(\w+)\]/g; 
+    // Match [PROD:Product Name]
+    const productRegex = /\[PROD:([^\]]+)\]/gi; 
     let parts = content.split(productRegex);
 
     return parts.map((part, index) => {
+      // If index is odd, it's the captured product name
       if (index % 2 === 1) { 
-        const productId = part;
-        const product = initialProducts.find(p => p.id === productId);
+        // Clean up any accidental markdown stars the AI might add
+        const productName = part.trim().replace(/\*/g, ''); 
+        
+        // Find product by matching the name
+        const product = initialProducts.find(p => 
+          p.name.toLowerCase() === productName.toLowerCase() || 
+          p.id === productName // Keep ID fallback just in case
+        );
         
         if (product) {
           return (
@@ -90,9 +96,15 @@ export default function FashionAssistant({ initialProducts }: { initialProducts:
             </div>
           );
         }
-        return `[PROD:${productId}]`; 
+        // Graceful fallback: If product is completely missing, show gold text instead of ugly code
+        return <strong key={index} className="text-[#D4AF37]">{productName}</strong>; 
       }
-      return <span key={index}>{part}</span>;
+      
+      // Clean up rogue markdown links [Name](/product/id) to just standard text
+      let cleanText = part.replace(/\[([^\]]+)\]\(\/product\/[^\)]+\)/g, '$1');
+      cleanText = cleanText.replace(/\*\*/g, ''); // Strip bold stars to keep the UI clean
+
+      return <span key={index} className="whitespace-pre-wrap">{cleanText}</span>;
     });
   };
 
@@ -125,7 +137,7 @@ export default function FashionAssistant({ initialProducts }: { initialProducts:
             {messages.map((m, index) => (
               <div key={index} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`
-                    p-4 max-w-[85%] text-sm font-light leading-relaxed whitespace-pre-wrap
+                    p-4 max-w-[85%] text-sm font-light leading-relaxed 
                     ${m.role === 'user' 
                       ? 'bg-[#1A1A1A] text-white rounded-t-sm rounded-l-sm' 
                       : 'bg-white text-gray-900 border border-gray-100 shadow-inner rounded-t-sm rounded-r-sm'
@@ -159,9 +171,6 @@ export default function FashionAssistant({ initialProducts }: { initialProducts:
                 <SendHorizontal className="w-5 h-5" />
               </button>
             </div>
-            {messages.length > 2 && (
-              <button onClick={clearChat} className="mt-4 text-[9px] uppercase tracking-[0.2em] font-bold text-gray-400 hover:text-red-600 transition-colors w-full text-center">Clear Consultation</button>
-            )}
           </div>
         </div>
       )}
