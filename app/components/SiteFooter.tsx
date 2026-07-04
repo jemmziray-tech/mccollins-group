@@ -20,7 +20,7 @@ export default function SiteFooter() {
       .catch(err => console.error("Error loading trust badges:", err));
   }, []);
 
-  const WHATSAPP_SALES = "255678405111";
+  const WHATSAPP_SALES = "255704945565";
   const WHATSAPP_SUPPORT = "255693485566"; 
   const INSTAGRAM_LINK = "https://www.instagram.com/_lwah.o?igsh=MTVha3V2a2ExdW40Mg==%22;"; 
   const TIKTOK_LINK = "https://tiktok.com/@mccollinsgroup"; 
