@@ -1,13 +1,9 @@
 import React from "react";
 import { notFound } from "next/navigation";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import Footer from "@/app/components/SiteFooter";
 import ProductClient from "./ProductClient";
-import ProductRecommendations from "@/app/components/ProductRecommendations"; // 🟢 IMPORT THE CAROUSEL
-
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-const prisma = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+import ProductRecommendations from "@/app/components/ProductRecommendations";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;

@@ -65,7 +65,7 @@ export default function FashionAssistant({ initialProducts }: { initialProducts:
   const renderMessageContent = (content: string) => {
     // Match [PROD:Product Name]
     const productRegex = /\[PROD:([^\]]+)\]/gi; 
-    let parts = content.split(productRegex);
+    const parts = content.split(productRegex);
 
     return parts.map((part, index) => {
       // If index is odd, it's the captured product name

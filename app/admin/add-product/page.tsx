@@ -5,25 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, UploadCloud, Loader2, CheckCircle, Trash2, LayoutGrid, Link as LinkIcon, Sparkles } from "lucide-react";
 
-// 🟢 THE NEW MCCOLLINS TAXONOMY
-const TAXONOMY = {
-  CATEGORIES: {
-    "Ready to Wear": ["New Arrivals", "Dresses", "Tailored Suits", "Jackets & Coats", "Knitwear", "Tops & Shirts"],
-    "Footwear": ["Classic Boots", "Heels & Wedges", "Premium Sneakers", "Formal Shoes", "Sandals"],
-    "Accessories": ["Luxury Bags", "Leather Belts", "Fine Jewellery", "Sunglasses", "Watches"]
-  },
-  BRANDS: [
-    "Colman Looks", 
-    "McCollins Exclusive", 
-    "Heritage Collection", 
-    "General Stock"
-  ],
-  COLLECTIONS: {
-    "Trending": ["Summer Staples", "Office Elegance", "Wedding Guest", "Streetwear"],
-    "Essentials": ["Premium Tees", "Classic Denim", "Outerwear", "Loungewear"],
-    "Other": ["None"]
-  }
-};
+import { TAXONOMY } from "@/lib/product-taxonomy";
 
 type DraftProduct = {
   id: string; 

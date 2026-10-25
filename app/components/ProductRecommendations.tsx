@@ -2,12 +2,8 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { Sparkles } from 'lucide-react';
-
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-const prisma = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 export default async function ProductRecommendations({ 
   currentProductId, 
@@ -42,10 +38,9 @@ export default async function ProductRecommendations({
     else if (product.category === category) baseScore = 2;
     else if (product.brand === brand) baseScore = 1;
 
-    // 🟢 The Genius Shuffle: Math.random() returns a decimal between 0 and 0.99.
-    // Adding this decimal acts as an invisible tie-breaker. 
-    // A Score 2 (e.g., 2.85) will NEVER beat a Score 3 (e.g., 3.12).
-    const finalScore = baseScore + Math.random();
+    // Deterministic tie-breaker without impure Math.random()
+    const tieBreaker = ((product.id.charCodeAt(product.id.length - 1) || 0) % 100) / 100;
+    const finalScore = baseScore + tieBreaker;
 
     return { ...product, finalScore };
   });

@@ -1,12 +1,8 @@
 // app/page.tsx
 import React, { Suspense } from "react";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import StoreClient from "./StoreClient";
-import StoreSkeleton from "./components/StoreSkeleton"; 
-
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-const prisma = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+import StoreSkeleton from "./components/StoreSkeleton";
 
 export const revalidate = 60; 
 

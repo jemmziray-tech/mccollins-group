@@ -1,57 +1,50 @@
+// app/api/checkout/route.ts
+export const runtime = "nodejs";
+
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { processOrderCreation } from "@/lib/order-service";
 
 export async function POST(req: Request) {
   try {
-    // 1. Security Check: Who is placing the order?
     const session = await getServerSession(authOptions);
-    
+
     if (!session || !session.user?.email) {
-      return new NextResponse("You must be logged in to checkout", { status: 401 });
+      return NextResponse.json({ error: "You must be logged in to checkout" }, { status: 401 });
     }
 
-    // 2. Find the exact user in the database
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email }
-    });
-
-    if (!user) {
-      return new NextResponse("User not found", { status: 404 });
-    }
-
-    // 3. Get the Cart data from the frontend
     const body = await req.json();
-    const { cart } = body;
+    const { cart, items } = body;
+    const rawItems = Array.isArray(items) ? items : Array.isArray(cart) ? cart : [];
 
-    if (!cart || cart.length === 0) {
-      return new NextResponse("Cart is empty", { status: 400 });
+    if (rawItems.length === 0) {
+      return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
     }
 
-    // 4. Calculate the total price
-    const totalAmount = cart.reduce((sum: number, item: any) => sum + item.price, 0);
+    const parsedItems = rawItems.map((item: any) => ({
+      productId: item.productId || item.id,
+      quantity: Number(item.quantity) || 1,
+      size: item.size || null,
+    }));
 
-    // 5. THE MAGIC: Save the Order AND the Items to the database at the same time!
-    const order = await prisma.order.create({
-      data: {
-        userId: user.id,
-        totalAmount: totalAmount,
-        status: "PENDING",
-        items: {
-          create: cart.map((item: any) => ({
-            productId: item.id,
-            quantity: 1, 
-            priceAtPurchase: item.price
-          }))
-        }
-      }
+    const { order, calculatedTotal } = await processOrderCreation({
+      items: parsedItems,
+      customerName: session.user.name || null,
+      userEmail: session.user.email,
+      userId: (session.user as any).id || null,
     });
 
-    return NextResponse.json(order);
-
-  } catch (error) {
-    console.error("CHECKOUT_ERROR", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return NextResponse.json({
+      success: true,
+      order,
+      totalAmount: calculatedTotal,
+    });
+  } catch (error: any) {
+    console.error("CHECKOUT_ERROR:", error);
+    return NextResponse.json(
+      { error: error.message || "Failed to process checkout" },
+      { status: 400 }
+    );
   }
 }

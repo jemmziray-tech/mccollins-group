@@ -1,15 +1,48 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth";
+
+export const runtime = "nodejs";
 
 export async function GET() {
+  return NextResponse.json(
+    { error: "GET /api/seed is disabled for security. Use authenticated POST /api/seed." },
+    { status: 405 }
+  );
+}
+
+export async function POST(request: Request) {
   try {
-    // 1. Check if we already seeded the database so we don't duplicate items
+    const seedSecret = process.env.SEED_SECRET;
+    const providedSecret = request.headers.get("x-seed-secret");
+
+    let isAuthorized = false;
+
+    // Check optional seed secret first
+    if (seedSecret && providedSecret && seedSecret === providedSecret) {
+      isAuthorized = true;
+    } else {
+      // Check admin session
+      const auth = await requireAdmin();
+      if (auth.authorized) {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      return NextResponse.json(
+        { error: "Unauthorized: Admin session or valid x-seed-secret required to seed database." },
+        { status: 403 }
+      );
+    }
+
+    // Check if we already seeded the database so we don't duplicate items
     const count = await prisma.product.count();
     if (count > 0) {
       return NextResponse.json({ message: "Database is already loaded with products!" });
     }
 
-    // 2. Inject your starter products into the database
+    // Inject starter products
     await prisma.product.createMany({
       data: [
         {
@@ -17,35 +50,29 @@ export async function GET() {
           brand: "Colman Looks",
           description: "Premium quality jacket for every occasion.",
           price: 45000,
-          imageUrl: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=400&q=80"
-        },
-        {
-          name: "Premium Grade Rice (25kg)",
-          brand: "Nataka Afya",
-          description: "High quality grains for your home.",
-          price: 65000,
-          imageUrl: "https://images.unsplash.com/photo-1586201375761-83865001e8ac?auto=format&fit=crop&w=400&q=80"
-        },
-        {
-          name: "Hardcover Notebook Set",
-          brand: "Akili Hub",
-          description: "Essential stationery to empower minds.",
-          price: 15000,
-          imageUrl: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80"
+          category: "Jackets & Coats",
+          department: "Men",
+          collection: "Essentials",
+          stock: 15,
+          imageUrl: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=400&q=80",
         },
         {
           name: "Elegant Summer Dress",
           brand: "Colman Looks",
-          description: "Beautiful summer dress.",
+          description: "Beautiful summer dress made with fine breathable fabric.",
           price: 35000,
-          imageUrl: "https://images.unsplash.com/photo-1618932260643-ee46255476d8?auto=format&fit=crop&w=400&q=80"
-        }
-      ]
+          category: "Dresses",
+          department: "Women",
+          collection: "Trending",
+          stock: 12,
+          imageUrl: "https://images.unsplash.com/photo-1618932260643-ee46255476d8?auto=format&fit=crop&w=400&q=80",
+        },
+      ],
     });
 
-    return NextResponse.json({ message: "Success! Starter products added to database." });
+    return NextResponse.json({ message: "Success! Starter products added to database." }, { status: 201 });
   } catch (error) {
-    console.error(error);
-    return new NextResponse("Internal Error", { status: 500 });
+    console.error("Seed error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

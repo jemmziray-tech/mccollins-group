@@ -3,6 +3,18 @@
 import React, { useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-[#0F1115] border border-[#D4AF37]/30 p-3 rounded-sm shadow-xl">
+        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">{label}</p>
+        <p className="text-[#D4AF37] font-serif text-lg">TSH {payload[0].value.toLocaleString()}</p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function RevenueChart({ orders }: { orders: any[] }) {
   
   // 🟢 SMART LOGIC: Group orders by date for the last 7 days
@@ -25,19 +37,6 @@ export default function RevenueChart({ orders }: { orders: any[] }) {
       return { date: displayDate, revenue: dailyRevenue };
     });
   }, [orders]);
-
-  // Custom Tooltip for that Luxury Vibe
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-[#0F1115] border border-[#D4AF37]/30 p-3 rounded-sm shadow-xl">
-          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">{label}</p>
-          <p className="text-[#D4AF37] font-serif text-lg">TSH {payload[0].value.toLocaleString()}</p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="bg-white rounded-sm shadow-sm border border-gray-200 p-6 md:p-8 animate-in fade-in slide-in-from-bottom-6 duration-700 w-full mb-12">

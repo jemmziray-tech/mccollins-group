@@ -17,7 +17,8 @@ import {
   ShieldCheck,
   Loader2,
   Heart,
-  ArrowRight
+  ArrowRight,
+  ShoppingBag
 } from "lucide-react";
 
 import { useCart } from "./context/CartContext";
@@ -93,32 +94,40 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          cart, 
-          totalAmount: cartTotal, 
+          cart: cart.map(item => ({ id: item.id, quantity: item.quantity, size: item.size })), 
           userEmail: session?.user?.email,
           customerName: guestDetails.name,
           customerPhone: `${guestDetails.phone} (${guestDetails.area})` 
         }),
       });
-      if (!res.ok) console.error("Backend Error");
+
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "We could not save your order. Please check item availability and try again.");
+        setIsCheckingOut(false);
+        return;
+      }
+
+      let orderDetails = `Hujambo McCollins! Ninaomba ku-place order (Ref: ${data.orderId || "New"}):\n\n`;
+      orderDetails += `*Jina:* ${guestDetails.name}\n*Simu:* ${guestDetails.phone}\n*Eneo:* ${guestDetails.area}\n\n`;
+      orderDetails += `*Mzigo Wangu:*\n`;
+      
+      cart.forEach(item => {
+        orderDetails += `▪️ ${item.quantity}x ${item.name} - Tsh ${(item.price * item.quantity).toLocaleString()}\n`;
+      });
+      const verifiedTotal = data.totalAmount ?? cartTotal;
+      orderDetails += `\n*TOTAL: Tsh ${verifiedTotal.toLocaleString()}*\n\nJe, hivi vitu vyote vipo store?`;
+
+      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(orderDetails)}`, "_blank");
+      
+      setIsCheckingOut(false);
+      setCheckoutStep("cart");
+      setIsCartOpen(false);
     } catch (error) {
-      console.error("Network Error.");
+      console.error("Order submission network error:", error);
+      alert("A network error occurred while processing your order. Please try again.");
+      setIsCheckingOut(false);
     }
-
-    let orderDetails = `Hujambo McCollins! Ninaomba ku-place order hii:\n\n`;
-    orderDetails += `*Jina:* ${guestDetails.name}\n*Simu:* ${guestDetails.phone}\n*Eneo:* ${guestDetails.area}\n\n`;
-    orderDetails += `*Mzigo Wangu:*\n`;
-    
-    cart.forEach(item => {
-      orderDetails += `▪️ ${item.quantity}x ${item.name} - Tsh ${(item.price * item.quantity).toLocaleString()}\n`;
-    });
-    orderDetails += `\n*TOTAL: Tsh ${cartTotal.toLocaleString()}*\n\nJe, hivi vitu vyote vipo store?`;
-
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(orderDetails)}`, "_blank");
-    
-    setIsCheckingOut(false);
-    setCheckoutStep("cart");
-    setIsCartOpen(false);
   };
 
   const clearAllFilters = () => {
@@ -201,10 +210,15 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
         <div className="flex-1 overflow-y-auto p-5">
           {checkoutStep === "cart" ? (
             cart.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                <ShoppingCart className="w-16 h-16 mb-4 opacity-50"/>
-                <p>Your cart is empty.</p>
-                <button onClick={() => setIsCartOpen(false)} className="mt-4 text-[#D4AF37] hover:underline font-bold uppercase text-sm">Continue shopping</button>
+              <div className="h-full flex flex-col items-center justify-center text-center px-6">
+                <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-6 border border-gray-100">
+                  <ShoppingBag className="w-6 h-6 text-[#D4AF37] opacity-80"/>
+                </div>
+                <h3 className="text-xl font-serif text-gray-900 mb-2">Your Cart Awaits</h3>
+                <p className="text-sm text-gray-500 mb-8">Discover our latest collections and find the perfect addition to your wardrobe.</p>
+                <button onClick={() => setIsCartOpen(false)} className="text-[11px] font-bold text-black border-b border-black pb-1 hover:text-[#D4AF37] hover:border-[#D4AF37] uppercase tracking-editorial transition-colors">
+                  Continue Shopping
+                </button>
               </div>
             ) : (
               <div className="space-y-6">
@@ -354,13 +368,16 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
           </div>
           
           {displayedProducts.length === 0 ? (
-            <div className="text-center py-20 animate-in fade-in duration-500">
-              <h3 className="text-xl font-serif text-gray-700">No products found.</h3>
-              <p className="text-gray-500 mt-2">Try clearing your filters or selecting a different category.</p>
-              <button onClick={clearAllFilters} className="mt-6 border border-black text-black hover:bg-black hover:text-white px-8 py-3 font-bold uppercase tracking-widest text-xs transition-colors">View All Products</button>
+            <div className="text-center py-32 max-w-lg mx-auto animate-in fade-in duration-700">
+              <div className="w-16 h-px bg-[#D4AF37] mx-auto mb-6"></div>
+              <h3 className="text-3xl font-serif text-[#1A1A1A] mb-4">No results found</h3>
+              <p className="text-gray-500 mb-8 font-medium">We couldn't find anything matching your criteria. Explore our curated collections to find your perfect piece.</p>
+              <button onClick={clearAllFilters} className="border border-black text-black hover:bg-black hover:text-white px-8 py-4 font-bold uppercase tracking-editorial text-[11px] transition-colors">
+                View All Collections
+              </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-12">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-6 gap-y-12">
               {displayedProducts.map((p: any, idx: number) => (
                 <ProductCard key={p.id} p={p} idx={idx} />
               ))}

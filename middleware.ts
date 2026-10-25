@@ -1,27 +1,19 @@
 // middleware.ts
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
-
-// 1. Add your VIP Admin emails here!
-const ADMIN_EMAILS = [
-  "jem.mziray@gmail.com",
-  "festomcrowland@gmail.com",
-  "nyombicolins04@gmail.com"
-];
+import { isAdminEmail } from "@/lib/admin";
 
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
     const path = req.nextUrl.pathname;
 
-    // If they are trying to access the Admin panel...
+    // If accessing the Admin panel
     if (path.startsWith("/admin")) {
-      // Check if they have the ADMIN role in the database
       const isRoleAdmin = token?.role === "ADMIN";
-      // OR check if their email is on the VIP list!
-      const isEmailAdmin = token?.email ? ADMIN_EMAILS.includes(token.email) : false;
+      const isEmailAdmin = isAdminEmail(token?.email);
 
-      // If they are NEITHER, kick them back to the homepage
+      // If neither role nor email matches admin criteria, redirect to homepage
       if (!isRoleAdmin && !isEmailAdmin) {
         return NextResponse.redirect(new URL("/", req.url));
       }
@@ -29,7 +21,6 @@ export default withAuth(
   },
   {
     callbacks: {
-      // This tells the middleware to ALWAYS run, so we can handle the logic above
       authorized: ({ token }) => !!token,
     },
   }

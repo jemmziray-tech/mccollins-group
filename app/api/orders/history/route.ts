@@ -2,34 +2,38 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const email = searchParams.get("email");
+    const session = await getServerSession(authOptions);
 
-    if (!email) {
-      return NextResponse.json({ error: "Email is required to fetch history." }, { status: 400 });
+    if (!session?.user?.email) {
+      return NextResponse.json(
+        { error: "Unauthorized: You must be signed in to view your order history." },
+        { status: 401 }
+      );
     }
 
-    // Fetch orders belonging ONLY to this user email, sorted by newest first
+    // Fetch orders belonging strictly to the authenticated user's session email
     const orders = await prisma.order.findMany({
       where: {
         user: {
-          email: email
-        }
+          email: session.user.email,
+        },
       },
       orderBy: {
-        createdAt: "desc"
+        createdAt: "desc",
       },
       include: {
         items: {
           include: {
-            product: true // 🟢 This pulls in the product name, image, and price for the dashboard!
-          }
-        }
-      }
+            product: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json(orders);

@@ -2,16 +2,9 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-type Product = {
-  id: string;
-  name: string;
-  brand: string;
-  price: number;
-  category: string;
-  imageUrl: string;
-  description?: string;
-  [key: string]: any; 
-};
+import { ProductItem } from "@/lib/types";
+
+type Product = ProductItem;
 
 type WishlistContextType = {
   wishlist: Product[];

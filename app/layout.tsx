@@ -9,6 +9,7 @@ import Provider from "./components/Provider";
 import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext"; 
 import SiteHeader from "./components/SiteHeader";
+import SmoothScrollProvider from "./components/SmoothScrollProvider";
 
 // 🟢 Luxury Font Configurations
 const inter = Inter({ 
@@ -62,26 +63,28 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${playfair.variable} h-full antialiased`}>
       <body className="font-sans antialiased">
-        {/* NextAuth Session Provider */}
-        <Provider>
-          
-          {/* Shopping Cart Provider */}
-          <CartProvider>
+        <SmoothScrollProvider>
+          {/* NextAuth Session Provider */}
+          <Provider>
             
-            {/* Wishlist Provider wrapping the entire site! */}
-            <WishlistProvider>
+            {/* Shopping Cart Provider */}
+            <CartProvider>
               
-              {/* Our shiny new dynamic Navbar! */}
-              <SiteHeader />
+              {/* Wishlist Provider wrapping the entire site! */}
+              <WishlistProvider>
+                
+                {/* Our shiny new dynamic Navbar! */}
+                <SiteHeader />
+                
+                {/* The rest of the website */}
+                <main>{children}</main>
+                
+              </WishlistProvider>
               
-              {/* The rest of the website */}
-              <main>{children}</main>
-              
-            </WishlistProvider>
+            </CartProvider>
             
-          </CartProvider>
-          
-        </Provider>
+          </Provider>
+        </SmoothScrollProvider>
 
         {/* 🟢 VERCEL ANALYTICS: Tracks live views & visitors */}
         <Analytics />
