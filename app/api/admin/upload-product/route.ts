@@ -1,10 +1,11 @@
 // app/api/admin/upload-product/route.ts
 export const dynamic = "force-dynamic";
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { createClient } from '@supabase/supabase-js';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/server-auth';
+import { validateImageFile } from '@/lib/upload-validation';
+import { PRODUCT_CATEGORY_OPTIONS, PRODUCT_COLLECTION_OPTIONS } from '@/lib/product-taxonomy';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -12,6 +13,9 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function POST(req: Request) {
   try {
+    const adminError = await requireAdmin();
+    if (adminError) return adminError;
+
     const formData = await req.formData();
     
     // --- 1. GRAB TEXT FIELDS ---
@@ -32,8 +36,27 @@ export async function POST(req: Request) {
     const directImageUrl = formData.get('imageUrl') as string | null;
     const directHoverUrl = formData.get('hoverImageUrl') as string | null;
 
+    const primaryImageError = validateImageFile(file, "Primary image");
+    if (primaryImageError) {
+      return NextResponse.json({ error: primaryImageError }, { status: 400 });
+    }
+
+    const hoverImageError = validateImageFile(hoverFile, "Hover image");
+    if (hoverImageError) {
+      return NextResponse.json({ error: hoverImageError }, { status: 400 });
+    }
+
     if ((!file || file.size === 0) && !directImageUrl) {
       return NextResponse.json({ error: "Primary image file or link is required" }, { status: 400 });
+    }
+    if (!Number.isFinite(price) || price <= 0) {
+      return NextResponse.json({ error: "Valid price is required" }, { status: 400 });
+    }
+    if (!name) {
+      return NextResponse.json({ error: "Product name is required" }, { status: 400 });
+    }
+    if (!PRODUCT_CATEGORY_OPTIONS.includes(category)) {
+      return NextResponse.json({ error: "Invalid category" }, { status: 400 });
     }
 
     // --- 3. PROCESS PRIMARY IMAGE ---
@@ -80,9 +103,9 @@ export async function POST(req: Request) {
         brand,
         department,
         category,
-        // Ensure your Prisma schema supports "collection" if you're passing it here! 
-        // If not, you can map this to description: `${collection} - ${description}`
-        ...(collection && collection !== "None" && { collection }), 
+        ...(collection &&
+          collection !== "None" &&
+          PRODUCT_COLLECTION_OPTIONS.includes(collection) && { collection }),
         description: description || null,
         imageUrl: primaryImageUrl as string, 
         hoverImageUrl: hoverImageUrl, 

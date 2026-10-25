@@ -4,11 +4,7 @@ import GoogleProvider from "next-auth/providers/google"; // <-- NEW: Google Auth
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-
-// --- MASTER ADMIN LIST ---
-// Put your real Gmail addresses here. 
-// Anyone on this list automatically gets full access to the Admin Dashboard.
-const ADMIN_EMAILS = ["jem.mziray@gmail.com", "nyombicolins04@gmail.com", "festomcrowland@gmail.com"];
+import { isAdminEmail } from "@/lib/admin";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -37,7 +33,7 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user || !user?.password) {
-          throw new Error("User not found");
+          throw new Error("Invalid email or password");
         }
 
         const isCorrectPassword = await bcrypt.compare(
@@ -46,7 +42,7 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!isCorrectPassword) {
-          throw new Error("Invalid password");
+          throw new Error("Invalid email or password");
         }
 
         return {
@@ -62,7 +58,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     // TRIGGERED ON LOGIN: Auto-promotes admins in the database
     async signIn({ user, account }) {
-      if (user.email && ADMIN_EMAILS.includes(user.email)) {
+      if (isAdminEmail(user.email)) {
         try {
           // Update the database to ensure they are marked as an Admin forever
           await prisma.user.update({
@@ -86,7 +82,7 @@ export const authOptions: NextAuthOptions = {
         token.picture = user.image; // Grabs the Google profile picture!
 
         // Ultimate failsafe: If they are on the Admin list, force their token to Admin
-        if (user.email && ADMIN_EMAILS.includes(user.email)) {
+        if (isAdminEmail(user.email)) {
           token.role = "ADMIN";
         }
       }

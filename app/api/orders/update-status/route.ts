@@ -1,13 +1,13 @@
 // app/api/orders/update-status/route.ts
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-const prisma = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/server-auth";
 
 export async function PATCH(req: Request) {
   try {
+    const adminError = await requireAdmin();
+    if (adminError) return adminError;
+
     const body = await req.json();
     const { orderId, newStatus } = body;
 

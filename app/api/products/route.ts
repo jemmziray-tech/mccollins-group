@@ -6,6 +6,8 @@ export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from '@supabase/supabase-js';
+import { requireAdmin } from "@/lib/server-auth";
+import { PRODUCT_CATEGORY_OPTIONS } from "@/lib/product-taxonomy";
 
 // Initialize Supabase (Needed to delete the images!)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -21,6 +23,14 @@ export async function GET(request: Request) {
     // If an ID is provided, return just that one product (used for the Edit page)
     if (id) {
       const product = await prisma.product.findUnique({ where: { id } });
+      if (!product) {
+        return NextResponse.json({ error: "Product not found" }, { status: 404 });
+      }
+
+      if (!product.isAvailable) {
+        const adminError = await requireAdmin();
+        if (adminError) return adminError;
+      }
       return NextResponse.json(product);
     }
 
@@ -39,12 +49,24 @@ export async function GET(request: Request) {
 // --- POST: Save new products from the Admin Panel ---
 export async function POST(request: Request) {
   try {
+    const adminError = await requireAdmin();
+    if (adminError) return adminError;
+
     const body = await request.json();
-    const { name, price, brand, imageUrl, hoverImageUrl, description, category, sizeType, stock, department } = body;
+    const { name, price, brand, imageUrl, hoverImageUrl, description, category, sizeType, stock, department, sizes, collection } = body;
 
     // Validate required fields
     if (!name || !price || !brand || !imageUrl) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+    if (!Number.isFinite(Number(price)) || Number(price) <= 0) {
+      return NextResponse.json({ error: "Invalid product price" }, { status: 400 });
+    }
+    if (stock !== undefined && (!Number.isInteger(Number(stock)) || Number(stock) < 0)) {
+      return NextResponse.json({ error: "Invalid stock value" }, { status: 400 });
+    }
+    if (category && !PRODUCT_CATEGORY_OPTIONS.includes(category)) {
+      return NextResponse.json({ error: "Invalid category" }, { status: 400 });
     }
 
     // Save to database
@@ -57,8 +79,10 @@ export async function POST(request: Request) {
         hoverImageUrl: hoverImageUrl || null,
         description: description || null,
         category: category || "Uncategorized",
+        collection: collection || null,
         department: department || "Unisex",
         sizeType: sizeType || "none",
+        sizes: Array.isArray(sizes) ? sizes.filter((size) => typeof size === "string") : [],
         isAvailable: true,
         // 🟢 NEW: Ensure stock is saved! Default to 10 if not provided.
         stock: stock !== undefined ? Number(stock) : 10,
@@ -75,11 +99,20 @@ export async function POST(request: Request) {
 // --- PUT: Update an existing product via the Admin Panel ---
 export async function PUT(request: Request) {
   try {
+    const adminError = await requireAdmin();
+    if (adminError) return adminError;
+
     const body = await request.json();
-    const { id, name, price, brand, imageUrl, hoverImageUrl, description, category, sizeType, stock, department } = body;
+    const { id, name, price, brand, imageUrl, hoverImageUrl, description, category, sizeType, stock, department, sizes, collection } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Product ID is required for updating" }, { status: 400 });
+    }
+    if (stock !== undefined && (!Number.isInteger(Number(stock)) || Number(stock) < 0)) {
+      return NextResponse.json({ error: "Invalid stock value" }, { status: 400 });
+    }
+    if (category && !PRODUCT_CATEGORY_OPTIONS.includes(category)) {
+      return NextResponse.json({ error: "Invalid category" }, { status: 400 });
     }
 
     // Update the database
@@ -90,11 +123,13 @@ export async function PUT(request: Request) {
         price: Number(price),
         brand,
         imageUrl,
-        hoverImageUrl: hoverImageUrl !== undefined ? hoverImageUrl : undefined,
+        hoverImageUrl: hoverImageUrl !== undefined ? hoverImageUrl || null : undefined,
         description: description || null,
         category: category || "Uncategorized",
+        collection: collection || null,
         department: department || "Unisex",
         sizeType: sizeType || "none",
+        sizes: Array.isArray(sizes) ? sizes.filter((size) => typeof size === "string") : undefined,
         // 🟢 NEW: Update stock value if provided
         ...(stock !== undefined && { stock: Number(stock) }),
       },
@@ -110,6 +145,9 @@ export async function PUT(request: Request) {
 // --- DELETE: Remove products via the Admin Panel ---
 export async function DELETE(request: Request) {
   try {
+    const adminError = await requireAdmin();
+    if (adminError) return adminError;
+
     // Extract the ID from the URL (e.g., /api/products?id=123)
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -169,6 +207,9 @@ export async function DELETE(request: Request) {
 // --- PATCH: Toggle Product Visibility ---
 export async function PATCH(request: Request) {
   try {
+    const adminError = await requireAdmin();
+    if (adminError) return adminError;
+
     const body = await request.json();
     const { id, isAvailable } = body;
 

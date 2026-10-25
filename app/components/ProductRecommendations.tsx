@@ -2,12 +2,8 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { PrismaClient } from '@prisma/client';
 import { Sparkles } from 'lucide-react';
-
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-const prisma = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+import { prisma } from '@/lib/prisma';
 
 export default async function ProductRecommendations({ 
   currentProductId, 

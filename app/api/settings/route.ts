@@ -2,9 +2,13 @@
 export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/server-auth";
 
 export async function POST(request: Request) {
   try {
+    const adminError = await requireAdmin();
+    if (adminError) return adminError;
+
     const { elevatorPitch, brandVideoUrl } = await request.json(); // 🟢 ADDED brandVideoUrl
 
     const settings = await prisma.storeSettings.upsert({

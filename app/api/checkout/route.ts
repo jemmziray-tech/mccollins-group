@@ -1,57 +1,39 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { createOrderFromPayload } from "@/lib/order-processing";
+import { getServerAuthSession } from "@/lib/server-auth";
 
 export async function POST(req: Request) {
   try {
-    // 1. Security Check: Who is placing the order?
-    const session = await getServerSession(authOptions);
-    
-    if (!session || !session.user?.email) {
-      return new NextResponse("You must be logged in to checkout", { status: 401 });
-    }
-
-    // 2. Find the exact user in the database
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email }
-    });
-
-    if (!user) {
-      return new NextResponse("User not found", { status: 404 });
-    }
-
-    // 3. Get the Cart data from the frontend
     const body = await req.json();
-    const { cart } = body;
-
-    if (!cart || cart.length === 0) {
-      return new NextResponse("Cart is empty", { status: 400 });
-    }
-
-    // 4. Calculate the total price
-    const totalAmount = cart.reduce((sum: number, item: any) => sum + item.price, 0);
-
-    // 5. THE MAGIC: Save the Order AND the Items to the database at the same time!
-    const order = await prisma.order.create({
-      data: {
-        userId: user.id,
-        totalAmount: totalAmount,
-        status: "PENDING",
-        items: {
-          create: cart.map((item: any) => ({
-            productId: item.id,
-            quantity: 1, 
-            priceAtPurchase: item.price
+    const session = await getServerAuthSession();
+    const items = Array.isArray(body?.items)
+      ? body.items
+      : Array.isArray(body?.cart)
+        ? body.cart.map((item: any) => ({
+            productId: item?.productId || item?.id,
+            quantity: item?.quantity,
+            size: item?.size,
           }))
-        }
-      }
+        : [];
+
+    const result = await createOrderFromPayload({
+      items,
+      customerName: body?.customerName,
+      customerPhone: body?.customerPhone,
+      userEmail: session?.user?.email ?? undefined,
     });
 
-    return NextResponse.json(order);
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
+    }
+
+    return NextResponse.json({
+      success: true,
+      orderId: result.orderId,
+      warning: "This endpoint is deprecated. Please use /api/orders/create.",
+    });
 
   } catch (error) {
-    console.error("CHECKOUT_ERROR", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return NextResponse.json({ error: "Invalid request payload." }, { status: 400 });
   }
 }

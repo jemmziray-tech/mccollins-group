@@ -1,12 +1,8 @@
 // app/about/page.tsx
 import React from "react";
 import Link from "next/link";
-import { PrismaClient } from "@prisma/client";
 import Footer from "@/app/components/SiteFooter"; 
-
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-const prisma = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+import { prisma } from "@/lib/prisma";
 
 export default async function AboutPage() {
   const settings = await prisma.storeSettings.findUnique({

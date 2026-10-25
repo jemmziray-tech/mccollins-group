@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/server-auth";
 
 export async function GET() {
+  return NextResponse.json({ error: "Method not allowed. Use POST with admin authorization." }, { status: 405 });
+}
+
+export async function POST() {
   try {
+    const adminError = await requireAdmin();
+    if (adminError) return adminError;
+
     // 1. Check if we already seeded the database so we don't duplicate items
     const count = await prisma.product.count();
     if (count > 0) {

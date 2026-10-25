@@ -4,26 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, UploadCloud, Loader2, CheckCircle, Trash2, LayoutGrid, Link as LinkIcon, Sparkles } from "lucide-react";
-
-// 🟢 THE NEW MCCOLLINS TAXONOMY
-const TAXONOMY = {
-  CATEGORIES: {
-    "Ready to Wear": ["New Arrivals", "Dresses", "Tailored Suits", "Jackets & Coats", "Knitwear", "Tops & Shirts"],
-    "Footwear": ["Classic Boots", "Heels & Wedges", "Premium Sneakers", "Formal Shoes", "Sandals"],
-    "Accessories": ["Luxury Bags", "Leather Belts", "Fine Jewellery", "Sunglasses", "Watches"]
-  },
-  BRANDS: [
-    "Colman Looks", 
-    "McCollins Exclusive", 
-    "Heritage Collection", 
-    "General Stock"
-  ],
-  COLLECTIONS: {
-    "Trending": ["Summer Staples", "Office Elegance", "Wedding Guest", "Streetwear"],
-    "Essentials": ["Premium Tees", "Classic Denim", "Outerwear", "Loungewear"],
-    "Other": ["None"]
-  }
-};
+import { PRODUCT_BRANDS, PRODUCT_CATEGORIES, PRODUCT_COLLECTIONS } from "@/lib/product-taxonomy";
 
 type DraftProduct = {
   id: string; 
@@ -293,7 +274,7 @@ export default function AddProductPage() {
                       <div className="sm:col-span-1">
                         <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Category</label>
                         <select value={draft.category} onChange={(e) => updateDraft(draft.id, 'category', e.target.value)} className="w-full border-b border-gray-200 focus:border-[#D4AF37] bg-transparent pb-2 outline-none text-[#1A1A1A] font-bold text-xs uppercase tracking-wider cursor-pointer">
-                          {Object.entries(TAXONOMY.CATEGORIES).map(([groupName, items]) => (
+                          {Object.entries(PRODUCT_CATEGORIES).map(([groupName, items]) => (
                             <optgroup key={groupName} label={groupName}>
                               {items.map(item => <option key={item} value={item}>{item}</option>)}
                             </optgroup>
@@ -304,14 +285,14 @@ export default function AddProductPage() {
                       <div className="sm:col-span-1">
                         <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Brand / Designer</label>
                         <select value={draft.brand} onChange={(e) => updateDraft(draft.id, 'brand', e.target.value)} className="w-full border-b border-gray-200 focus:border-[#D4AF37] bg-transparent pb-2 outline-none text-[#1A1A1A] font-bold text-xs uppercase tracking-wider cursor-pointer">
-                          {TAXONOMY.BRANDS.map(brand => <option key={brand} value={brand}>{brand}</option>)}
+                          {PRODUCT_BRANDS.map(brand => <option key={brand} value={brand}>{brand}</option>)}
                         </select>
                       </div>
 
                       <div className="sm:col-span-1">
                         <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Collection (Tag)</label>
                         <select value={draft.collection} onChange={(e) => updateDraft(draft.id, 'collection', e.target.value)} className="w-full border-b border-gray-200 focus:border-[#D4AF37] bg-transparent pb-2 outline-none text-[#1A1A1A] font-bold text-xs uppercase tracking-wider cursor-pointer">
-                          {Object.entries(TAXONOMY.COLLECTIONS).map(([groupName, items]) => (
+                          {Object.entries(PRODUCT_COLLECTIONS).map(([groupName, items]) => (
                             <optgroup key={groupName} label={groupName}>
                               {items.map(item => <option key={item} value={item}>{item}</option>)}
                             </optgroup>

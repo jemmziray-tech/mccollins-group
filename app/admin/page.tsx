@@ -2,7 +2,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { 
   Plus, 
   ArrowLeft, 
@@ -28,11 +28,6 @@ import OrderListClient from "./OrderListClient";
 import RevenueChart from "./RevenueChart"; 
 import BespokeStatusSelect from "../components/BespokeStatusSelect"; // 🟢 IMPORTED NEW STATUS DROPDOWN
 import ElevatorPitchEditor from "../components/ElevatorPitchEditor"; // 🟢 IMPORTED PITCH EDITOR
-
-// Secure Database Connection
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-const prisma = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 export default async function AdminDashboard() {
   // 1. FETCH PRODUCTS
