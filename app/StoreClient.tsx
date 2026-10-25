@@ -36,6 +36,7 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [checkoutStep, setCheckoutStep] = useState<"cart" | "details">("cart");
   const [guestDetails, setGuestDetails] = useState({ name: "", phone: "", area: "" });
 
@@ -86,6 +87,7 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
   const handleMasterCheckout = async (e: React.FormEvent) => {
     e.preventDefault(); 
     if (cart.length === 0) return;
+    setCheckoutError(null);
     setIsCheckingOut(true); 
 
     try {
@@ -93,16 +95,25 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          cart, 
-          totalAmount: cartTotal, 
-          userEmail: session?.user?.email,
+          items: cart.map((item) => ({
+            productId: item.id,
+            quantity: item.quantity,
+            size: item.size || null,
+          })),
           customerName: guestDetails.name,
           customerPhone: `${guestDetails.phone} (${guestDetails.area})` 
         }),
       });
-      if (!res.ok) console.error("Backend Error");
+      if (!res.ok) {
+        const payload = await res.json().catch(() => null);
+        setCheckoutError(payload?.error || "We couldn't save your order. Please try again.");
+        setIsCheckingOut(false);
+        return;
+      }
     } catch (error) {
-      console.error("Network Error.");
+      setCheckoutError("Network error while saving your order. Please try again.");
+      setIsCheckingOut(false);
+      return;
     }
 
     let orderDetails = `Hujambo McCollins! Ninaomba ku-place order hii:\n\n`;
@@ -271,14 +282,19 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
                 Proceed to Checkout
               </MagneticButton>
             ) : (
-              <MagneticButton 
-                form="checkout-form" 
-                type="submit" 
-                disabled={isCheckingOut} 
-                className={`w-full hover:bg-gray-800 text-white py-4 rounded-sm font-bold shadow-sm flex justify-center items-center gap-2 active:scale-95 uppercase tracking-widest text-sm ${isCheckingOut ? 'bg-gray-800 opacity-80' : 'bg-[#D4AF37] text-black'}`}
-              >
-                {isCheckingOut ? <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</> : <><MessageCircle className="w-5 h-5" /> Confirm via WhatsApp</>}
-              </MagneticButton>
+              <>
+                {checkoutError && (
+                  <p className="text-xs text-red-600 font-medium mb-3">{checkoutError}</p>
+                )}
+                <MagneticButton 
+                  form="checkout-form" 
+                  type="submit" 
+                  disabled={isCheckingOut} 
+                  className={`w-full hover:bg-gray-800 text-white py-4 rounded-sm font-bold shadow-sm flex justify-center items-center gap-2 active:scale-95 uppercase tracking-widest text-sm ${isCheckingOut ? 'bg-gray-800 opacity-80' : 'bg-[#D4AF37] text-black'}`}
+                >
+                  {isCheckingOut ? <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</> : <><MessageCircle className="w-5 h-5" /> Confirm via WhatsApp</>}
+                </MagneticButton>
+              </>
             )}
           </div>
         )}

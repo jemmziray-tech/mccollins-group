@@ -2,6 +2,7 @@
 export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/server-auth";
 
 export async function POST(request: Request) {
   try {
@@ -32,6 +33,9 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
+    const adminError = await requireAdmin();
+    if (adminError) return adminError;
+
     const { id, status } = await request.json();
     
     if (!id || !status) {

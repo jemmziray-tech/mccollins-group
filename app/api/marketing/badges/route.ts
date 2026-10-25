@@ -2,6 +2,7 @@
 export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/server-auth";
 
 // 🟢 NEW: Fetch all badges to display in the Admin Dashboard
 export async function GET() {
@@ -17,6 +18,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const adminError = await requireAdmin();
+    if (adminError) return adminError;
+
     const { imageUrl, name } = await request.json();
     if (!imageUrl) return NextResponse.json({ error: "Image URL required" }, { status: 400 });
 
@@ -31,6 +35,9 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const adminError = await requireAdmin();
+    if (adminError) return adminError;
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });

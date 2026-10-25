@@ -85,6 +85,7 @@ model Product {
   hoverImageUrl String?     
   
   category      String      @default("Uncategorized")
+  collection    String?
   
   // Existing fields
   department    String      @default("Unisex") 

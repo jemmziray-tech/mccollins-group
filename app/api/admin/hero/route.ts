@@ -1,7 +1,9 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { createClient } from '@supabase/supabase-js';
+import { prisma } from '@/lib/prisma';
+import { requireAdmin } from '@/lib/server-auth';
+import { validateImageFile } from '@/lib/upload-validation';
 
 export const config = {
   api: {
@@ -12,7 +14,6 @@ export const config = {
 };
 
 
-const prisma = new PrismaClient();
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -41,6 +42,9 @@ export async function GET() {
 // --- POST: Update the campaign from the Admin Dashboard ---
 export async function POST(req: Request) {
   try {
+    const adminError = await requireAdmin();
+    if (adminError) return adminError;
+
     const formData = await req.formData();
     
     const title = formData.get('title') as string;
@@ -49,6 +53,11 @@ export async function POST(req: Request) {
     const buttonLink = formData.get('buttonLink') as string;
     const file = formData.get('image') as File | null;
     let existingImageUrl = formData.get('existingImageUrl') as string;
+
+    const fileError = validateImageFile(file, "Hero image");
+    if (fileError) {
+      return NextResponse.json({ error: fileError }, { status: 400 });
+    }
 
     // If the admin uploaded a NEW image, send it to Supabase!
     if (file && file.size > 0) {

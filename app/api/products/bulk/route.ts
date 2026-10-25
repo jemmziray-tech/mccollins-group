@@ -4,14 +4,15 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-const prisma = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/server-auth";
+import { PRODUCT_CATEGORY_OPTIONS, PRODUCT_COLLECTION_OPTIONS } from "@/lib/product-taxonomy";
 
 export async function POST(request: Request) {
   try {
+    const adminError = await requireAdmin();
+    if (adminError) return adminError;
+
     const productsArray = await request.json();
 
     if (!Array.isArray(productsArray) || productsArray.length === 0) {
@@ -27,13 +28,22 @@ export async function POST(request: Request) {
       imageUrl: p.imageUrl,
       description: p.description || null,
       category: p.category || "Uncategorized",
+      collection:
+        typeof p.collection === "string" && PRODUCT_COLLECTION_OPTIONS.includes(p.collection)
+          ? p.collection
+          : null,
       department: p.department || "Unisex",
       sizeType: p.sizeType || "clothing",
       sizes: Array.isArray(p.sizes) ? p.sizes : [], 
       isAvailable: true,
       // 🟢 NEW: Safely capture stock, fallback to 10 if missing
       stock: p.stock !== undefined ? Number(p.stock) : 10,
-    }));
+    }))
+    .filter((p) => PRODUCT_CATEGORY_OPTIONS.includes(p.category) && !!p.imageUrl && p.price > 0);
+
+    if (safeProducts.length === 0) {
+      return NextResponse.json({ error: "No valid products to create" }, { status: 400 });
+    }
 
     // Prisma's createMany securely injects the cleaned array into the database instantly
     const createdProducts = await prisma.product.createMany({

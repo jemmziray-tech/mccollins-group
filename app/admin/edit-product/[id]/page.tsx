@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { PackageSearch, ArrowLeft, Image as ImageIcon, CheckCircle2, AlertCircle, UploadCloud, Loader2 } from "lucide-react";
+import { PRODUCT_BRANDS, PRODUCT_CATEGORIES, PRODUCT_COLLECTIONS } from "@/lib/product-taxonomy";
 
 export default function EditProductPage() {
   const router = useRouter();
@@ -23,10 +24,15 @@ export default function EditProductPage() {
     id: "",
     name: "",
     price: "",
-    brand: "",
+    brand: "McCollins Exclusive",
     description: "",
-    category: "Outerwear",
+    category: "New Arrivals",
+    department: "Unisex",
+    collection: "None",
     sizeType: "clothing", 
+    sizes: "S, M, L",
+    stock: "10",
+    hoverImageUrl: "",
   });
 
   // Fetch the existing product data as soon as the page loads
@@ -45,7 +51,12 @@ export default function EditProductPage() {
           brand: data.brand,
           description: data.description || "",
           category: data.category,
+          department: data.department || "Unisex",
+          collection: data.collection || "None",
           sizeType: data.sizeType,
+          sizes: Array.isArray(data.sizes) ? data.sizes.join(", ") : "",
+          stock: typeof data.stock === "number" ? String(data.stock) : "10",
+          hoverImageUrl: data.hoverImageUrl || "",
         });
         
         setExistingImageUrl(data.imageUrl);
@@ -107,6 +118,9 @@ export default function EditProductPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           ...formData, 
+          sizes: formData.sizes.split(",").map((size) => size.trim()).filter(Boolean),
+          stock: Number(formData.stock),
+          collection: formData.collection === "None" ? null : formData.collection,
           imageUrl: finalImageUrl 
         }),
       });
@@ -234,10 +248,15 @@ export default function EditProductPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Brand *</label>
-                  <input required type="text" 
-                    className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] text-gray-900"
-                    value={formData.brand} onChange={(e) => setFormData({...formData, brand: e.target.value})} 
-                  />
+                  <select
+                    className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] text-gray-900 bg-white"
+                    value={formData.brand}
+                    onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                  >
+                    {PRODUCT_BRANDS.map((brand) => (
+                      <option key={brand} value={brand}>{brand}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
@@ -251,11 +270,42 @@ export default function EditProductPage() {
                     className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] text-gray-900 bg-white"
                     value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})}
                   >
-                    <option value="Shirts">Shirts & Tees</option>
-                    <option value="Outerwear">Jackets & Outerwear</option>
-                    <option value="Denim">Jeans & Denim</option>
-                    <option value="Footwear">Shoes & Boots</option>
-                    <option value="Accessories">Accessories</option>
+                    {Object.entries(PRODUCT_CATEGORIES).map(([groupName, items]) => (
+                      <optgroup key={groupName} label={groupName}>
+                        {items.map((item) => (
+                          <option key={item} value={item}>{item}</option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Department</label>
+                  <select
+                    className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] text-gray-900 bg-white"
+                    value={formData.department}
+                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                  >
+                    <option value="Men">Men</option>
+                    <option value="Women">Women</option>
+                    <option value="Kids">Kids</option>
+                    <option value="Unisex">Unisex</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Collection</label>
+                  <select
+                    className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] text-gray-900 bg-white"
+                    value={formData.collection}
+                    onChange={(e) => setFormData({ ...formData, collection: e.target.value })}
+                  >
+                    {Object.entries(PRODUCT_COLLECTIONS).map(([groupName, items]) => (
+                      <optgroup key={groupName} label={groupName}>
+                        {items.map((item) => (
+                          <option key={item} value={item}>{item}</option>
+                        ))}
+                      </optgroup>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -268,6 +318,35 @@ export default function EditProductPage() {
                     <option value="shoes">Shoes (40, 41, 42, etc)</option>
                     <option value="none">One Size / Accessories</option>
                   </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Sizes</label>
+                  <input
+                    type="text"
+                    className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] text-gray-900"
+                    value={formData.sizes}
+                    onChange={(e) => setFormData({ ...formData, sizes: e.target.value })}
+                    placeholder="S, M, L"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Stock</label>
+                  <input
+                    type="number"
+                    min={0}
+                    className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] text-gray-900"
+                    value={formData.stock}
+                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Hover Image URL</label>
+                  <input
+                    type="url"
+                    className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#007185] text-gray-900"
+                    value={formData.hoverImageUrl}
+                    onChange={(e) => setFormData({ ...formData, hoverImageUrl: e.target.value })}
+                  />
                 </div>
               </div>
             </div>

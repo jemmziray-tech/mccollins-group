@@ -14,20 +14,14 @@ export default function AccountPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
 
-  const ADMIN_EMAILS = [
-    "jem.mziray@gmail.com",
-    "nyombicolins04@gmail.com", 
-    "festomcrowland@gmail.com" 
-  ];
-
-  const isAdmin = session?.user?.email && ADMIN_EMAILS.includes(session.user.email); 
+  const isAdmin = (session?.user as any)?.role === "ADMIN";
 
   useEffect(() => {
     async function fetchMyOrders() {
       if (!session?.user?.email) return;
       
       try {
-        const res = await fetch(`/api/orders/history?email=${session.user.email}`);
+        const res = await fetch(`/api/orders/history`);
         if (!res.ok) throw new Error("Failed to fetch orders");
         
         const data = await res.json();
