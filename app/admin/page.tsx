@@ -30,7 +30,7 @@ import ElevatorPitchEditor from "../components/ElevatorPitchEditor";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminDashboard() {
-  const products = await prisma.product.findMany({ orderBy: { createdAt: "desc" } });
+  const products = await prisma.product.findMany({ where: { archivedAt: null }, orderBy: { createdAt: "desc" } });
   const orders = await prisma.order.findMany({
     orderBy: { createdAt: "desc" },
     include: { user: true, items: { include: { product: true } } }

@@ -44,7 +44,6 @@ export interface CreateOrderPayload {
   }[];
   customerName?: string;
   customerPhone?: string;
-  userEmail?: string;
 }
 
 export interface BespokeRequestPayload {

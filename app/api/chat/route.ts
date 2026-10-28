@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     let inventoryList = "";
     try {
       const availableProducts = await prisma.product.findMany({
-        where: { isAvailable: true, stock: { gt: 0 } },
+        where: { isAvailable: true, archivedAt: null, stock: { gt: 0 } },
         select: { name: true, price: true, category: true, department: true, description: true }
       });
 

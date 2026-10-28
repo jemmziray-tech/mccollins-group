@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { processOrderCreation } from "@/lib/order-service";
+import { normalizeOrderItems, orderOwnerFromSession } from "@/lib/order-input";
 
 export async function POST(req: Request) {
   try {
@@ -22,17 +23,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
     }
 
-    const parsedItems = rawItems.map((item: any) => ({
-      productId: item.productId || item.id,
-      quantity: Number(item.quantity) || 1,
-      size: item.size || null,
-    }));
+    const parsedItems = normalizeOrderItems(rawItems);
+    const userId = orderOwnerFromSession(session);
 
     const { order, calculatedTotal } = await processOrderCreation({
       items: parsedItems,
       customerName: session.user.name || null,
-      userEmail: session.user.email,
-      userId: (session.user as any).id || null,
+      userId,
     });
 
     return NextResponse.json({

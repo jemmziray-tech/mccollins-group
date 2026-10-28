@@ -95,7 +95,6 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           cart: cart.map(item => ({ id: item.id, quantity: item.quantity, size: item.size })), 
-          userEmail: session?.user?.email,
           customerName: guestDetails.name,
           customerPhone: `${guestDetails.phone} (${guestDetails.area})` 
         }),

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Trash2, Loader2 } from 'lucide-react';
+import { Archive, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function DeleteButton({ productId }: { productId: string }) {
@@ -10,7 +10,7 @@ export default function DeleteButton({ productId }: { productId: string }) {
 
   const handleDelete = async () => {
     // 1. Safety Check
-    const confirmDelete = window.confirm("Are you sure you want to permanently delete this product? This will also delete the images from your storage.");
+    const confirmDelete = window.confirm("Archive this product? It will leave the storefront. Previous orders and images will be preserved.");
     if (!confirmDelete) return;
 
     // 2. Trigger Loading State
@@ -27,12 +27,12 @@ export default function DeleteButton({ productId }: { productId: string }) {
         router.refresh();
       } else {
         const data = await response.json();
-        alert(`Failed to delete: ${data.error}`);
+        alert(`Failed to archive: ${data.error}`);
         setIsDeleting(false); // Turn off loading so they can try again
       }
     } catch (error) {
-      console.error("Delete Error:", error);
-      alert("A network error occurred while trying to delete the product.");
+      console.error("Archive Error:", error);
+      alert("A network error occurred while trying to archive the product.");
       setIsDeleting(false);
     }
   };
@@ -42,9 +42,10 @@ export default function DeleteButton({ productId }: { productId: string }) {
       onClick={handleDelete}
       disabled={isDeleting}
       className="p-2 text-red-500 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      title="Delete Product"
+      title="Archive Product"
+      aria-label="Archive product"
     >
-      {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+      {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Archive className="w-4 h-4" />}
     </button>
   );
 }

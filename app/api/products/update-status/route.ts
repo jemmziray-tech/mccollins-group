@@ -22,7 +22,7 @@ export async function PATCH(req: Request) {
     }
 
     const updatedProduct = await prisma.product.update({
-      where: { id: productId },
+      where: { id: productId, archivedAt: null },
       data: updateData,
     });
 

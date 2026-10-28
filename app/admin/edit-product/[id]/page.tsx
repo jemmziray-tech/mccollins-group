@@ -13,6 +13,7 @@ import {
   Loader2,
   Sparkles,
 } from "lucide-react";
+import { uploadProductImage } from "@/lib/upload-product-image";
 import { TAXONOMY } from "@/lib/product-taxonomy";
 
 export default function EditProductPage() {
@@ -110,44 +111,8 @@ export default function EditProductPage() {
     try {
       let finalImageUrl = existingImageUrl;
       let finalHoverUrl = existingHoverUrl;
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-      // Primary Image upload if changed
-      if (newImageFile) {
-        const fileExt = newImageFile.name.split(".").pop();
-        const fileName = `main-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-
-        const uploadRes = await fetch(`${supabaseUrl}/storage/v1/object/products/${fileName}`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${supabaseKey}`,
-            "Content-Type": newImageFile.type,
-          },
-          body: newImageFile,
-        });
-
-        if (!uploadRes.ok) throw new Error("Failed to upload primary image to Supabase");
-        finalImageUrl = `${supabaseUrl}/storage/v1/object/public/products/${fileName}`;
-      }
-
-      // Hover Image upload if changed
-      if (newHoverFile) {
-        const hExt = newHoverFile.name.split(".").pop();
-        const hName = `hover-${Date.now()}-${Math.random().toString(36).substring(2)}.${hExt}`;
-
-        const hUploadRes = await fetch(`${supabaseUrl}/storage/v1/object/products/${hName}`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${supabaseKey}`,
-            "Content-Type": newHoverFile.type,
-          },
-          body: newHoverFile,
-        });
-
-        if (!hUploadRes.ok) throw new Error("Failed to upload hover image to Supabase");
-        finalHoverUrl = `${supabaseUrl}/storage/v1/object/public/products/${hName}`;
-      }
+      if (newImageFile) finalImageUrl = await uploadProductImage(newImageFile);
+      if (newHoverFile) finalHoverUrl = await uploadProductImage(newHoverFile);
 
       const sizeArray = formData.sizes
         .split(",")
