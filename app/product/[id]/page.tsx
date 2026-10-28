@@ -8,7 +8,7 @@ import ProductRecommendations from "@/app/components/ProductRecommendations";
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
   const product = await prisma.product.findUnique({
-    where: { id: resolvedParams.id },
+    where: { id: resolvedParams.id, archivedAt: null },
   });
 
   if (!product) return { title: 'Product Not Found | McCollins Group' };
@@ -24,10 +24,10 @@ export default async function ProductDisplayPage({ params }: { params: Promise<{
   const resolvedParams = await params;
   
   const product = await prisma.product.findUnique({
-    where: { id: resolvedParams.id },
+    where: { id: resolvedParams.id, archivedAt: null },
   });
 
-  if (!product || !product.isAvailable) notFound(); 
+  if (!product || !product.isAvailable || product.archivedAt) notFound();
 
   // Serialize Prisma dates for the Client Component
   const safeProduct = JSON.parse(JSON.stringify(product));

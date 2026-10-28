@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
-import { supabaseServer } from "@/lib/supabase-server";
+import { revalidatePath } from "next/cache";
 
 // --- GET: Fetch all products OR a single product ---
 export async function GET(request: Request) {
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     const id = searchParams.get("id");
 
     if (id) {
-      const product = await prisma.product.findUnique({ where: { id } });
+      const product = await prisma.product.findUnique({ where: { id, archivedAt: null } });
       if (!product) {
         return NextResponse.json({ error: "Product not found" }, { status: 404 });
       }
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
     }
 
     const products = await prisma.product.findMany({
-      where: { isAvailable: true },
+      where: { isAvailable: true, archivedAt: null },
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json(products);
@@ -146,7 +146,7 @@ export async function PUT(request: Request) {
     }
 
     const updatedProduct = await prisma.product.update({
-      where: { id },
+      where: { id, archivedAt: null },
       data: updateData,
     });
 
@@ -157,7 +157,7 @@ export async function PUT(request: Request) {
   }
 }
 
-// --- DELETE: Remove products via the Admin Panel ---
+// --- DELETE: Archive products without destroying purchase history ---
 export async function DELETE(request: Request) {
   const auth = await requireAdmin();
   if (!auth.authorized) return auth.response;
@@ -170,39 +170,23 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
     }
 
-    const product = await prisma.product.findUnique({ where: { id } });
+    const product = await prisma.product.findUnique({ where: { id, archivedAt: null } });
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    // Attempt clean up of images in Supabase Storage
-    const filesToDelete: string[] = [];
-    if (product.imageUrl) {
-      const mainFileName = product.imageUrl.split("/").pop();
-      if (mainFileName) filesToDelete.push(mainFileName);
-    }
-    if (product.hoverImageUrl) {
-      const hoverFileName = product.hoverImageUrl.split("/").pop();
-      if (hoverFileName) filesToDelete.push(hoverFileName);
-    }
-
-    if (filesToDelete.length > 0) {
-      try {
-        await supabaseServer.storage.from("products").remove(filesToDelete);
-      } catch (storageError) {
-        console.error("Failed to delete images from Supabase:", storageError);
-      }
-    }
-
-    await prisma.product.delete({ where: { id } });
-
-    return NextResponse.json(
-      { message: "Product and images deleted successfully" },
-      { status: 200 }
-    );
+    // Keep product and images so previous purchases remain readable.
+    await prisma.product.update({
+      where: { id, archivedAt: null },
+      data: { archivedAt: new Date(), isAvailable: false },
+    });
+    revalidatePath("/");
+    revalidatePath("/explore");
+    revalidatePath(`/product/${id}`);
+    return NextResponse.json({ message: "Product archived. Order history and images preserved." });
   } catch (error) {
-    console.error("Database DELETE Error:", error);
-    return NextResponse.json({ error: "Failed to delete product" }, { status: 500 });
+    console.error("Product archive error:", error);
+    return NextResponse.json({ error: "Failed to archive product" }, { status: 500 });
   }
 }
 
@@ -224,7 +208,7 @@ export async function PATCH(request: Request) {
     if (stock !== undefined) updateData.stock = Math.max(0, Number(stock));
 
     const updatedProduct = await prisma.product.update({
-      where: { id },
+      where: { id, archivedAt: null },
       data: updateData,
     });
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, UploadCloud, Loader2, CheckCircle, Trash2, LayoutGrid, Link as LinkIcon, Sparkles } from "lucide-react";
 
+import { uploadProductImage } from "@/lib/upload-product-image";
 import { TAXONOMY } from "@/lib/product-taxonomy";
 
 type DraftProduct = {
@@ -93,28 +94,13 @@ export default function AddProductPage() {
     }
 
     setIsSubmitting(true);
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     try {
       const uploadPromises = drafts.map(async (draft) => {
         let finalImageUrl = draft.previewUrl;
 
         if (draft.file) {
-          const fileExt = draft.file.name.split('.').pop();
-          const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-          
-          const res = await fetch(`${supabaseUrl}/storage/v1/object/products/${fileName}`, {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${supabaseKey}`,
-              "Content-Type": draft.file.type,
-            },
-            body: draft.file,
-          });
-
-          if (!res.ok) throw new Error(`Supabase Upload Blocked`);
-          finalImageUrl = `${supabaseUrl}/storage/v1/object/public/products/${fileName}`;
+          finalImageUrl = await uploadProductImage(draft.file);
         }
 
         const sizeArray = draft.sizes.split(',').map(s => s.trim()).filter(s => s.length > 0);

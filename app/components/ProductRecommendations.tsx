@@ -20,7 +20,7 @@ export default async function ProductRecommendations({
   // every single related piece to ensure we never miss a Perfect Match.
   const rawMatches = await prisma.product.findMany({
     where: {
-      isAvailable: true,
+      isAvailable: true, archivedAt: null,
       id: { not: currentProductId }, 
       OR: [
         { category: category },

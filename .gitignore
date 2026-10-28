@@ -27,3 +27,7 @@ Thumbs.db
 
 # Ephemeral dumps
 temp.html
+
+# Local tooling state
+*.tsbuildinfo
+supabase/.temp/
