@@ -9,6 +9,18 @@ export default function OrderStatusSelect({ orderId, currentStatus }: { orderId:
   const [status, setStatus] = useState(currentStatus);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const paidOptions = ["PAID", "PAID_PROCESSING", "PAID_COMPLETED"];
+  const standardOptions = ["PENDING", "PROCESSING", "COMPLETED", "CANCELLED"];
+  const options = paidOptions.includes(status)
+    ? (status === "PAID"
+        ? paidOptions
+        : status === "PAID_PROCESSING"
+          ? paidOptions.slice(1)
+          : ["PAID_COMPLETED"])
+    : standardOptions.includes(status)
+      ? standardOptions
+      : [status];
+  const locked = !standardOptions.includes(status) && !["PAID","PAID_PROCESSING"].includes(status);
 
   const handleStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = e.target.value;
@@ -40,7 +52,7 @@ export default function OrderStatusSelect({ orderId, currentStatus }: { orderId:
   
   if (status === "PROCESSING") {
     bgColor = "bg-[#1A1A1A] text-white border-[#1A1A1A]";
-  } else if (status === "COMPLETED") {
+  } else if (status.startsWith("PAID") || status === "COMPLETED") {
     bgColor = "bg-green-50 text-green-700 border-green-200";
   } else if (status === "CANCELLED") {
     bgColor = "bg-red-50 text-red-700 border-red-200";
@@ -52,13 +64,10 @@ export default function OrderStatusSelect({ orderId, currentStatus }: { orderId:
       <select
         value={status}
         onChange={handleStatusChange}
-        disabled={isLoading}
+        disabled={isLoading || locked}
         className={`appearance-none font-bold text-[9px] uppercase tracking-widest px-4 py-1.5 rounded-sm border outline-none cursor-pointer pr-8 transition-colors shadow-sm ${bgColor} hover:shadow-md disabled:opacity-70`}
       >
-        <option value="PENDING">PENDING</option>
-        <option value="PROCESSING">PROCESSING</option>
-        <option value="COMPLETED">COMPLETED</option>
-        <option value="CANCELLED">CANCELLED</option>
+        {options.map((option) => <option key={option} value={option}>{option}</option>)}
       </select>
       
       {/* 🟢 Custom Sharp Dropdown Arrow */}

@@ -166,7 +166,7 @@ export async function reconcileFlutterwavePayment(transactionId: number, expecte
   if (!/^c[a-z0-9]{10,40}$/.test(orderId)) throw new Error("Invalid order reference.");
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) throw new Error("Order for payment not found.");
-  if (order.status === PAYMENT_PAID) return { status: "paid", orderId };
+  if (["PAID", "PAID_PROCESSING", "PAID_COMPLETED"].includes(order.status)) return { status: "paid", orderId };
   if (order.status !== PAYMENT_PENDING) return { status: "review", orderId };
 
   if (verified.currency !== "TZS" || !Number.isFinite(Number(verified.amount)) ||

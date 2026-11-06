@@ -37,3 +37,5 @@ Official references:
 - https://developer.flutterwave.com/docs/flutterwave-standard-1
 - https://developer.flutterwave.com/docs/webhooks
 - https://developer.flutterwave.com/docs/transaction-verification
+
+- Admin order statuses AWAITING_PAYMENT and PAYMENT_FAILED are protected from manual changes; paid orders progress through PAID → PAID_PROCESSING → PAID_COMPLETED while retaining payment provenance.

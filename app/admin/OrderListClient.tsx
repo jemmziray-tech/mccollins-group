@@ -26,7 +26,7 @@ export default function OrderListClient({ initialOrders }: { initialOrders: any[
     return true;
   });
 
-  const tabs = ["ALL", "PENDING", "PROCESSING", "COMPLETED", "CANCELLED"];
+  const tabs = ["ALL", "PENDING", "AWAITING_PAYMENT", "PAID", "PAID_PROCESSING", "PAID_COMPLETED", "PROCESSING", "COMPLETED", "PAYMENT_FAILED", "CANCELLED"];
 
   // 🟢 CSV EXPORT LOGIC
   const handleExportCSV = () => {
