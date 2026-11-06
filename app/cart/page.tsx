@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext';
 // 🟢 IMPORT THE NEW SAVE CART COMPONENT
 import SaveCartForm from '../components/SaveCartForm';
 
+
 export default function CartPage() {
   const { cart, removeFromCart, cartTotal } = useCart();
 
@@ -111,6 +112,10 @@ export default function CartPage() {
               >
                 Checkout via WhatsApp
               </button>
+
+              <Link href="/checkout" className="w-full block text-center border-2 border-black text-black font-black uppercase tracking-widest py-4 hover:bg-black hover:text-white transition-colors rounded-lg mt-3">
+                Pay securely online
+              </Link>
 
               {/* 🟢 NEW DYNAMIC GUEST CART CAPTURE COMPONENT */}
               <SaveCartForm currentCart={cart} />
