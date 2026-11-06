@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { checkoutOrigin, reconcileFlutterwavePayment } from "@/lib/flutterwave";
+import { checkoutOrigin, reconcileFlutterwavePayment, signPaymentResult } from "@/lib/flutterwave";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     result = "pending";
   }
 
-  return NextResponse.redirect(new URL("/payment/result?result=" + encodeURIComponent(result), checkoutOrigin()), {
+  return NextResponse.redirect(new URL("/payment/result?result=" + encodeURIComponent(result) + "&sig=" + signPaymentResult(result), checkoutOrigin()), {
     headers: { "Cache-Control": "no-store" },
   });
 }

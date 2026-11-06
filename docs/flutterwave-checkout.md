@@ -21,7 +21,7 @@ Never put API keys in NEXT_PUBLIC variables, in the repository, or in a chat mes
 - The /checkout form is available, but its Pay button remains disabled until FLW_SECRET_KEY and FLW_SECRET_HASH are configured.
 - The server re-reads product prices, sizes, and stock from the database and reserves inventory when initiating payment.
 - The payment provider returns a secure hosted checkout URL (cards/mobilemoneytanzania).
-- Webhook: POST /api/payments/flutterwave/webhook. Authenticates with verif-hash, verifies the transaction directly with Flutterwave, and marks the order PAID only when tx_ref, TZS, amount and status pass verification. Duplicate webhooks are idempotent.
+- Webhook: POST /api/payments/flutterwave/webhook. Authenticates with the v3 verif-hash or HMAC-signed flutterwave-signature, verifies the transaction directly with Flutterwave, and marks the order PAID only when tx_ref, TZS, amount and status pass verification. Duplicate webhooks are idempotent.
 - Flutterwave return URL: GET /api/payments/flutterwave/return. The server verifies the transaction with Flutterwave before displaying a result.
 - On failed checkout session creation or a provider-confirmed failed/cancelled payment, inventory is restored.
 - Abandoned reservations must be monitored and reconciled manually with the Flutterwave dashboard before freeing stock. Do not auto-cancel an order whose payment status is uncertain.

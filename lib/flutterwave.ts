@@ -1,4 +1,4 @@
-import { timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 
 const FLUTTERWAVE_API = "https://api.flutterwave.com/v3";
@@ -28,12 +28,35 @@ function secretKey() {
   return process.env.FLW_SECRET_KEY!;
 }
 
-export function verifyWebhookSecret(received: string | null): boolean {
-  const expected = process.env.FLW_SECRET_HASH;
-  if (!expected || !received) return false;
+function safeEqual(expected: string, received: string | null): boolean {
+  if (!received) return false;
   const a = Buffer.from(expected, "utf8");
   const b = Buffer.from(received, "utf8");
   return a.length === b.length && timingSafeEqual(a, b);
+}
+
+// Newer Flutterwave webhooks use an HMAC over the raw body.
+// Legacy v3 events use the verif-hash shared-secret header.
+export function verifyFlutterwaveWebhook(rawBody: string, headers: Headers): boolean {
+  const secret = process.env.FLW_SECRET_HASH;
+  if (!secret) return false;
+  const signature = headers.get("flutterwave-signature");
+  if (signature) {
+    const expected = createHmac("sha256", secret).update(rawBody).digest("base64");
+    return safeEqual(expected, signature);
+  }
+  return safeEqual(secret, headers.get("verif-hash"));
+}
+
+export function signPaymentResult(result: string): string {
+  const secret = process.env.FLW_SECRET_HASH;
+  if (!secret) throw new Error("Payment results are not configured.");
+  return createHmac("sha256", secret).update(result).digest("hex");
+}
+
+export function verifiedPaymentResult(result: string, signature: string | undefined): boolean {
+  if (!signature || !process.env.FLW_SECRET_HASH) return false;
+  return safeEqual(signPaymentResult(result), signature);
 }
 
 export function orderReference(orderId: string) {

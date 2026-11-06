@@ -1,15 +1,17 @@
 import Link from "next/link";
+import { verifiedPaymentResult } from "@/lib/flutterwave";
 
 export const dynamic = "force-dynamic";
 
 export default async function PaymentResult({
   searchParams,
 }: {
-  searchParams: Promise<{ result?: string }>;
+  searchParams: Promise<{ result?: string; sig?: string }>;
 }) {
-  const { result } = await searchParams;
-  const paid = result === "paid";
-  const failed = result === "failed";
+  const { result, sig } = await searchParams;
+  const trusted = result && verifiedPaymentResult(result, sig);
+  const paid = trusted && result === "paid";
+  const failed = trusted && result === "failed";
 
   return (
     <main className="min-h-screen bg-[#FDFBF7] px-6 pt-40 pb-20 text-[#1A1A1A]">

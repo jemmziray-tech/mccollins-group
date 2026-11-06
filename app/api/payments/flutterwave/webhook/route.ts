@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
-import { verifyWebhookSecret, reconcileFlutterwavePayment } from "@/lib/flutterwave";
+import { verifyFlutterwaveWebhook, reconcileFlutterwavePayment } from "@/lib/flutterwave";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  if (!verifyWebhookSecret(request.headers.get("verif-hash"))) {
+  const rawBody = await request.text();
+  if (!verifyFlutterwaveWebhook(rawBody, request.headers)) {
     return NextResponse.json({ error: "Unauthorized webhook" }, { status: 401 });
   }
   try {
-    const payload = await request.json();
+    const payload = JSON.parse(rawBody);
     const transactionId = Number(payload?.data?.id);
     if (!Number.isSafeInteger(transactionId) || transactionId <= 0) {
       return NextResponse.json({ error: "Invalid transaction payload" }, { status: 400 });
