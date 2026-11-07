@@ -46,7 +46,7 @@ export default async function AdminDashboard() {
   }));
 
   const totalRevenue = orders
-    .filter(order => order.status === "COMPLETED")
+    .filter(order => ["COMPLETED", "PAID", "PAID_PROCESSING", "PAID_COMPLETED"].includes(order.status))
     .reduce((sum, order) => sum + order.totalAmount, 0);
     
   const totalOrdersCount = orders.length;

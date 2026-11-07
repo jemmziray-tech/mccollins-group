@@ -7,6 +7,7 @@ export interface CreateOrderInput {
   customerPhone?: string | null;
   // Set only from the verified NextAuth session.
   userId?: string | null;
+  status?: "PENDING" | "AWAITING_PAYMENT";
 }
 
 export async function createOrder(db: Pick<PrismaClient, "$transaction">, input: CreateOrderInput) {
@@ -68,7 +69,7 @@ export async function createOrder(db: Pick<PrismaClient, "$transaction">, input:
         totalAmount: total, userId: input.userId || null,
         customerName: input.customerName || "Guest User",
         customerPhone: input.customerPhone || "No Phone Provided",
-        status: "PENDING", items: { create: orderItems },
+        status: input.status || "PENDING", items: { create: orderItems },
       },
       include: { items: { include: { product: true } } },
     });

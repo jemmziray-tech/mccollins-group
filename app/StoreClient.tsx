@@ -277,12 +277,15 @@ export default function StoreClient({ initialProducts }: { initialProducts: any[
             </div>
             
             {checkoutStep === "cart" ? (
-              <MagneticButton 
+              <div className="space-y-3">
+                <Link href="/checkout" onClick={() => setIsCartOpen(false)} className="block w-full bg-[#D4AF37] text-black text-center font-bold py-3.5 rounded-sm uppercase tracking-widest text-xs">Pay securely online</Link>
+                <MagneticButton 
                 onClick={() => setCheckoutStep("details")} 
                 className="w-full hover:bg-gray-800 text-white py-4 rounded-sm font-bold shadow-sm flex justify-center items-center gap-2 active:scale-95 uppercase tracking-widest text-sm bg-[#1A1A1A]"
               >
                 Proceed to Checkout
               </MagneticButton>
+              </div>
             ) : (
               <MagneticButton 
                 form="checkout-form" 
